@@ -152,12 +152,14 @@ async def on_message(message):
       channel = client.get_channel(channelID_Input)
       await channel.send(msg[24:])
 
-  # Refrain from using the ff. built-ins such as but not limited to: str, dict, list, range
+  # Refrain from using the ff. built-in terms such as but not limited to: str, dict, list, range
   # Note to self: Don't send msg in a coding block to retain markdown support
+  # Strictly speaking, the shop resets at 4 AM so this can mislead someone. I'll work on it when it seems needed.
   elif message.content.startswith("$paimonbargains") or message.content.startswith("$paimonsbargains") or message.content.startswith("$paimon'sbargains") or message.content.startswith("$viewshop"):
     currentMonth = datetime.now().month
+    #currentMonth = 12
 
-    def determine_char():
+    def determine_character():
       if currentMonth > 6:
         return currentMonth - 6
       else:
@@ -173,13 +175,17 @@ async def on_message(message):
     def display_future():
       built = "\n\n**Future:**\n"
       for x in range(1, 7):
-        built = built + months[loopback(currentMonth + x, 12) - 1] + " | " + characters[loopback(determine_char() + x, 6) - 1] + "\n"
+        built = built + months[loopback(currentMonth + x, 12) - 1] + " | " + characters[loopback(determine_character() + x, 6) - 1] + "\n"
 
       return built;
 
+    def determine_weapon_series():
+      return "\n  Blackcliff series" if currentMonth % 2 else "\n  Royal series"
+
     await message.channel.send(
       "**Current:**\n" +
-      months[currentMonth - 1] + " | " + characters[determine_char() - 1] +
+      months[currentMonth - 1] + " | " + characters[determine_character() - 1] +
+      determine_weapon_series() +
       display_future()
     )
 
