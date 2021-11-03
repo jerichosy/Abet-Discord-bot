@@ -133,7 +133,7 @@ async def on_message(message):
 
   msg = message.content
 
-  if message.content.startswith("$inspire"):
+  if message.content.startswith("$inspire") or message.content.startswith("$inspiration"):
     async with message.channel.typing():
       quote = get_quote()
       await asyncio.sleep(1)
