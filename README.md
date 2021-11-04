@@ -11,4 +11,4 @@
 <br>
 
 **Unfinished:** <br />
-_NONE_
+- Improve "roll" trigger
