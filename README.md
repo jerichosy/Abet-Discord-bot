@@ -4,10 +4,11 @@
 `$inspire` - Returns a random inspirational quote (alias: `$inspiration`) <br />
 `$choose [phrase 1], [phrase 2], ...` - Returns a random choice from the given words/phrases <br />
 `$viewshop` - Views current Paimon's Bargains items for the month (alias: `$paimonbargains`, `$paimonsbargains`, `$paimon'sbargains`) <br />
-`$carl` - _Find out for yourself_ (alias: `$Carl`, `$fuckcarl`, `$fuckCarl`) <br /> <br />
+`$carl` - _Find out for yourself_ (alias: `$Carl`, `$fuckcarl`, `$fuckCarl`) <br />
+`$ping` - Returns latency information <br /> <br />
 `$help` - Returns a link to this page
 
 <br>
 
 **Unfinished:** <br />
-- Ping command
+_NONE_
