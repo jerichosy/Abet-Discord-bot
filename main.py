@@ -6,17 +6,19 @@ import json
 import random
 from datetime import datetime
 import asyncio
+import time
 
-client = discord.Client()
+client = discord.Client(activity=discord.Game(name='Fuck Carl bot'))
 
 # NOTE: There's no need to do case-insensitive checking cause bot already replies too much.
-sad_words = ["sad", "depressed", "bitch"]
+sad_words = ["sad", "depressed", "bitch", "hirap"]
 
 genshin_words = ["mihoyo", "Mihoyo"]
 
 yay_words = ["yay"]
 
-primo_words = ["should i pull", "pulling", "roll", "constellation", "primos", "primogem", "C6", "C2", "C1"]
+#"roll" should work
+primo_words = ["should i pull", "pulling", " roll", "roll ", " roll ", "constellation", "primos", "primogem", "C6", "C2", "C1"]
 
 starter_encouragements = [
   "Cheer up!",
@@ -133,7 +135,7 @@ async def on_message(message):
 
   msg = message.content
 
-  if message.content.startswith("$inspire") or message.content.startswith("$inspiration"):
+  if message.content.startswith("$inspire") or message.content.startswith("$inspiration") or message.content.startswith("$inspo"):
     async with message.channel.typing():
       quote = get_quote()
       await asyncio.sleep(1)
@@ -193,6 +195,19 @@ async def on_message(message):
     choose_phrases = msg[8:].split(", ")
     print("\n", choose_phrases)
     await message.channel.send(random.choice(choose_phrases))
+
+  elif message.content.startswith("$help"):
+    await message.channel.send("List of commands: https://github.com/jerichosy/Abet-Discord-bot")
+
+  elif message.content.startswith("$carl") or message.content.startswith("$Carl") or message.content.startswith("$fuckcarl") or message.content.startswith("$fuckCarl"):
+    await message.channel.send("https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png")
+
+  elif message.content.startswith("$ping"):
+    start_time = time.time()
+    to_edit = await message.channel.send("Testing ping...")
+    end_time = time.time()
+
+    await to_edit.edit(content=f"Pong! {round(client.latency * 1000)}ms | API: {round((end_time - start_time) * 1000)}ms")
 
   else:
     if any(word in msg for word in sad_words):
