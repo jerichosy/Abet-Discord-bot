@@ -7,7 +7,7 @@
 `&carl` - _Find out for yourself_ (alias: `&Carl`, `&fuckcarl`, `&fuckCarl`) <br />
 `&ping` - Returns latency information <br /> <br />
 `&about` - Returns a link to this page <br /> <br />
-\*Refer to bot's &help command for the latest list
+\*Refer to bot's `&help` command for the latest list
 
 <br>
 
