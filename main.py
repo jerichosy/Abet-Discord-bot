@@ -1,6 +1,6 @@
 # Check: ~~dependencies~~, ~~comments~~
 # Change: migrate from requests to non-blocking alternative (will not do rn)
-# Additions: Categorize cmds so it shows up nicely on &help (only some, will do others next time), ~~add their respective desc~~
+# Additions: Categorize cmds so it shows up nicely on &help (only some, will do others next time), ~~add their respective desc~~, roleplay additions
 
 import discord
 from discord.ext import commands
@@ -24,14 +24,14 @@ bot = commands.Bot(command_prefix=commands.when_mentioned_or('&'), activity=disc
 # NOTE: There's no need to do case-insensitive checking cause bot already replies too much.
 sad_words = ["sad", "depressed", "bitch", "hirap"]
 
-genshin_words = ["mihoyo", "Mihoyo"]
-
 yay_words = ["yay"]
 
 #"roll" should work
 primo_words = ["should i pull", "pulling", " roll", "roll ", " roll ", "constellation", "primos", "primogem", "C6", "C2", "C1"]
 
-starter_encouragements = [
+genshin_words = ["mihoyo", "Mihoyo"]
+
+sad_response = [
   "Cheer up!",
   "Hang in there!",
   "You are a great person!",
@@ -47,8 +47,8 @@ starter_encouragements = [
   "Is there anything I can do to make you feel better?"
 ]
 
-yay_encouragements = [
-  "I’m so proud of you!",
+yay_response = [
+  "I'm so proud of you!",
   "Good job!",
   "Keep it up!",
   "Keep up the good work!",
@@ -61,6 +61,34 @@ yay_encouragements = [
   "WTF? Really?",
   "What the heck? Let's goooooooooo!",
   "I knew you could do it!"
+]
+
+primo_response = [
+  "Looks like someone's pulling today!",
+  "I swear a 10 pull seems great right now",  # Unhealthy
+  "What's the worse that could happen? You getting Qiqi?",
+  "Don't save your gems you'll get qiqi anyways",
+  "wait don't tell me you're not going to pull?",  # Unhealthy
+  "I hear that standing in the corner of mondstadt gives you a higher chance to pull a 5 star",
+  "the adventurer's guild is calling. They want to watch you pull.",
+  "make sure you stream if you pull.",
+  "It's just a game. Pulling won't be the end of the world.",
+  "New content?",
+  "The Kyoya Intelligence Agency (KIA) will be monitoring your pulls.",
+]
+
+genshin_response = [
+  "Did I hear Mihoyo? That bitch.",
+  "Mihoyo loves you",
+  "Awe, we're trying our best here at Mihoyo",
+  "I promise to give you more primos in future patches - Mihoyo",
+  "Did you just BS Mihoyo? UID Saved, sending to Mihoyo servers...",
+  "Hey people at Mihoyo are just trying to do their jobs",
+  "Please rate our game with a 5 star in the Play Store!",
+  "Please don't leave we need you['re money]",
+  "We give all the money we make at Mihoyo to Mona",
+  "All funds from Mihoyo are sent straight to Zhongli's pockets",
+  "We aren't ripping you off. We're just compensating Timmie which is why we couldn't get you better rewards!"
 ]
 
 abet_response = [
@@ -88,35 +116,6 @@ abet_response = [
   "Bakit ako tinatanong niyo? May Carl kayo diba?"
 ]
 
-primo_response = [
-  "Looks like someone's pulling today!",
-  "I swear a 10 pull seems great right now",  # Unhealthy
-  "What's the worse that could happen? You getting Qiqi?",
-  "Maybe it's time to pull in the weapon banner",  # Unhealthy
-  "Don't save your gems you'll get qiqi anyways",
-  "wait don't tell me you're not going to pull?",  # Unhealthy
-  "I hear that standing in the corner of mondstadt gives you a higher chance to pull a 5 star",
-  "the adventurer's guild is calling. They want to watch you pull.",
-  "make sure you stream if you pull.",
-  "It's just a game. Pulling won't be the end of the world.",
-  "New content?",
-  "The Kyoya Intelligence Agency (KIA) will be monitoring your pulls."
-]
-
-genshin_response = [
-  "Did I hear Mihoyo? That bitch.",
-  "Mihoyo loves you",
-  "Awe, we're trying our best here at Mihoyo",
-  "I promise to give you more primos in future patches - Mihoyo",
-  "Did you just BS Mihoyo? UID Saved, sending to Mihoyo servers...",
-  "Hey people at Mihoyo are just trying to do their jobs",
-  "Please rate our game with a 5 star in the Play Store!",
-  "Please don't leave we need you['re money]",
-  "We give all the money we make at Mihoyo to Mona",
-  "All funds from Mihoyo are sent straight to Zhongli's pockets",
-  "We aren't ripping you off. We're just compensating Timmie which is why we couldn't get you better rewards!"
-]
-
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 characters = [
   "Fischl Xiangling",
@@ -125,6 +124,17 @@ characters = [
   "Razor Amber",
   "Bennett Lisa",
   "Barbara Kaeya"
+]
+
+users = [
+  366062276664623105,  # Christian
+  528559623934836776,  # sunny
+  453210960182640650,  # Jehu
+  577505465966133248,  # Daniel
+  727511628496765030,  # Mae
+  298454523624554501,  # Jericho
+  434028304492920872,  # Abet
+  748695566485159998,  # Audric
 ]
 
 # Do we need to catch exceptions for requests/aiohttp and send an error msg?
@@ -254,14 +264,13 @@ async def cat(ctx):
             await ctx.send(js['file'])
 
 @bot.command(aliases=['Abet'])
-async def abet(ctx):
+async def abet(ctx, has_question):  # has_question is solely used for triggering the error cmd handler if it's not present in the msg
   """customized Magic 8-Ball"""
   await ctx.send(random.choice(abet_response))
 
 @bot.command()
-async def choose(ctx):  # , *choices: str
+async def choose(ctx):
   """Returns a random choice from the given words/phrases"""
-  #await ctx.send(random.choice(choices))
   choose_phrases = ctx.message.content[8:].split(", ")  # Split returns a list (square brackets)
   print("\n", choose_phrases)
   await ctx.send(random.choice(choose_phrases))
@@ -271,9 +280,13 @@ async def coinflip(ctx):
   """Flip a coin"""
   await ctx.send(random.choice(['Heads', 'Tails']))
 
+@bot.command()
+async def raffle(ctx):
+  await ctx.send(f"Congratulations, <@{random.choice(users)}> won!")
+
 # Refrain from using the ff. built-in terms such as but not limited to: str, dict, list, range
 # Note to self: Don't send msg in a coding block to retain markdown support
-# Strictly speaking, the shop resets at 4 AM so this can mislead someone. I'll work on it when it seems needed.
+# TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. I'll work on it when it seems needed.
 @bot.command(aliases=["paimonsbargains", "paimon'sbargains", "viewshop"])
 async def paimonbargains(ctx):
   """Views current Paimon's Bargains items for the month"""
@@ -340,10 +353,10 @@ async def on_message(message):
   #    await channel.send(msg[24:])
 
   if any(word in msg for word in sad_words):
-    await message.channel.send(random.choice(starter_encouragements))
+    await message.channel.send(random.choice(sad_response))
 
   if any(word in msg for word in yay_words):
-    await message.channel.send(random.choice(yay_encouragements))
+    await message.channel.send(random.choice(yay_response))
 
   if any(word in msg for word in primo_words):
     await message.channel.send(random.choice(primo_response))
@@ -359,8 +372,12 @@ async def on_command_error(ctx, error):
   if isinstance(error, commands.errors.NSFWChannelRequired):
     # Raise exception if NSFW channel setting disabled
     await ctx.send("This is an NSFW command! Please use in the appropriate channel(s).")
+  elif isinstance(error, commands.errors.MissingRequiredArgument) and (ctx.message.content.startswith("&abet") or ctx.message.content.startswith("&Abet")):
+    await ctx.send("What?")
   elif isinstance(error, commands.errors.CommandNotFound):
     pass
+  elif isinstance(error, discord.HTTPException):
+    await ctx.send("You are ratelimited")
   else:
     await ctx.send(error)
   # add more?
