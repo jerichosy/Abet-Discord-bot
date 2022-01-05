@@ -1,6 +1,8 @@
-# Check: ~~dependencies~~, ~~comments~~
-# Change: migrate from requests to non-blocking alternative (will not do rn)
-# Additions: Categorize cmds so it shows up nicely on &help (only some, will do others next time), ~~add their respective desc~~, roleplay additions
+# Check: ~~dependencies~~, comments
+# Change: migrate from requests to non-blocking alternative (will not do rn), make it not respond to bots
+# Additions: Categorize cmds so it shows up nicely on &help (only some, will do others next time), add their respective desc
+
+# Add in commit desc/comment: 
 
 import discord
 from discord.ext import commands
@@ -18,18 +20,19 @@ help_command = commands.DefaultHelpCommand(
   no_category = 'List of commands'
 )
 
-bot = commands.Bot(command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='"Technically Updated"'), help_command = help_command)  # , description=description
+bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='Try my roleplay cmds!'), help_command = help_command)  # , description=description
 
-# PLS FIX THIS SHIT
+# PLS FIX TRIGGER WORDS
+
 # NOTE: There's no need to do case-insensitive checking cause bot already replies too much.
 sad_words = ["sad", "depressed", "bitch", "hirap"]
 
 yay_words = ["yay"]
 
 #"roll" should work
-primo_words = ["should i pull", "pulling", " roll", "roll ", " roll ", "constellation", "primos", "primogem", "C6", "C2", "C1"]
+wish_words = ["should i pull", "pulling", " roll", "roll ", " roll ", "constellation", "primos", "primogem", "C6", "C2", "C1"]
 
-genshin_words = ["mihoyo", "Mihoyo"]
+mhy_words = ["mihoyo", "Mihoyo"]
 
 sad_response = [
   "Cheer up!",
@@ -63,7 +66,7 @@ yay_response = [
   "I knew you could do it!"
 ]
 
-primo_response = [
+wish_response = [
   "Looks like someone's pulling today!",
   "I swear a 10 pull seems great right now",  # Unhealthy
   "What's the worse that could happen? You getting Qiqi?",
@@ -77,7 +80,7 @@ primo_response = [
   "The Kyoya Intelligence Agency (KIA) will be monitoring your pulls.",
 ]
 
-genshin_response = [
+mhy_response = [
   "Did I hear Mihoyo? That bitch.",
   "Mihoyo loves you",
   "Awe, we're trying our best here at Mihoyo",
@@ -126,24 +129,13 @@ characters = [
   "Barbara Kaeya"
 ]
 
-users = [
-  366062276664623105,  # Christian
-  528559623934836776,  # sunny
-  453210960182640650,  # Jehu
-  577505465966133248,  # Daniel
-  727511628496765030,  # Mae
-  298454523624554501,  # Jericho
-  434028304492920872,  # Abet
-  748695566485159998,  # Audric
-]
-
 # Do we need to catch exceptions for requests/aiohttp and send an error msg?
 # Figure out aiohttp: https://discordpy.readthedocs.io/en/stable/faq.html#what-does-blocking-mean
 def get_quote():
-  response = requests.get("https://zenquotes.io/api/random")
+  response = requests.get("https://zenquotes.io/api/random", timeout=7)
   json_data = json.loads(response.text)
   quote = json_data[0]['q'] + " -" + json_data[0]['a']
-  return(quote)
+  return quote
 
 # This has issues on IPv6 networks it seems like
 def get_waifu(type, category):
@@ -153,13 +145,24 @@ def get_waifu(type, category):
   print(response) # debug
   json_data = json.loads(response.text)
   waifu = json_data['url']
-  return(waifu)
+  return waifu
+
+# Note: discord.Member implements a lot of func of discord.User, but we don't need any of the extras atm
+def get_roleplay_embed(ctx, user_mentioned, type, category, action):
+  title = f"{ctx.author.name} {action} "
+  if user_mentioned != None:
+    name = str(user_mentioned)
+    size = len(name)
+    title = title + name[:size-5]
+  embed = discord.Embed(title = title)
+  embed.set_image(url=get_waifu(type, category))
+  return embed
 
 @bot.event
 async def on_ready():
   print("We have logged in as {0.user}".format(bot))
 
-@bot.command(aliases=['info', 'sourcecode', 'github', 'Github', 'GitHub'])
+@bot.command(aliases=['info', 'sourcecode', 'github'])
 async def about(ctx):
   """link to documentation & source code on GitHub"""
   await ctx.send("Source code & documentation: https://github.com/jerichosy/Abet-Discord-bot")
@@ -173,7 +176,7 @@ async def ping(ctx):
 
   await to_edit.edit(content=f"Pong! {round(bot.latency * 1000)}ms | API: {round((end_time - start_time) * 1000)}ms")
 
-@bot.command(aliases=['Carl', 'fuckcarl', 'fuckCarl'])
+@bot.command(aliases=['fuckcarl'])
 async def carl(ctx):
   """Dish Carl"""
   await ctx.send("https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png")
@@ -242,15 +245,103 @@ async def dance(ctx):
 async def cringe(ctx):
   await ctx.send(get_waifu("sfw", "cringe"))
 
+#@bot.command()
+#async def embed(ctx):
+#  embed = discord.Embed(title="Test embed", url="https://github.com/jerichosy", description="This is a test embed", color=0x00FF00)
+#  embed.set_image(url="https://cdn.discordapp.com/avatars/298454523624554501/a_7ff2f55104909f01920a9c086ddda8c5.jpg?size=4096")
+#  await ctx.send(embed=embed)
+
+# Note: discord.Member implements a lot of func of discord.User, but we don't need any of the extras atm
+@bot.command()
+async def cuddle(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "cuddle", "cuddles"))
+
+@bot.command()
+async def hug(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "hug", "hugs"))
+
+@bot.command()
+async def kiss(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "kiss", "kisses"))
+
+@bot.command()
+async def lick(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "lick", "licks"))
+
+@bot.command()
+async def pat(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "pat", "pats"))
+
+@bot.command()
+async def bonk(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "bonk", "bonks"))
+
+@bot.command()
+async def yeet(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "yeet", "yeets"))
+
+@bot.command()
+async def wave(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "wave", "waves"))
+
+@bot.command()
+async def highfive(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "highfive", "highfives"))
+
+@bot.command()
+async def handhold(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "handhold", "handholds"))
+
+@bot.command()
+async def bite(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "bite", "bites"))
+
+@bot.command()
+async def glomp(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "glomp", "glomps"))
+
+@bot.command()
+async def slap(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "slap", "slaps"))
+
+# Add kill Abet bot easter egg (go offline then back on and send some scary/taunting shit)
+@bot.command()
+async def kill(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "kill", "kills"))
+
+@bot.command()
+async def kick(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "kick", "kicks"))
+
+@bot.command()
+async def wink(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "wink", "winks at"))
+
+@bot.command()
+async def poke(ctx, user_mentioned: discord.User=None):
+  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "poke", "pokes"))
+
 # --- NSFW Start ---
-@bot.command(aliases=['Hentai'])
+@bot.command()
 @commands.is_nsfw()
 async def hentai(ctx):
   """( ͡° ͜ʖ ͡°)"""
-  #await ctx.send()
   await ctx.send(get_waifu("nsfw", "waifu"))
 
-# Do we need to add the rest?
+@bot.command()
+@commands.is_nsfw()
+async def nekonsfw(ctx):
+  await ctx.send(get_waifu("nsfw", "neko"))
+
+@bot.command()
+@commands.is_nsfw()
+async def trap(ctx):
+  await ctx.send(get_waifu("nsfw", "trap"))
+
+@bot.command()
+@commands.is_nsfw()
+async def blowjob(ctx):
+  await ctx.send(get_waifu("nsfw", "blowjob"))
 
 # --- NSFW End ---
 
@@ -263,10 +354,13 @@ async def cat(ctx):
             js = await r.json()
             await ctx.send(js['file'])
 
-@bot.command(aliases=['Abet'])
-async def abet(ctx, has_question):  # has_question is solely used for triggering the error cmd handler if it's not present in the msg
+@bot.command()
+async def abet(ctx, has_question=None):
   """customized Magic 8-Ball"""
-  await ctx.send(random.choice(abet_response))
+  if has_question == None:
+    await ctx.send("What?")
+  else:
+    await ctx.send(random.choice(abet_response))
 
 @bot.command()
 async def choose(ctx):
@@ -279,10 +373,6 @@ async def choose(ctx):
 async def coinflip(ctx):
   """Flip a coin"""
   await ctx.send(random.choice(['Heads', 'Tails']))
-
-@bot.command()
-async def raffle(ctx):
-  await ctx.send(f"Congratulations, <@{random.choice(users)}> won!")
 
 # Refrain from using the ff. built-in terms such as but not limited to: str, dict, list, range
 # Note to self: Don't send msg in a coding block to retain markdown support
@@ -329,20 +419,6 @@ async def on_message(message):
 
   msg = message.content
 
-  # --- NEW WAIFU.PICS CMDS AFTER THIS SHOULD HAVE INTERACTION ---
-
-  #elif message.content.startswith("&pat"):
-    #waifu = get_waifu("sfw", "pat")
-    #await message.channel.send(
-
-  #elif message.content.startswith("&kiss"):
-    #await message.channel.send(get_waifu("sfw", "kiss"))
-
-  #elif message.content.startswith("&lick"):
-    #await message.channel.send(get_waifu("sfw", "lick"))
-
-  # --- END ---
-
   #if message.content.startswith("&say "):
   #  try:
   #    channel_id_input = int(msg[5:23])
@@ -358,11 +434,11 @@ async def on_message(message):
   if any(word in msg for word in yay_words):
     await message.channel.send(random.choice(yay_response))
 
-  if any(word in msg for word in primo_words):
-    await message.channel.send(random.choice(primo_response))
+  if any(word in msg for word in wish_words):
+    await message.channel.send(random.choice(wish_response))
 
-  if any(word in msg for word in genshin_words):
-    await message.channel.send(random.choice(genshin_response))
+  if any(word in msg for word in mhy_words):
+    await message.channel.send(random.choice(mhy_response))
 
   await bot.process_commands(message)
 
@@ -372,10 +448,10 @@ async def on_command_error(ctx, error):
   if isinstance(error, commands.errors.NSFWChannelRequired):
     # Raise exception if NSFW channel setting disabled
     await ctx.send("This is an NSFW command! Please use in the appropriate channel(s).")
-  elif isinstance(error, commands.errors.MissingRequiredArgument) and (ctx.message.content.startswith("&abet") or ctx.message.content.startswith("&Abet")):
-    await ctx.send("What?")
-  elif isinstance(error, commands.errors.CommandNotFound):
-    pass
+  #elif isinstance(error, commands.errors.MissingRequiredArgument) and (ctx.message.content.startswith("&abet") or ctx.message.content.startswith("&Abet")):
+  #  await ctx.send("What?")
+  #elif isinstance(error, commands.errors.CommandNotFound):
+  #  pass
   elif isinstance(error, discord.HTTPException):
     await ctx.send("You are ratelimited")
   else:
