@@ -15,6 +15,7 @@ import json
 import random
 from datetime import datetime
 import time
+import re
 
 help_command = commands.DefaultHelpCommand(
   no_category = 'List of commands'
@@ -30,9 +31,9 @@ sad_words = ["sad", "depressed", "bitch", "hirap"]
 yay_words = ["yay"]
 
 #"roll" should work
-wish_words = ["should i pull", "pulling", " roll", "roll ", " roll ", "constellation", "primos", "primogem", "C6", "C2", "C1"]
+wish_words = ["should i pull", "pulling", "p*ll", "roll", "rolls", "constellation", "constellations", "primo", "primos", "primogem", "primogems", "C6", "C5", "C4", "C3", "C2", "C1", "C0", "character", "characters"]
 
-mhy_words = ["mihoyo", "Mihoyo"]
+mhy_words = ["mihoyo"]
 
 sad_response = [
   "Cheer up!",
@@ -129,6 +130,9 @@ characters = [
   "Barbara Kaeya"
 ]
 
+def findWholeWord(w):
+    return re.compile(r'\b({0})\b'.format(w), flags=re.IGNORECASE).search
+
 # Do we need to catch exceptions for requests/aiohttp and send an error msg?
 # Figure out aiohttp: https://discordpy.readthedocs.io/en/stable/faq.html#what-does-blocking-mean
 def get_quote():
@@ -139,8 +143,7 @@ def get_quote():
 
 # This has issues on IPv6 networks it seems like
 def get_waifu(type, category):
-  url_string = "https://api.waifu.pics/"
-  url_string = url_string + type + "/" + category
+  url_string = f"https://api.waifu.pics/{type}/{category}"
   response = requests.get(url_string, timeout=7)  # This can take a while. How can we make sure it doesn't block execution?
   print(response) # debug
   json_data = json.loads(response.text)
@@ -428,17 +431,23 @@ async def on_message(message):
   #    channel = bot.get_channel(channel_id_input)
   #    await channel.send(msg[24:])
 
-  if any(word in msg for word in sad_words):
-    await message.channel.send(random.choice(sad_response))
-
+  for x in sad_words:
+    if findWholeWord(x)(msg):
+        await message.channel.send(random.choice(sad_response))
+        break
+  
   if any(word in msg for word in yay_words):
     await message.channel.send(random.choice(yay_response))
-
-  if any(word in msg for word in wish_words):
-    await message.channel.send(random.choice(wish_response))
-
-  if any(word in msg for word in mhy_words):
-    await message.channel.send(random.choice(mhy_response))
+  
+  for x in wish_words:
+    if findWholeWord(x)(msg):
+        await message.channel.send(random.choice(wish_response))
+        break
+  
+  for x in mhy_words:
+    if findWholeWord(x)(msg):
+        await message.channel.send(random.choice(mhy_response))
+        break
 
   await bot.process_commands(message)
 
