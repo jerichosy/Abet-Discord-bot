@@ -23,15 +23,11 @@ help_command = commands.DefaultHelpCommand(
 
 bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='Try my roleplay cmds!'), help_command = help_command)  # , description=description
 
-# PLS FIX TRIGGER WORDS
-
-# NOTE: There's no need to do case-insensitive checking cause bot already replies too much.
 sad_words = ["sad", "depressed", "bitch", "hirap"]
 
 yay_words = ["yay"]
 
-#"roll" should work
-wish_words = ["should i pull", "pulling", "p*ll", "roll", "rolls", "constellation", "constellations", "primo", "primos", "primogem", "primogems", "C6", "C5", "C4", "C3", "C2", "C1", "C0", "character", "characters"]
+wish_words = ["should i pull", "pulling", "p\*ll", "roll", "rolls", "constellation", "constellations", "primo", "primos", "primogem", "primogems", "C6", "C5", "C4", "C3", "C2", "C1", "C0", "character", "characters"]
 
 mhy_words = ["mihoyo"]
 
