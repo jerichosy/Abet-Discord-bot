@@ -27,7 +27,7 @@ sad_words = ["sad", "depressed", "bitch", "hirap"]
 
 yay_words = ["yay"]
 
-wish_words = ["should i pull", "pulling", "p\*ll", "roll", "rolls", "constellation", "constellations", "primo", "primos", "primogem", "primogems", "C6", "C5", "C4", "C3", "C2", "C1", "C0", "character", "characters"]
+wish_words = ["should i pull", "pulling", "p\*ll", "rolls", "constellation", "constellations", "primo", "primos", "primogem", "primogems", "C6", "C5", "C4", "C3", "C2", "C1", "C0", "character", "characters"]
 
 mhy_words = ["mihoyo"]
 
@@ -168,7 +168,7 @@ async def about(ctx):
 
 @bot.command()
 async def ping(ctx):
-  """Returns ping and API/websocket latency"""
+  """Get the bot's current websocket and API latency"""
   start_time = time.time()
   to_edit = await ctx.send("Testing ping...")
   end_time = time.time()
