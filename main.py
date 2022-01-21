@@ -1,11 +1,12 @@
 # Check: ~~dependencies~~, comments
 # Change: migrate from requests to non-blocking alternative (will not do rn), make it not respond to bots
-# Additions: Categorize cmds so it shows up nicely on &help (only some, will do others next time), add their respective desc
+# Additions: Fix help cmd in "No Category", Add cogs and cmd desc.
 
 # Add in commit desc/comment: 
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import has_permissions
 from dotenv import load_dotenv
 import os
 import asyncio
@@ -17,15 +18,15 @@ from datetime import datetime
 import time
 import re
 
-help_command = commands.DefaultHelpCommand(
-  no_category = 'List of commands'
-)
+#help_command = commands.DefaultHelpCommand(
+#  no_category = 'List of commands'
+#)
 
-bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='Try my roleplay cmds!'), help_command = help_command)  # , description=description
+bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='Try my roleplay cmds!'), help_command=commands.MinimalHelpCommand())  # , description=description
 
-sad_words = ["sad", "depressed", "bitch", "hirap"]
+sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
 
-yay_words = ["yay"]
+yay_words = ["yay", "YAY", "freee", "FREEE"]
 
 wish_words = ["should i pull", "pulling", "p\*ll", "rolls", "constellation", "constellations", "primo", "primos", "primogem", "primogems", "C6", "C5", "C4", "C3", "C2", "C1", "C0", "character", "characters"]
 
@@ -60,7 +61,8 @@ yay_response = [
   "I can't believe it! You are amazing!",
   "WTF? Really?",
   "What the heck? Let's goooooooooo!",
-  "I knew you could do it!"
+  "I knew you could do it!",
+  "<:letsgo:914430483176255488>"
 ]
 
 wish_response = [
@@ -153,7 +155,7 @@ def get_roleplay_embed(ctx, user_mentioned, type, category, action):
     name = str(user_mentioned)
     size = len(name)
     title = title + name[:size-5]
-  embed = discord.Embed(title = title)
+  embed = discord.Embed(title=title, color=0xee615b)
   embed.set_image(url=get_waifu(type, category))
   return embed
 
@@ -161,88 +163,113 @@ def get_roleplay_embed(ctx, user_mentioned, type, category, action):
 async def on_ready():
   print("We have logged in as {0.user}".format(bot))
 
-@bot.command(aliases=['info', 'sourcecode', 'github'])
-async def about(ctx):
-  """link to documentation & source code on GitHub"""
-  await ctx.send("Source code & documentation: https://github.com/jerichosy/Abet-Discord-bot")
+class Info(commands.Cog):
+  
+  def __init__(self, bot):
+    self.bot = bot
 
-@bot.command()
-async def ping(ctx):
-  """Get the bot's current websocket and API latency"""
-  start_time = time.time()
-  to_edit = await ctx.send("Testing ping...")
-  end_time = time.time()
+  @commands.command(aliases=['info', 'sourcecode', 'github'])
+  async def about(self, ctx):
+    """link to documentation & source code on GitHub"""
+    await ctx.send("Source code & documentation: https://github.com/jerichosy/Abet-Discord-bot")
 
-  await to_edit.edit(content=f"Pong! {round(bot.latency * 1000)}ms | API: {round((end_time - start_time) * 1000)}ms")
+  @commands.command()
+  async def ping(self, ctx):
+    """Get the bot's current websocket and API latency"""
+    start_time = time.time()
+    to_edit = await ctx.send("Testing ping...")
+    end_time = time.time()
 
-@bot.command(aliases=['fuckcarl'])
-async def carl(ctx):
-  """Dish Carl"""
-  await ctx.send("https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png")
+    await to_edit.edit(content=f"Pong! {round(bot.latency * 1000)}ms | API: {round((end_time - start_time) * 1000)}ms")
 
-@bot.command(aliases=['inspiration', 'inspo'])
-async def inspire(ctx):
-  """Sends a random inspirational quote"""
-  async with ctx.typing():
-    quote = get_quote()
-    await asyncio.sleep(1)
-  await ctx.send(quote)
+class Fun(commands.Cog):
+  
+  def __init__(self, bot):
+    self.bot = bot
 
-@bot.command()
-async def waifu(ctx):
-  await ctx.send(get_waifu("sfw", "waifu"))
+  # Don't make this into an embed
+  @commands.command(aliases=['fuckcarl'])
+  async def carl(self, ctx):
+    """Dish Carl"""
+    await ctx.send("https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png")
 
-@bot.command()
-async def neko(ctx):
-  await ctx.send(get_waifu("sfw", "neko"))
+  @commands.command(aliases=['inspiration', 'inspo'])
+  async def inspire(self, ctx):
+    """Sends a random inspirational quote"""
+    async with ctx.typing():
+      quote = get_quote()
+      await asyncio.sleep(1)
+    await ctx.send(quote)
 
-@bot.command()
-async def shinobu(ctx):
-  await ctx.send(get_waifu("sfw", "shinobu"))
+  @commands.command(aliases=['meow'])
+  async def cat(self, ctx):
+    """Sends a random cat image"""
+    async with aiohttp.ClientSession() as session:
+      async with session.get('http://aws.random.cat/meow') as r:
+          if r.status == 200:
+              js = await r.json()
+              await ctx.send(js['file'])
 
-@bot.command()
-async def megumin(ctx):
-  await ctx.send(get_waifu("sfw", "megumin"))
+class Waifu(commands.Cog):
 
-@bot.command()
-async def bully(ctx):
-  await ctx.send(get_waifu("sfw", "bully"))
+  def __init__(self, bot):
+    self.bot = bot
 
-@bot.command()
-async def cry(ctx):
-  await ctx.send(get_waifu("sfw", "cry"))
+  @commands.command()
+  async def waifu(self, ctx):
+    await ctx.send(get_waifu("sfw", "waifu"))
 
-@bot.command()
-async def awoo(ctx):
-  await ctx.send(get_waifu("sfw", "awoo"))
+  @commands.command()
+  async def neko(self, ctx):
+    await ctx.send(get_waifu("sfw", "neko"))
 
-@bot.command()
-async def smug(ctx):
-  await ctx.send(get_waifu("sfw", "smug"))
+  @commands.command()
+  async def shinobu(self, ctx):
+    await ctx.send(get_waifu("sfw", "shinobu"))
 
-@bot.command()
-async def blush(ctx):
-  await ctx.send(get_waifu("sfw", "blush"))
+  @commands.command()
+  async def megumin(self, ctx):
+    await ctx.send(get_waifu("sfw", "megumin"))
 
-@bot.command()
-async def smile(ctx):
-  await ctx.send(get_waifu("sfw", "smile"))
+  @commands.command()
+  async def bully(self, ctx):
+    await ctx.send(get_waifu("sfw", "bully"))
 
-@bot.command()
-async def nom(ctx):
-  await ctx.send(get_waifu("sfw", "nom"))
+  @commands.command()
+  async def cry(self, ctx):
+    await ctx.send(get_waifu("sfw", "cry"))
 
-@bot.command()
-async def happy(ctx):
-  await ctx.send(get_waifu("sfw", "happy"))
+  @commands.command()
+  async def awoo(self, ctx):
+    await ctx.send(get_waifu("sfw", "awoo"))
 
-@bot.command()
-async def dance(ctx):
-  await ctx.send(get_waifu("sfw", "dance"))
+  @commands.command()
+  async def smug(self, ctx):
+    await ctx.send(get_waifu("sfw", "smug"))
 
-@bot.command()
-async def cringe(ctx):
-  await ctx.send(get_waifu("sfw", "cringe"))
+  @commands.command()
+  async def blush(self, ctx):
+    await ctx.send(get_waifu("sfw", "blush"))
+
+  @commands.command()
+  async def smile(self, ctx):
+    await ctx.send(get_waifu("sfw", "smile"))
+
+  @commands.command()
+  async def nom(self, ctx):
+    await ctx.send(get_waifu("sfw", "nom"))
+
+  @commands.command()
+  async def happy(self, ctx):
+    await ctx.send(get_waifu("sfw", "happy"))
+
+  @commands.command()
+  async def dance(self, ctx):
+    await ctx.send(get_waifu("sfw", "dance"))
+
+  @commands.command()
+  async def cringe(self, ctx):
+    await ctx.send(get_waifu("sfw", "cringe"))
 
 #@bot.command()
 #async def embed(ctx):
@@ -250,166 +277,187 @@ async def cringe(ctx):
 #  embed.set_image(url="https://cdn.discordapp.com/avatars/298454523624554501/a_7ff2f55104909f01920a9c086ddda8c5.jpg?size=4096")
 #  await ctx.send(embed=embed)
 
-# Note: discord.Member implements a lot of func of discord.User, but we don't need any of the extras atm
-@bot.command()
-async def cuddle(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "cuddle", "cuddles"))
+class Roleplay(commands.Cog):
 
-@bot.command()
-async def hug(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "hug", "hugs"))
+  def __init__(self, bot):
+    self.bot = bot
 
-@bot.command()
-async def kiss(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "kiss", "kisses"))
+  # Note: discord.Member implements a lot of func of discord.User, but we don't need any of the extras atm
+  @commands.command()
+  async def cuddle(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "cuddle", "cuddles"))
 
-@bot.command()
-async def lick(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "lick", "licks"))
+  @commands.command()
+  async def hug(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "hug", "hugs"))
 
-@bot.command()
-async def pat(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "pat", "pats"))
+  @commands.command()
+  async def kiss(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "kiss", "kisses"))
 
-@bot.command()
-async def bonk(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "bonk", "bonks"))
+  @commands.command()
+  async def lick(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "lick", "licks"))
 
-@bot.command()
-async def yeet(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "yeet", "yeets"))
+  @commands.command()
+  async def pat(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "pat", "pats"))
 
-@bot.command()
-async def wave(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "wave", "waves"))
+  @commands.command()
+  async def bonk(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "bonk", "bonks"))
 
-@bot.command()
-async def highfive(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "highfive", "highfives"))
+  @commands.command()
+  async def yeet(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "yeet", "yeets"))
 
-@bot.command()
-async def handhold(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "handhold", "handholds"))
+  @commands.command()
+  async def wave(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "wave", "waves"))
 
-@bot.command()
-async def bite(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "bite", "bites"))
+  @commands.command()
+  async def highfive(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "highfive", "highfives"))
 
-@bot.command()
-async def glomp(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "glomp", "glomps"))
+  @commands.command()
+  async def handhold(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "handhold", "handholds"))
 
-@bot.command()
-async def slap(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "slap", "slaps"))
+  @commands.command()
+  async def bite(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "bite", "bites"))
 
-# Add kill Abet bot easter egg (go offline then back on and send some scary/taunting shit)
-@bot.command()
-async def kill(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "kill", "kills"))
+  @commands.command()
+  async def glomp(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "glomp", "glomps"))
 
-@bot.command()
-async def kick(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "kick", "kicks"))
+  @commands.command()
+  async def slap(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "slap", "slaps"))
 
-@bot.command()
-async def wink(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "wink", "winks at"))
+  # Add kill Abet bot easter egg (go offline then back on and send some scary/taunting shit)
+  @commands.command()
+  async def kill(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "kill", "kills"))
 
-@bot.command()
-async def poke(ctx, user_mentioned: discord.User=None):
-  await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "poke", "pokes"))
+  @commands.command()
+  async def kick(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "kick", "kicks"))
+
+  @commands.command()
+  async def wink(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "wink", "winks at"))
+
+  @commands.command()
+  async def poke(self, ctx, user_mentioned: discord.User=None):
+    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "poke", "pokes"))
 
 # --- NSFW Start ---
-@bot.command()
-@commands.is_nsfw()
-async def hentai(ctx):
-  """( ͡° ͜ʖ ͡°)"""
-  await ctx.send(get_waifu("nsfw", "waifu"))
+class NSFW(commands.Cog):
+  
+  def __init__(self, bot):
+    self.bot = bot
 
-@bot.command()
-@commands.is_nsfw()
-async def nekonsfw(ctx):
-  await ctx.send(get_waifu("nsfw", "neko"))
+  @commands.command()
+  @commands.is_nsfw()
+  async def hentai(self, ctx):
+    """( ͡° ͜ʖ ͡°)"""
+    await ctx.send(get_waifu("nsfw", "waifu"))
 
-@bot.command()
-@commands.is_nsfw()
-async def trap(ctx):
-  await ctx.send(get_waifu("nsfw", "trap"))
+  @commands.command()
+  @commands.is_nsfw()
+  async def nekonsfw(self, ctx):
+    await ctx.send(get_waifu("nsfw", "neko"))
 
-@bot.command()
-@commands.is_nsfw()
-async def blowjob(ctx):
-  await ctx.send(get_waifu("nsfw", "blowjob"))
+  @commands.command()
+  @commands.is_nsfw()
+  async def trap(self, ctx):
+    await ctx.send(get_waifu("nsfw", "trap"))
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def blowjob(self, ctx):
+    await ctx.send(get_waifu("nsfw", "blowjob"))
 
 # --- NSFW End ---
 
-@bot.command(aliases=['meow'])
-async def cat(ctx):
-  """Sends a random cat image"""
-  async with aiohttp.ClientSession() as session:
-    async with session.get('http://aws.random.cat/meow') as r:
-        if r.status == 200:
-            js = await r.json()
-            await ctx.send(js['file'])
+class Tools(commands.Cog):
 
-@bot.command()
-async def abet(ctx, has_question=None):
-  """customized Magic 8-Ball"""
-  if has_question == None:
-    await ctx.send("What?")
-  else:
-    await ctx.send(random.choice(abet_response))
+  def __init__(self, bot):
+    self.bot = bot
 
-@bot.command()
-async def choose(ctx):
-  """Returns a random choice from the given words/phrases"""
-  choose_phrases = ctx.message.content[8:].split(", ")  # Split returns a list (square brackets)
-  print("\n", choose_phrases)
-  await ctx.send(random.choice(choose_phrases))
-
-@bot.command(aliases=['coin', 'flipacoin', 'heads', 'tails'])
-async def coinflip(ctx):
-  """Flip a coin"""
-  await ctx.send(random.choice(['Heads', 'Tails']))
-
-# Refrain from using the ff. built-in terms such as but not limited to: str, dict, list, range
-# Note to self: Don't send msg in a coding block to retain markdown support
-# TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. I'll work on it when it seems needed.
-@bot.command(aliases=["paimonsbargains", "paimon'sbargains", "viewshop"])
-async def paimonbargains(ctx):
-  """Views current Paimon's Bargains items for the month"""
-  current_month = datetime.now().month
-
-  def determine_character():
-    if current_month > 6:
-      return current_month - 6
+  @commands.command()
+  async def abet(self, ctx, has_question=None):
+    """customized Magic 8-Ball"""
+    if has_question == None:
+      await ctx.send("What?")
     else:
-      return current_month
+      await ctx.send(random.choice(abet_response))
 
-  # Even if this function is only relevant to display_future(), do not nest functions unless there's a specific reason to do so
-  def loopback(current, upper_limit):
-    if current > upper_limit:
-      return current - upper_limit
+  @commands.command()
+  async def choose(self, ctx):
+    """Returns a random choice from the given words/phrases"""
+    choose_phrases = ctx.message.content[8:].split(", ")  # Split returns a list (square brackets)
+    print("\n", choose_phrases)
+    #print(len(choose_phrases))
+    if len(choose_phrases) > 1:
+      await ctx.send(random.choice(choose_phrases))
     else:
-      return current
+      pass
 
-  def display_future():
-    built = "\n\n**Future:**\n"
-    for x in range(1, 7):
-      built = built + months[loopback(current_month + x, 12) - 1] + " | " + characters[loopback(determine_character() + x, 6) - 1] + "\n"
+  @commands.command(aliases=['coin', 'flipacoin', 'heads', 'tails'])
+  async def coinflip(self, ctx):
+    """Flip a coin"""
+    await ctx.send(random.choice(['Heads', 'Tails']))
 
-    return built;
+  # Refrain from using the ff. built-in terms such as but not limited to: str, dict, list, range
+  # Note to self: Don't send msg in a coding block to retain markdown support
+  # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. I'll work on it when it seems needed.
+  @commands.command(aliases=["paimonsbargains", "paimon'sbargains", "viewshop"])
+  async def paimonbargains(self, ctx):
+    """Views current Paimon's Bargains items for the month"""
+    current_month = datetime.now().month
 
-  def determine_weapon_series():
-    return "\n  Blackcliff series" if current_month % 2 else "\n  Royal series"
+    def determine_character():
+      if current_month > 6:
+        return current_month - 6
+      else:
+        return current_month
 
-  await ctx.send(
-    "**Current:**\n"
-    + months[current_month - 1] + " | " + characters[determine_character() - 1]
-    + determine_weapon_series()
-    + display_future()
-  )
+    # Even if this function is only relevant to display_future(), do not nest functions unless there's a specific reason to do so
+    def loopback(current, upper_limit):
+      if current > upper_limit:
+        return current - upper_limit
+      else:
+        return current
+
+    def display_future():
+      built = "\n\n**Future:**\n"
+      for x in range(1, 7):
+        built = built + months[loopback(current_month + x, 12) - 1] + " | " + characters[loopback(determine_character() + x, 6) - 1] + "\n"
+
+      return built;
+
+    def determine_weapon_series():
+      return "\n  Blackcliff series" if current_month % 2 else "\n  Royal series"
+
+    await ctx.send(
+      "**Current:**\n"
+      + months[current_month - 1] + " | " + characters[determine_character() - 1]
+      + determine_weapon_series()
+      + display_future()
+    )
+
+class Admin(commands.Cog):
+
+  def __init__(self, bot):
+    self.bot = bot
+
+  @commands.command()
+  #@commands.is_owner()
+  @has_permissions(manage_messages=True)
+  async def purge(self, ctx, amount: int):
+    await ctx.channel.purge(limit=amount+1)
 
 @bot.event
 async def on_message(message):
@@ -435,15 +483,15 @@ async def on_message(message):
   if any(word in msg for word in yay_words):
     await message.channel.send(random.choice(yay_response))
   
-  for x in wish_words:
-    if findWholeWord(x)(msg):
-        await message.channel.send(random.choice(wish_response))
-        break
+  #for x in wish_words:
+    #if findWholeWord(x)(msg):
+        #await message.channel.send(random.choice(wish_response))
+        #break
   
-  for x in mhy_words:
-    if findWholeWord(x)(msg):
-        await message.channel.send(random.choice(mhy_response))
-        break
+  #for x in mhy_words:
+    #if findWholeWord(x)(msg):
+        #await message.channel.send(random.choice(mhy_response))
+        #break
 
   await bot.process_commands(message)
 
@@ -462,6 +510,14 @@ async def on_command_error(ctx, error):
   else:
     await ctx.send(error)
   # add more?
+
+bot.add_cog(Info(bot))
+bot.add_cog(Fun(bot))
+bot.add_cog(Waifu(bot))
+bot.add_cog(Roleplay(bot))
+bot.add_cog(NSFW(bot))
+bot.add_cog(Tools(bot))
+bot.add_cog(Admin(bot))
 
 load_dotenv()
 bot.run(os.getenv('BOT_TOKEN'))
