@@ -1,8 +1,9 @@
 # Check: ~~dependencies~~, comments
-# Change: migrate from requests to non-blocking alternative (will not do rn), make it not respond to bots
-# Additions: Fix help cmd in "No Category", Add cogs and cmd desc.
+# Change: migrate from requests to non-blocking alternative (will not do rn), make it not respond to bots, Fix help cmd in "No Category"
+# Additions: Add cogs and cmd desc.
+# Will not fix: Error of converting int when user accidentally types argument(s) containing characters, non-ints, etc.
 
-# Add in commit desc/comment: 
+# Add in commit desc/comment:
 
 import discord
 from discord.ext import commands
@@ -14,15 +15,19 @@ import aiohttp
 import requests
 import json
 import random
+from random import choices
 from datetime import datetime
 import time
 import re
+import logging
 
-#help_command = commands.DefaultHelpCommand(
-#  no_category = 'List of commands'
-#)
+logger = logging.getLogger('discord')
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
 
-bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='Try my roleplay cmds!'), help_command=commands.MinimalHelpCommand())  # , description=description
+bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='&help'), help_command=commands.MinimalHelpCommand())  # , description=description
 
 sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
 
@@ -143,10 +148,25 @@ def get_quote():
 def get_waifu(type, category):
   url_string = f"https://api.waifu.pics/{type}/{category}"
   response = requests.get(url_string, timeout=7)  # This can take a while. How can we make sure it doesn't block execution?
-  print(response) # debug
+  print(f"Waifu.pics: {response}") # debug
   json_data = json.loads(response.text)
   waifu = json_data['url']
   return waifu
+
+def get_waifu_im_embed(type, category):
+  url_string = f"https://api.waifu.im/{type}/{category}"
+  response = requests.get(url_string, timeout=7)  # This can take a while. How can we make sure it doesn't block execution?
+  print(f"Waifu.im: {response}") # debug
+  json_data = json.loads(response.text)
+  source = json_data['images'][0]['source']
+  #embed = discord.Embed(title=url, color=int(f"0x{json_data['images'][0]['dominant_color'].strip('#')}"), url=url)
+  embed = discord.Embed(color=0xffc0cb)
+  embed.set_image(url=json_data['images'][0]['url'])
+  #embed.set_footer(text=f"Source: [{json_data['images'][0]['source']}]({json_data['images'][0]['source']})", icon_url="https://waifu.im/favicon.ico")
+  
+  #img = json_data['images'][0]['url']
+  
+  return source, embed
 
 # Note: discord.Member implements a lot of func of discord.User, but we don't need any of the extras atm
 def get_roleplay_embed(ctx, user_mentioned, type, category, action):
@@ -154,10 +174,15 @@ def get_roleplay_embed(ctx, user_mentioned, type, category, action):
   if user_mentioned != None:
     name = str(user_mentioned)
     size = len(name)
-    title = title + name[:size-5]
+    title += name[:size-5]
   embed = discord.Embed(title=title, color=0xee615b)
   embed.set_image(url=get_waifu(type, category))
   return embed
+
+def coin_flip():
+  population = ['Heads', 'Tails']
+  weight = [0.1, 0.9]
+  return str(choices(population, weight)).strip('[\']')
 
 @bot.event
 async def on_ready():
@@ -209,6 +234,26 @@ class Fun(commands.Cog):
           if r.status == 200:
               js = await r.json()
               await ctx.send(js['file'])
+
+  # Lifted from https://github.com/Rapptz/discord.py/blob/master/examples/guessing_game.py
+  @commands.command(aliases=['game'])
+  async def guess(self, ctx):
+    await ctx.send('Guess a number between 1 and 10.')
+
+    def is_correct(m):
+      return m.author == ctx.author and m.content.isdigit()
+
+    answer = random.randint(1, 10)
+
+    try:
+      guess = await bot.wait_for('message', check=is_correct, timeout=5.0)
+    except asyncio.TimeoutError:
+      return await ctx.send(f'Sorry, you took too long it was {answer}.')
+
+    if int(guess.content) == answer:
+      await ctx.send('You are right!')
+    else:
+      await ctx.send(f'Oops. It is actually {answer}.')
 
 class Waifu(commands.Cog):
 
@@ -270,6 +315,13 @@ class Waifu(commands.Cog):
   @commands.command()
   async def cringe(self, ctx):
     await ctx.send(get_waifu("sfw", "cringe"))
+
+  @commands.command()
+  async def maid(self, ctx):
+    #text1, text2 = get_waifu_im_embed("sfw", "maid")
+    #await ctx.send(text1 + "\n" + text2)
+    text, embed = get_waifu_im_embed("sfw", "maid")
+    await ctx.send(text, embed=embed)
 
 #@bot.command()
 #async def embed(ctx):
@@ -408,7 +460,29 @@ class Tools(commands.Cog):
   @commands.command(aliases=['coin', 'flipacoin', 'heads', 'tails'])
   async def coinflip(self, ctx):
     """Flip a coin"""
-    await ctx.send(random.choice(['Heads', 'Tails']))
+    await ctx.send(coin_flip())
+
+  @commands.command(aliases=['cointally', 'flipacointally', 'headstally', 'tailstally', 'countcoins', 'coincount', 'coinscount'])
+  async def coinfliptally(self, ctx, amount: int):
+    heads_count = 0
+    tails_count = 0
+    #count = []
+    response = ""
+
+    if amount > 10000:
+      amount = 10000
+      response += "Max of 10k only allowed!\n"
+
+    for x in range(amount):
+      #count.append(coin_flip())
+      if coin_flip() == 'Heads':
+        heads_count += 1
+      else:
+        tails_count += 1
+
+    response += f"Heads: {heads_count}\nTails: {tails_count}"
+    #await ctx.send(print(count))
+    await ctx.send(response)
 
   # Refrain from using the ff. built-in terms such as but not limited to: str, dict, list, range
   # Note to self: Don't send msg in a coding block to retain markdown support
@@ -434,7 +508,7 @@ class Tools(commands.Cog):
     def display_future():
       built = "\n\n**Future:**\n"
       for x in range(1, 7):
-        built = built + months[loopback(current_month + x, 12) - 1] + " | " + characters[loopback(determine_character() + x, 6) - 1] + "\n"
+        built += months[loopback(current_month + x, 12) - 1] + " | " + characters[loopback(determine_character() + x, 6) - 1] + "\n"
 
       return built;
 
@@ -453,7 +527,7 @@ class Admin(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  @commands.command()
+  @commands.command(aliases=['delete'])
   #@commands.is_owner()
   @has_permissions(manage_messages=True)
   async def purge(self, ctx, amount: int):
