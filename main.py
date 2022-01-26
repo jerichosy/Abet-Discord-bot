@@ -3,7 +3,7 @@
 # Additions: Add cogs and cmd desc.
 # Will not fix: Error of converting int when user accidentally types argument(s) containing characters, non-ints, etc.
 
-# Add in commit desc/comment:
+# Add in commit desc/comment: 
 
 import discord
 from discord.ext import commands
@@ -16,7 +16,7 @@ import requests
 import json
 import random
 from random import choices
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import re
 import logging
@@ -171,7 +171,7 @@ def get_waifu_im_embed(type, category):
 # Note: discord.Member implements a lot of func of discord.User, but we don't need any of the extras atm
 def get_roleplay_embed(ctx, user_mentioned, type, category, action):
   title = f"{ctx.author.name} {action} "
-  if user_mentioned != None:
+  if user_mentioned is not None:  # PEP 8
     name = str(user_mentioned)
     size = len(name)
     title += name[:size-5]
@@ -323,11 +323,16 @@ class Waifu(commands.Cog):
     text, embed = get_waifu_im_embed("sfw", "maid")
     await ctx.send(text, embed=embed)
 
-#@bot.command()
-#async def embed(ctx):
-#  embed = discord.Embed(title="Test embed", url="https://github.com/jerichosy", description="This is a test embed", color=0x00FF00)
-#  embed.set_image(url="https://cdn.discordapp.com/avatars/298454523624554501/a_7ff2f55104909f01920a9c086ddda8c5.jpg?size=4096")
-#  await ctx.send(embed=embed)
+  @commands.command()
+  async def waifu2(self, ctx):
+    text, embed = get_waifu_im_embed("sfw", "waifu")
+    await ctx.send(text, embed=embed)
+
+@bot.command()
+async def embed(ctx):
+  embed = discord.Embed(title="Test embed", url="https://github.com/jerichosy", description="This is a test embed", color=0x00FF00)
+  embed.set_image(url="https://cdn.discordapp.com/avatars/298454523624554501/a_7ff2f55104909f01920a9c086ddda8c5.jpg?size=4096")
+  await ctx.send(embed=embed)
 
 class Roleplay(commands.Cog):
 
@@ -441,7 +446,7 @@ class Tools(commands.Cog):
   @commands.command()
   async def abet(self, ctx, has_question=None):
     """customized Magic 8-Ball"""
-    if has_question == None:
+    if has_question is None:  # PEP 8
       await ctx.send("What?")
     else:
       await ctx.send(random.choice(abet_response))
@@ -521,6 +526,77 @@ class Tools(commands.Cog):
       + determine_weapon_series()
       + display_future()
     )
+
+  @commands.command(aliases=['wait'])
+  async def whatanime(self, ctx, url=None):
+    """What Anime Is This"""
+
+    if url is None and len(ctx.message.attachments) == 0:
+      await ctx.send("Please attach an image / provide a link or URL")
+      return
+
+    if url is None:
+      url = ctx.message.attachments[0].url
+    
+    async with ctx.typing():
+      response = requests.get(f"https://api.trace.moe/search?url={url}", timeout=7)
+      print(f"Trace.moe: {response}") # debug
+      json_data = json.loads(response.text)
+
+      reason = ""
+      if json_data['error']:
+        reason = json_data['error']
+      else:  
+        file_name = json_data['result'][0]['filename']
+        timestamp = ""
+        if json_data['result'][0]['episode'] is not None:
+          timestamp = f"Episode {json_data['result'][0]['episode']} | "
+        timestamp += str(timedelta(seconds=int(json_data['result'][0]['from'])))
+        similarity = json_data['result'][0]['similarity']
+        video = json_data['result'][0]['video']
+
+        anilist_id = json_data['result'][0]['anilist']
+
+        query = '''
+        query ($id: Int) { # Define which variables will be used in the query (id)
+          Media (id: $id, type: ANIME) { # Insert our variables into the query arguments (id) (type: ANIME is hard-coded in the query)
+            id
+            title {
+              romaji
+              english
+              native
+            }
+          }
+        }
+        '''
+
+        variables = {
+            'id': anilist_id
+        }
+
+        response = requests.post("https://graphql.anilist.co/", json={'query': query, 'variables': variables})
+        print(f"  AniList GraphQL API: {response}") # debug
+        json_data = json.loads(response.text)
+
+        native = json_data['data']['Media']['title']['native']
+        romaji = json_data['data']['Media']['title']['romaji']
+        english = json_data['data']['Media']['title']['english']
+
+    if reason:
+      # So that if the user accidentally sends a link that embeds, even if the error code were to refer (send) back the URL, it will not embed.
+      # Conflicts with other error types tho
+      #def Find(string):
+      #  regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+      #  url = re.findall(regex, string)
+      #  return [x[0] for x in url]
+
+      #extracted_url = str(Find(reason)).strip('[\']')
+      #reason = reason.replace(extracted_url, f"<{extracted_url}>")
+
+      await ctx.send(reason)
+    else:
+      await ctx.send(f"<@{ctx.author.id}>\n\n**{native}\n{romaji}\n{english}**\n`{file_name}`\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity")
+      await ctx.send(video)
 
 class Admin(commands.Cog):
 
