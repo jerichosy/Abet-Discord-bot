@@ -11,6 +11,7 @@ from discord.ext.commands import has_permissions
 from dotenv import load_dotenv
 import os
 import asyncio
+import io
 import aiohttp
 import requests
 import json
@@ -19,15 +20,15 @@ from random import choices
 from datetime import datetime, timedelta
 import time
 import re
-import logging
+#import logging
 
-logger = logging.getLogger('discord')
-logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-logger.addHandler(handler)
+#logger = logging.getLogger('discord')
+#logger.setLevel(logging.DEBUG)
+#handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+#handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+#logger.addHandler(handler)
 
-bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='&help'), help_command=commands.MinimalHelpCommand())  # , description=description
+bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='&whatanime'), help_command=commands.MinimalHelpCommand())  # , description=description
 
 sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
 
@@ -197,6 +198,11 @@ class Info(commands.Cog):
   async def about(self, ctx):
     """link to documentation & source code on GitHub"""
     await ctx.send("Source code & documentation: https://github.com/jerichosy/Abet-Discord-bot")
+
+  @commands.command(aliases=['code'])
+  async def showcode(self, ctx):
+    """Have the bot upload it's own sourcecode here in Discord"""
+    await ctx.send(file=discord.File('main.py'))
 
   @commands.command()
   async def ping(self, ctx):
@@ -553,7 +559,7 @@ class Tools(commands.Cog):
           timestamp = f"Episode {json_data['result'][0]['episode']} | "
         timestamp += str(timedelta(seconds=int(json_data['result'][0]['from'])))
         similarity = json_data['result'][0]['similarity']
-        video = json_data['result'][0]['video']
+        video_url = json_data['result'][0]['video']
 
         anilist_id = json_data['result'][0]['anilist']
 
@@ -566,6 +572,7 @@ class Tools(commands.Cog):
               english
               native
             }
+            isAdult
           }
         }
         '''
@@ -578,9 +585,14 @@ class Tools(commands.Cog):
         print(f"  AniList GraphQL API: {response}") # debug
         json_data = json.loads(response.text)
 
-        native = json_data['data']['Media']['title']['native']
-        romaji = json_data['data']['Media']['title']['romaji']
-        english = json_data['data']['Media']['title']['english']
+        native = "" if json_data['data']['Media']['title']['native'] is None else f"**{json_data['data']['Media']['title']['native']}**\n"
+        romaji = "" if json_data['data']['Media']['title']['romaji'] is None else f"**{json_data['data']['Media']['title']['romaji']}**\n"
+        english = "" if json_data['data']['Media']['title']['english'] is None else f"**{json_data['data']['Media']['title']['english']}**\n"
+        #native = ""
+        #romaji = ""
+        #english = ""
+        #title = json_data['data']['Media']['title']['native']
+        #title += 
 
     if reason:
       # So that if the user accidentally sends a link that embeds, even if the error code were to refer (send) back the URL, it will not embed.
@@ -595,8 +607,22 @@ class Tools(commands.Cog):
 
       await ctx.send(reason)
     else:
-      await ctx.send(f"<@{ctx.author.id}>\n\n**{native}\n{romaji}\n{english}**\n`{file_name}`\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity")
-      await ctx.send(video)
+      await ctx.send(f"<@{ctx.author.id}>\n\n{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity")
+      #await ctx.send(video_url)
+
+      if json_data['data']['Media']['isAdult']:
+        preview_file_name = "SPOILER_preview.mp4"
+        warning = "[NSFW]"
+      else:
+        preview_file_name = "preview.mp4"
+        warning = ""
+
+      async with aiohttp.ClientSession() as session:
+        async with session.get(video_url) as resp:
+          if resp.status != 200:
+            return await ctx.send('Could not download preview...')
+          data = io.BytesIO(await resp.read())
+          await ctx.send(warning, file=discord.File(data, preview_file_name))
 
 class Admin(commands.Cog):
 
