@@ -138,10 +138,13 @@ def findWholeWord(w):
     return re.compile(r'\b({0})\b'.format(w), flags=re.IGNORECASE).search
 
 # Do we need to catch exceptions for requests/aiohttp and send an error msg?
-# Figure out aiohttp: https://discordpy.readthedocs.io/en/stable/faq.html#what-does-blocking-mean
-def get_quote():
-  response = requests.get("https://zenquotes.io/api/random", timeout=7)
-  json_data = json.loads(response.text)
+# Note about aiohttp: https://discordpy.readthedocs.io/en/stable/faq.html#what-does-blocking-mean
+async def get_quote():
+  #response = requests.get("https://zenquotes.io/api/random", timeout=7)
+  #json_data = json.loads(response.text)
+  async with aiohttp.ClientSession() as session:
+    async with session.get("https://zenquotes.io/api/random") as resp:
+      json_data = await resp.json()
   quote = json_data[0]['q'] + " -" + json_data[0]['a']
   return quote
 
@@ -224,11 +227,11 @@ class Fun(commands.Cog):
     """Dish Carl"""
     await ctx.send("https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png")
 
-  @commands.command(aliases=['inspiration', 'inspo'])
+  @commands.command(aliases=['inspiration', 'inspo', 'quote'])
   async def inspire(self, ctx):
     """Sends a random inspirational quote"""
     async with ctx.typing():
-      quote = get_quote()
+      quote = await get_quote()
       await asyncio.sleep(1)
     await ctx.send(quote)
 
@@ -237,9 +240,9 @@ class Fun(commands.Cog):
     """Sends a random cat image"""
     async with aiohttp.ClientSession() as session:
       async with session.get('http://aws.random.cat/meow') as r:
-          if r.status == 200:
-              js = await r.json()
-              await ctx.send(js['file'])
+        if r.status == 200:
+          js = await r.json()
+          await ctx.send(js['file'])
 
   # Lifted from https://github.com/Rapptz/discord.py/blob/master/examples/guessing_game.py
   @commands.command(aliases=['game'])
@@ -336,7 +339,7 @@ class Waifu(commands.Cog):
 
 @bot.command()
 async def embed(ctx):
-  embed = discord.Embed(title="Test embed", url="https://github.com/jerichosy", description="This is a test embed", color=0x00FF00)
+  embed = discord.Embed(title="Test embed", url="http://jerichosy.github.io/interactive-map", description="This is a test embed", color=0x00FF00)
   embed.set_image(url="https://cdn.discordapp.com/avatars/298454523624554501/a_7ff2f55104909f01920a9c086ddda8c5.jpg?size=4096")
   await ctx.send(embed=embed)
 
@@ -623,6 +626,18 @@ class Tools(commands.Cog):
             return await ctx.send('Could not download preview...')
           data = io.BytesIO(await resp.read())
           await ctx.send(warning, file=discord.File(data, preview_file_name))
+
+  @commands.command()
+  async def weather(self, ctx, location=None):
+    if location is None:
+      location = ""
+    async with ctx.typing():
+      async with aiohttp.ClientSession() as session:
+        async with session.get(f"https://wttr.in/{location}?0") as resp:
+          await ctx.send(f"```ansi\n{await resp.text()}```")
+      #response = requests.get(f"https://wttr.in/{location}?0")
+    #print(response.text)
+    #await ctx.send(f"```ansi\n{response.text}```")
 
 class Admin(commands.Cog):
 
