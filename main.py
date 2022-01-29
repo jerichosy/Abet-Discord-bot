@@ -139,14 +139,13 @@ def findWholeWord(w):
 
 # Do we need to catch exceptions for requests/aiohttp and send an error msg?
 # Note about aiohttp: https://discordpy.readthedocs.io/en/stable/faq.html#what-does-blocking-mean
-async def get_quote():
+async def get_json_quote(url):
   #response = requests.get("https://zenquotes.io/api/random", timeout=7)
   #json_data = json.loads(response.text)
   async with aiohttp.ClientSession() as session:
-    async with session.get("https://zenquotes.io/api/random") as resp:
+    async with session.get(url) as resp:
       json_data = await resp.json()
-  quote = json_data[0]['q'] + " -" + json_data[0]['a']
-  return quote
+  return json_data
 
 # This has issues on IPv6 networks it seems like
 def get_waifu(type, category):
@@ -231,8 +230,17 @@ class Fun(commands.Cog):
   async def inspire(self, ctx):
     """Sends a random inspirational quote"""
     async with ctx.typing():
-      quote = await get_quote()
+      json_data = await get_json_quote("https://zenquotes.io/api/random")
+      quote = json_data[0]['q'] + " -" + json_data[0]['a']
       await asyncio.sleep(1)
+    await ctx.send(quote)
+
+  @commands.command(aliases=['west', 'kanyewest', 'ye'])
+  async def kanye(self, ctx):
+    """random Kanye West quotes (Kanye as a Service)"""
+    async with ctx.typing():
+      json_data = await get_json_quote("https://api.kanye.rest/")
+      quote = json_data['quote'] + " - Kanye West"
     await ctx.send(quote)
 
   @commands.command(aliases=['meow'])
@@ -445,6 +453,72 @@ class NSFW(commands.Cog):
   async def blowjob(self, ctx):
     await ctx.send(get_waifu("nsfw", "blowjob"))
 
+  @commands.command()
+  @commands.is_nsfw()
+  async def ass(self, ctx):
+    text, embed = get_waifu_im_embed("nsfw", "ass")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def ero(self, ctx):
+    text, embed = get_waifu_im_embed("nsfw", "ero")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def hentai2(self, ctx):
+    text, embed = get_waifu_im_embed("nsfw", "hentai")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def maidnsfw(self, ctx):
+    text, embed = get_waifu_im_embed("nsfw", "maid")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def milf(self, ctx):
+    text, embed = get_waifu_im_embed("nsfw", "milf")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def oppai(self, ctx):
+    text, embed = get_waifu_im_embed("nsfw", "oppai")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def oral(self, ctx):
+    text, embed = get_waifu_im_embed("nsfw", "oral")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def paizuri(self, ctx):
+    text, embed = get_waifu_im_embed("nsfw", "paizuri")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def selfies(self, ctx):
+    text, embed = get_waifu_im_embed("nsfw", "selfies")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def uniform(self, ctx):
+    text, embed = get_waifu_im_embed("nsfw", "uniform")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def ecchi(self, ctx):
+    text, embed = get_waifu_im_embed("nsfw", "ecchi")
+    await ctx.send(text, embed=embed)
+
 # --- NSFW End ---
 
 class Tools(commands.Cog):
@@ -536,7 +610,7 @@ class Tools(commands.Cog):
       + display_future()
     )
 
-  @commands.command(aliases=['wait'])
+  @commands.command(aliases=['wait', 'anime'])
   async def whatanime(self, ctx, url=None):
     """What Anime Is This"""
 
@@ -633,8 +707,12 @@ class Tools(commands.Cog):
       location = ""
     async with ctx.typing():
       async with aiohttp.ClientSession() as session:
-        async with session.get(f"https://wttr.in/{location}?0") as resp:
-          await ctx.send(f"```ansi\n{await resp.text()}```")
+        async with session.get(f"https://wttr.in/{location}?0T") as resp:
+          print(f"wttr.in response: {resp.status}")
+          if resp.status != 200 or await resp.text() == "" or await resp.text() == "Follow @igor_chubin for wttr.in updates":
+            return await ctx.send("The weather service is having problems. Please try again later.")
+          await ctx.send(f"```{await resp.text()}```")
+          #print (await resp.text())
       #response = requests.get(f"https://wttr.in/{location}?0")
     #print(response.text)
     #await ctx.send(f"```ansi\n{response.text}```")
