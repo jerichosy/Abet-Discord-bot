@@ -68,7 +68,11 @@ yay_response = [
   "WTF? Really?",
   "What the heck? Let's goooooooooo!",
   "I knew you could do it!",
-  "<:letsgo:914430483176255488>"
+  "<:letsgo:914430483176255488>",
+  "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>",
+  "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>",
+  "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>",
+  "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>"
 ]
 
 wish_response = [
@@ -121,7 +125,8 @@ abet_response = [
   "I'll bet you a hundred dollars that is not going to happen",
   "Ask Jericho",
   "Ask Carl",
-  "Bakit ako tinatanong niyo? May Carl kayo diba?"
+  "Bakit ako tinatanong niyo? May Carl kayo diba?",
+  "..."
 ]
 
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
