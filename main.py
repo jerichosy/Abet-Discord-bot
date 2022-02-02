@@ -722,6 +722,18 @@ class Tools(commands.Cog):
     #print(response.text)
     #await ctx.send(f"```ansi\n{response.text}```")
 
+  @commands.command()
+  async def metar(self, ctx, airport_code):
+    token = "mhB5QDfs2D1OqGtA3htNfAFwjyTfs86cAa-JFU09Ask"
+    async with ctx.typing():
+      async with aiohttp.ClientSession(headers={"Authorization": "BEARER " + token}) as session:
+        async with session.get(f"https://avwx.rest/api/metar/{airport_code}") as response:
+          print(f"AVWX response: {response.status}")
+          json_data = await response.json()
+          if response.status != 200:
+            return await ctx.send(json_data['error'])
+          await ctx.send(json_data['raw'])
+
 class Admin(commands.Cog):
 
   def __init__(self, bot):
@@ -732,6 +744,23 @@ class Admin(commands.Cog):
   @has_permissions(manage_messages=True)
   async def purge(self, ctx, amount: int):
     await ctx.channel.purge(limit=amount+1)
+
+  @commands.command(aliases=['close', 'shutup'])
+  @has_permissions(administrator=True)
+  async def shutdown(self, ctx):
+    await ctx.send("🛑 Shutting down!")
+    await bot.close()
+    #exit()
+
+  @commands.command()
+  @has_permissions(manage_guild=True)
+  async def changestatus(self, ctx):
+    status_msg = ctx.message.content[14:]
+    if status_msg:
+      await ctx.message.add_reaction('✅')
+      await bot.change_presence(activity=discord.Game(name=status_msg))
+    else:
+      await ctx.send("What status would you like me to play?")
 
 @bot.event
 async def on_message(message):
