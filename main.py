@@ -33,7 +33,7 @@ logger.addHandler(handler)
 
 load_dotenv()
 
-bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='&whatanime'), help_command=commands.MinimalHelpCommand())  # , description=description
+bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='&saucenao'), help_command=commands.MinimalHelpCommand())  # , description=description
 
 sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
 
@@ -171,7 +171,6 @@ async def get_waifu(type, category):
 async def get_waifu_im_embed(type, category):
   type = "False" if type=="sfw" else "True"
   url_string = f"https://api.waifu.im/random/?selected_tags={category}&is_nsfw={type}"
-  #url_string = f"https://api.waifu.im/{type}/{category}"
 
   async with aiohttp.ClientSession() as session:
     #start_time = time.time()
@@ -884,15 +883,6 @@ class Admin(commands.Cog):
     channel = bot.get_channel(channel_id)
     message = await channel.fetch_message(message_id)
     await message.reply(ctx.message.content[50:])
-
-  # @commands.command()
-  # @has_permissions(manage_messages=True)
-  # async def say(self, ctx, channel_id, content):
-  #   channel = bot.get_channel(channel_id)
-
-  # @commands.command()
-  # @has_permissions(manage_messages=True)
-  # async def say(self, ctx, channel_id, message_id, content):
 
 @bot.event
 async def on_message(message):
