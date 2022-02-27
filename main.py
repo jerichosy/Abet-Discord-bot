@@ -1,9 +1,11 @@
 # Check: ~~dependencies~~, comments
-# Change: migrate from requests to non-blocking alternative (will not do rn), make it not respond to bots, Fix help cmd in "No Category"
+# Change: migrate from requests to non-blocking alternative (only whatanime remaining), make it not respond to bots, Fix help cmd in "No Category", Consider pulling AniList info straight from Trace.moe instead to improve response time
 # Additions: Add cogs and cmd desc.
 # Will not fix: Error of converting int when user accidentally types argument(s) containing characters, non-ints, etc.
 
 # Add in commit desc/comment: 
+
+# Notes: requests has issues on IPv6 networks
 
 import discord
 from discord.ext import commands
@@ -20,21 +22,24 @@ from random import choices
 from datetime import datetime, timedelta
 import time
 import re
-#import logging
 
-#logger = logging.getLogger('discord')
-#logger.setLevel(logging.DEBUG)
-#handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
-#handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-#logger.addHandler(handler)
+import logging
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
+
+load_dotenv()
 
 bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='&whatanime'), help_command=commands.MinimalHelpCommand())  # , description=description
 
 sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
 
-yay_words = ["yay", "YAY", "freee", "FREEE"]
+yay_words = ["yay", "freee"]
 
-wish_words = ["should i pull", "pulling", "p\*ll", "rolls", "constellation", "constellations", "primo", "primos", "primogem", "primogems", "C6", "C5", "C4", "C3", "C2", "C1", "C0", "character", "characters"]
+wish_words = ["should i pull", "pulling", "p\*ll", "rolls", "constellation", "constellations", "primo", "primos", "primogem", "primogems", "c6", "c5", "c4", "c3", "c2", "c1", "c0", "character", "characters"]
 
 mhy_words = ["mihoyo"]
 
@@ -72,7 +77,8 @@ yay_response = [
   "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>",
   "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>",
   "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>",
-  "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>"
+  "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>",
+  "https://cdn.discordapp.com/attachments/877238195966865498/943248232807538738/988697_558224364239923_644168573_n.png"
 ]
 
 wish_response = [
@@ -143,7 +149,6 @@ def findWholeWord(w):
     return re.compile(r'\b({0})\b'.format(w), flags=re.IGNORECASE).search
 
 # Do we need to catch exceptions for requests/aiohttp and send an error msg?
-# Note about aiohttp: https://discordpy.readthedocs.io/en/stable/faq.html#what-does-blocking-mean
 async def get_json_quote(url):
   #response = requests.get("https://zenquotes.io/api/random", timeout=7)
   #json_data = json.loads(response.text)
@@ -152,39 +157,55 @@ async def get_json_quote(url):
       json_data = await resp.json()
   return json_data
 
-# This has issues on IPv6 networks it seems like
-def get_waifu(type, category):
+async def get_waifu(type, category):
   url_string = f"https://api.waifu.pics/{type}/{category}"
-  response = requests.get(url_string, timeout=7)  # This can take a while. How can we make sure it doesn't block execution?
-  print(f"Waifu.pics: {response}") # debug
-  json_data = json.loads(response.text)
-  waifu = json_data['url']
+  async with aiohttp.ClientSession() as session:
+    async with session.get(url_string) as r:
+      print(f"Waifu.pics: {r.status}") # debug
+      if r.status == 200:
+        json_data = await r.json()
+        waifu = json_data['url']
+  
   return waifu
 
-def get_waifu_im_embed(type, category):
-  url_string = f"https://api.waifu.im/{type}/{category}"
-  response = requests.get(url_string, timeout=7)  # This can take a while. How can we make sure it doesn't block execution?
-  print(f"Waifu.im: {response}") # debug
-  json_data = json.loads(response.text)
-  source = json_data['images'][0]['source']
-  #embed = discord.Embed(title=url, color=int(f"0x{json_data['images'][0]['dominant_color'].strip('#')}"), url=url)
-  embed = discord.Embed(color=0xffc0cb)
-  embed.set_image(url=json_data['images'][0]['url'])
-  #embed.set_footer(text=f"Source: [{json_data['images'][0]['source']}]({json_data['images'][0]['source']})", icon_url="https://waifu.im/favicon.ico")
-  
-  #img = json_data['images'][0]['url']
+async def get_waifu_im_embed(type, category):
+  type = "False" if type=="sfw" else "True"
+  url_string = f"https://api.waifu.im/random/?selected_tags={category}&is_nsfw={type}"
+  #url_string = f"https://api.waifu.im/{type}/{category}"
+
+  async with aiohttp.ClientSession() as session:
+    #start_time = time.time()
+    async with session.get(url_string) as resp:
+      print(f"Waifu.im: {resp.status}")
+      json_data = await resp.json()
+      if resp.status in {200, 201}:
+        #embed = discord.Embed(color=0xffc0cb)
+        embed = discord.Embed(color=int(f"0x{json_data['images'][0]['dominant_color'].lstrip('#')}", 0))
+        embed.set_image(url=json_data['images'][0]['url'])
+
+        source = json_data['images'][0]['source']
+
+        #end_time = time.time()
+        #{round((end_time - start_time) * 1000)}ms
+        #embed.set_footer(text=f"Retrieved in {end_time - start_time} seconds", icon_url="https://waifu.im/favicon.ico")
+
+        print(json_data)
+
+      else:
+        error = json_data['message']
+        print(error)
   
   return source, embed
 
 # Note: discord.Member implements a lot of func of discord.User, but we don't need any of the extras atm
-def get_roleplay_embed(ctx, user_mentioned, type, category, action):
+async def get_roleplay_embed(ctx, user_mentioned, type, category, action):
   title = f"{ctx.author.name} {action} "
   if user_mentioned is not None:  # PEP 8
     name = str(user_mentioned)
     size = len(name)
     title += name[:size-5]
   embed = discord.Embed(title=title, color=0xee615b)
-  embed.set_image(url=get_waifu(type, category))
+  embed.set_image(url=await get_waifu(type, category))
   return embed
 
 def coin_flip():
@@ -284,70 +305,70 @@ class Waifu(commands.Cog):
 
   @commands.command()
   async def waifu(self, ctx):
-    await ctx.send(get_waifu("sfw", "waifu"))
+    await ctx.send(await get_waifu("sfw", "waifu"))
 
   @commands.command()
   async def neko(self, ctx):
-    await ctx.send(get_waifu("sfw", "neko"))
+    await ctx.send(await get_waifu("sfw", "neko"))
 
   @commands.command()
   async def shinobu(self, ctx):
-    await ctx.send(get_waifu("sfw", "shinobu"))
+    await ctx.send(await get_waifu("sfw", "shinobu"))
 
   @commands.command()
   async def megumin(self, ctx):
-    await ctx.send(get_waifu("sfw", "megumin"))
+    await ctx.send(await get_waifu("sfw", "megumin"))
 
   @commands.command()
   async def bully(self, ctx):
-    await ctx.send(get_waifu("sfw", "bully"))
+    await ctx.send(await get_waifu("sfw", "bully"))
 
   @commands.command()
   async def cry(self, ctx):
-    await ctx.send(get_waifu("sfw", "cry"))
+    await ctx.send(await get_waifu("sfw", "cry"))
 
   @commands.command()
   async def awoo(self, ctx):
-    await ctx.send(get_waifu("sfw", "awoo"))
+    await ctx.send(await get_waifu("sfw", "awoo"))
 
   @commands.command()
   async def smug(self, ctx):
-    await ctx.send(get_waifu("sfw", "smug"))
+    await ctx.send(await get_waifu("sfw", "smug"))
 
   @commands.command()
   async def blush(self, ctx):
-    await ctx.send(get_waifu("sfw", "blush"))
+    await ctx.send(await get_waifu("sfw", "blush"))
 
   @commands.command()
   async def smile(self, ctx):
-    await ctx.send(get_waifu("sfw", "smile"))
+    await ctx.send(await get_waifu("sfw", "smile"))
 
   @commands.command()
   async def nom(self, ctx):
-    await ctx.send(get_waifu("sfw", "nom"))
+    await ctx.send(await get_waifu("sfw", "nom"))
 
   @commands.command()
   async def happy(self, ctx):
-    await ctx.send(get_waifu("sfw", "happy"))
+    await ctx.send(await get_waifu("sfw", "happy"))
 
   @commands.command()
   async def dance(self, ctx):
-    await ctx.send(get_waifu("sfw", "dance"))
+    await ctx.send(await get_waifu("sfw", "dance"))
 
   @commands.command()
   async def cringe(self, ctx):
-    await ctx.send(get_waifu("sfw", "cringe"))
+    await ctx.send(await get_waifu("sfw", "cringe"))
 
   @commands.command()
   async def maid(self, ctx):
-    #text1, text2 = get_waifu_im_embed("sfw", "maid")
+    #text1, text2 = await get_waifu_im_embed("sfw", "maid")
     #await ctx.send(text1 + "\n" + text2)
-    text, embed = get_waifu_im_embed("sfw", "maid")
+    text, embed = await get_waifu_im_embed("sfw", "maid")
     await ctx.send(text, embed=embed)
 
   @commands.command()
   async def waifu2(self, ctx):
-    text, embed = get_waifu_im_embed("sfw", "waifu")
+    text, embed = await get_waifu_im_embed("sfw", "waifu")
     await ctx.send(text, embed=embed)
 
 @bot.command()
@@ -364,72 +385,72 @@ class Roleplay(commands.Cog):
   # Note: discord.Member implements a lot of func of discord.User, but we don't need any of the extras atm
   @commands.command()
   async def cuddle(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "cuddle", "cuddles"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "cuddle", "cuddles"))
 
   @commands.command()
   async def hug(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "hug", "hugs"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "hug", "hugs"))
 
   @commands.command()
   async def kiss(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "kiss", "kisses"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "kiss", "kisses"))
 
   @commands.command()
   async def lick(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "lick", "licks"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "lick", "licks"))
 
   @commands.command()
   async def pat(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "pat", "pats"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "pat", "pats"))
 
   @commands.command()
   async def bonk(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "bonk", "bonks"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "bonk", "bonks"))
 
   @commands.command()
   async def yeet(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "yeet", "yeets"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "yeet", "yeets"))
 
   @commands.command()
   async def wave(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "wave", "waves"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "wave", "waves"))
 
   @commands.command()
   async def highfive(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "highfive", "highfives"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "highfive", "highfives"))
 
   @commands.command()
   async def handhold(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "handhold", "handholds"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "handhold", "handholds"))
 
   @commands.command()
   async def bite(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "bite", "bites"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "bite", "bites"))
 
   @commands.command()
   async def glomp(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "glomp", "glomps"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "glomp", "glomps"))
 
   @commands.command()
   async def slap(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "slap", "slaps"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "slap", "slaps"))
 
   # Add kill Abet bot easter egg (go offline then back on and send some scary/taunting shit)
   @commands.command()
   async def kill(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "kill", "kills"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "kill", "kills"))
 
   @commands.command()
   async def kick(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "kick", "kicks"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "kick", "kicks"))
 
   @commands.command()
   async def wink(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "wink", "winks at"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "wink", "winks at"))
 
   @commands.command()
   async def poke(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=get_roleplay_embed(ctx, user_mentioned, "sfw", "poke", "pokes"))
+    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "poke", "pokes"))
 
 # --- NSFW Start ---
 class NSFW(commands.Cog):
@@ -441,87 +462,105 @@ class NSFW(commands.Cog):
   @commands.is_nsfw()
   async def hentai(self, ctx):
     """( ͡° ͜ʖ ͡°)"""
-    await ctx.send(get_waifu("nsfw", "waifu"))
+    await ctx.send(await get_waifu("nsfw", "waifu"))
 
   @commands.command()
   @commands.is_nsfw()
   async def nekonsfw(self, ctx):
-    await ctx.send(get_waifu("nsfw", "neko"))
+    await ctx.send(await get_waifu("nsfw", "neko"))
 
   @commands.command()
   @commands.is_nsfw()
   async def trap(self, ctx):
-    await ctx.send(get_waifu("nsfw", "trap"))
+    await ctx.send(await get_waifu("nsfw", "trap"))
 
   @commands.command()
   @commands.is_nsfw()
   async def blowjob(self, ctx):
-    await ctx.send(get_waifu("nsfw", "blowjob"))
+    await ctx.send(await get_waifu("nsfw", "blowjob"))
 
   @commands.command()
   @commands.is_nsfw()
   async def ass(self, ctx):
-    text, embed = get_waifu_im_embed("nsfw", "ass")
+    text, embed = await get_waifu_im_embed("nsfw", "ass")
     await ctx.send(text, embed=embed)
 
   @commands.command()
   @commands.is_nsfw()
   async def ero(self, ctx):
-    text, embed = get_waifu_im_embed("nsfw", "ero")
+    text, embed = await get_waifu_im_embed("nsfw", "ero")
     await ctx.send(text, embed=embed)
 
   @commands.command()
   @commands.is_nsfw()
   async def hentai2(self, ctx):
-    text, embed = get_waifu_im_embed("nsfw", "hentai")
+    text, embed = await get_waifu_im_embed("nsfw", "hentai")
     await ctx.send(text, embed=embed)
 
   @commands.command()
   @commands.is_nsfw()
   async def maidnsfw(self, ctx):
-    text, embed = get_waifu_im_embed("nsfw", "maid")
+    text, embed = await get_waifu_im_embed("nsfw", "maid")
     await ctx.send(text, embed=embed)
 
   @commands.command()
   @commands.is_nsfw()
   async def milf(self, ctx):
-    text, embed = get_waifu_im_embed("nsfw", "milf")
+    text, embed = await get_waifu_im_embed("nsfw", "milf")
     await ctx.send(text, embed=embed)
 
   @commands.command()
   @commands.is_nsfw()
   async def oppai(self, ctx):
-    text, embed = get_waifu_im_embed("nsfw", "oppai")
+    text, embed = await get_waifu_im_embed("nsfw", "oppai")
     await ctx.send(text, embed=embed)
 
   @commands.command()
   @commands.is_nsfw()
   async def oral(self, ctx):
-    text, embed = get_waifu_im_embed("nsfw", "oral")
+    text, embed = await get_waifu_im_embed("nsfw", "oral")
     await ctx.send(text, embed=embed)
 
   @commands.command()
   @commands.is_nsfw()
   async def paizuri(self, ctx):
-    text, embed = get_waifu_im_embed("nsfw", "paizuri")
+    text, embed = await get_waifu_im_embed("nsfw", "paizuri")
     await ctx.send(text, embed=embed)
 
   @commands.command()
   @commands.is_nsfw()
   async def selfies(self, ctx):
-    text, embed = get_waifu_im_embed("nsfw", "selfies")
+    text, embed = await get_waifu_im_embed("nsfw", "selfies")
     await ctx.send(text, embed=embed)
 
   @commands.command()
   @commands.is_nsfw()
   async def uniform(self, ctx):
-    text, embed = get_waifu_im_embed("nsfw", "uniform")
+    text, embed = await get_waifu_im_embed("nsfw", "uniform")
     await ctx.send(text, embed=embed)
 
   @commands.command()
   @commands.is_nsfw()
   async def ecchi(self, ctx):
-    text, embed = get_waifu_im_embed("nsfw", "ecchi")
+    text, embed = await get_waifu_im_embed("nsfw", "ecchi")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def waifunsfw(self, ctx):
+    text, embed = await get_waifu_im_embed("nsfw", "waifu")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def selfies(self, ctx):
+    text, embed = await get_waifu_im_embed("nsfw", "selfies")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  @commands.is_nsfw()
+  async def breast(self, ctx):
+    text, embed = await get_waifu_im_embed("nsfw", "breast")
     await ctx.send(text, embed=embed)
 
 # --- NSFW End ---
@@ -592,7 +631,7 @@ class Tools(commands.Cog):
         return current_month
 
     # Even if this function is only relevant to display_future(), do not nest functions unless there's a specific reason to do so
-    def loopback(current, upper_limit):
+    def wraparound(current, upper_limit):
       if current > upper_limit:
         return current - upper_limit
       else:
@@ -601,7 +640,7 @@ class Tools(commands.Cog):
     def display_future():
       built = "\n\n**Future:**\n"
       for x in range(1, 7):
-        built += months[loopback(current_month + x, 12) - 1] + " | " + characters[loopback(determine_character() + x, 6) - 1] + "\n"
+        built += months[wraparound(current_month + x, 12) - 1] + " | " + characters[wraparound(determine_character() + x, 6) - 1] + "\n"
 
       return built;
 
@@ -627,7 +666,11 @@ class Tools(commands.Cog):
       url = ctx.message.attachments[0].url
     
     async with ctx.typing():
+      # consider adding search?cutBorders&url={} to https://soruly.github.io/trace.moe-api/#/docs?id=cut-black-borders
+      start_time = time.time()
       response = requests.get(f"https://api.trace.moe/search?url={url}", timeout=7)
+      #response = requests.get(f"https://api.trace.moe/search?anilistInfo&url={url}", timeout=7)
+      #end_time = time.time()
       print(f"Trace.moe: {response}") # debug
       json_data = json.loads(response.text)
 
@@ -664,6 +707,8 @@ class Tools(commands.Cog):
         }
 
         response = requests.post("https://graphql.anilist.co/", json={'query': query, 'variables': variables})
+        end_time = time.time()
+        print(f"{round((end_time - start_time) * 1000)}ms")
         print(f"  AniList GraphQL API: {response}") # debug
         json_data = json.loads(response.text)
 
@@ -706,6 +751,71 @@ class Tools(commands.Cog):
           data = io.BytesIO(await resp.read())
           await ctx.send(warning, file=discord.File(data, preview_file_name))
 
+  @commands.command(aliases=['sauce', 'source', 'getsource', 'artsource', 'getartsource'])
+  async def saucenao(self, ctx, url=None):
+    """SauceNao"""
+
+    if url is None and len(ctx.message.attachments) == 0:
+      await ctx.send("Please attach an image / provide a link or URL")
+      return
+
+    if url is None:
+      url = ctx.message.attachments[0].url
+    
+    async with ctx.typing():
+      token = os.getenv("SAUCENAO_TOKEN")
+      #response = requests.get(f"https://saucenao.com/search.php?db=999&output_type=2&numres=1&url={url}&api_key={token}", timeout=7)
+      async with aiohttp.ClientSession() as session:
+        async with session.get(f"https://saucenao.com/search.php?db=999&output_type=2&numres=1&url={url}&api_key={token}") as r:
+          print(f"SauceNao: {r.status}")
+          json_data = await r.json()
+          #print(json_data)
+
+          # error checking
+          if r.status != 200 or json_data['header']['status'] != 0:
+            if json_data['header']['status'] < 0:
+              if json_data['header']['status'] == -2:
+                return await ctx.send("Search Rate Too High. Your IP has exceeded the basic account type's rate limit of 6 searches every 30 seconds.")
+              else:
+                return await ctx.send("Client side error (bad image, out of searches, etc)")
+            else:
+              return await ctx.send("Server side error (failed descriptor gen, failed query, etc)")
+          
+          # if successful
+          def get_json_field(prefix, parameter):
+            try:
+              field = "" if not json_data['results'][0]['data'][parameter] else f"{prefix}{json_data['results'][0]['data'][parameter]}\n"
+              #print(json_data['results'][0]['data'][parameter])
+            except KeyError:
+              field = ""
+
+            return field
+
+          #source = f"**Sauce:** {json_data['results'][0]['data']['source']}\n"
+          source = get_json_field("**Sauce:** ", 'source')
+          if source == "":
+            source = f"**Sauce:** {json_data['results'][0]['data']['ext_urls'][0]}\n"
+          # to handle stuff like 
+          # https://i.pximg.net/img-original/img/2021/07/28/07/50/29/91550773 with https://cdn.discordapp.com/attachments/870095545992101958/947297823945293834/lASQNdS.jpg or
+          # http://i2.pixiv.net/img-original/img/2016/01/16/01/19/56/54734137 with https://cdn.discordapp.com/attachments/870095545992101958/947296081354588211/54734137_p0_master1200.png
+          elif "/img-original/img/" in source:
+            source = f"**Sauce:** https://pixiv.net/en/artworks/{source[len(source) - 9 : len(source)]}"
+          part = get_json_field("**Part:** ", 'part')
+          characters = get_json_field("**Character(s):** ", 'characters')
+          #characters = "" if json_data['results'][0]['data']['characters'] is None else f"**Character(s):** {json_data['results'][0]['data']['characters']}\n"
+          similarity = f"**Similarity:** {float(json_data['results'][0]['header']['similarity'])}%"
+
+          #danbooru = "" if json_data['results'][0]['data']['danbooru_id'] is None else f"Danbooru ID: {json_data['results'][0]['data']['danbooru_id']}\n"
+          danbooru = get_json_field("Danbooru ID: ", 'danbooru_id')
+          #yandere = "" if json_data['results'][0]['data']['yandere_id'] is None else f"Yandere ID: {json_data['results'][0]['data']['yandere_id']}\n"
+          yandere = get_json_field("Yandere ID: ", 'yandere_id')
+          #gelbooru = "" if json_data['results'][0]['data']['gelbooru_id'] is None else f"Gelbooru ID: {json_data['results'][0]['data']['gelbooru_id']}\n"
+          gelbooru = get_json_field("Gelbooru ID: ", 'gelbooru_id')
+
+          separator = "" if danbooru == "" and yandere == "" and gelbooru == "" else "\n--------------------------\n"
+
+          await ctx.send(f"<@{ctx.author.id}> This feature is in BETA!\n\n{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}")
+
   @commands.command()
   async def weather(self, ctx, location=None):
     if location is None:
@@ -724,7 +834,7 @@ class Tools(commands.Cog):
 
   @commands.command()
   async def metar(self, ctx, airport_code):
-    token = "mhB5QDfs2D1OqGtA3htNfAFwjyTfs86cAa-JFU09Ask"
+    token = os.getenv("METAR_TOKEN")
     async with ctx.typing():
       async with aiohttp.ClientSession(headers={"Authorization": "BEARER " + token}) as session:
         async with session.get(f"https://avwx.rest/api/metar/{airport_code}") as response:
@@ -733,6 +843,8 @@ class Tools(commands.Cog):
           if response.status != 200:
             return await ctx.send(json_data['error'])
           await ctx.send(json_data['raw'])
+        
+  # Create command
 
 class Admin(commands.Cog):
 
@@ -762,21 +874,32 @@ class Admin(commands.Cog):
     else:
       await ctx.send("What status would you like me to play?")
 
+  @commands.command()
+  async def sendmsg(self, ctx, channel_id: int, content):
+    channel = bot.get_channel(channel_id)
+    await channel.send(ctx.message.content[28:])
+
+  @commands.command()
+  async def sendreply(self, ctx, channel_id: int, message_id: int, content):
+    channel = bot.get_channel(channel_id)
+    message = await channel.fetch_message(message_id)
+    await message.reply(ctx.message.content[50:])
+
+  # @commands.command()
+  # @has_permissions(manage_messages=True)
+  # async def say(self, ctx, channel_id, content):
+  #   channel = bot.get_channel(channel_id)
+
+  # @commands.command()
+  # @has_permissions(manage_messages=True)
+  # async def say(self, ctx, channel_id, message_id, content):
+
 @bot.event
 async def on_message(message):
   if message.author == bot.user:
     return
 
-  msg = message.content
-
-  #if message.content.startswith("&say "):
-  #  try:
-  #    channel_id_input = int(msg[5:23])
-  #  except ValueError:
-  #    await message.channel.send("ERROR!")
-  #  else:
-  #    channel = bot.get_channel(channel_id_input)
-  #    await channel.send(msg[24:])
+  msg = message.content.lower()
 
   for x in sad_words:
     if findWholeWord(x)(msg):
@@ -822,5 +945,4 @@ bot.add_cog(NSFW(bot))
 bot.add_cog(Tools(bot))
 bot.add_cog(Admin(bot))
 
-load_dotenv()
 bot.run(os.getenv('BOT_TOKEN'))
