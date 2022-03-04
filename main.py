@@ -268,6 +268,37 @@ class Fun(commands.Cog):
       quote = json_data['quote'] + " - Kanye West"
     await ctx.send(quote)
 
+  @commands.command(aliases=['tronald', 'dump', 'donaldtrump', 'tronalddump'])
+  async def trump(self, ctx):
+    """random dumbest things Donald Trump has ever said"""
+    async with ctx.typing():
+      json_data = await get_json_quote("https://api.tronalddump.io/random/quote")
+      quote = json_data['value'] + " - Donald Trump"
+
+      # If there's a link in the msg, make it not embed
+      #def Find(string):
+      #  regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+      #  url = re.findall(regex, string)
+      #  return [x[0] for x in url]
+
+      # Test the above function
+      #quote = 'Huma calls it a "MESS," the rest of us call it CORRUPT! WikiLeaks catches Crooked in the act - again. #DrainTheSwamp https://t.co/juvdLIJPWu - Donald Trump'
+
+      #extracted_url = str(Find(quote)).strip('[\']')
+      #quote = quote.replace(extracted_url, f"<{extracted_url}>")
+      #print(quote)
+
+    await ctx.send(quote)
+
+  @commands.command(aliases=['tronaldmeme', 'dumpmeme', 'donaldtrumpmeme', 'tronalddumpmeme'])
+  async def trumpmeme(self, ctx):
+    """random dumbest things Donald Trump has ever said"""
+    async with ctx.typing():
+      async with aiohttp.ClientSession() as session:
+        async with session.get('https://api.tronalddump.io/random/meme') as r:
+          data = io.BytesIO(await r.read())
+          await ctx.send(file=discord.File(data, "tronalddump.jpg"))
+
   @commands.command(aliases=['meow'])
   async def cat(self, ctx):
     """Sends a random cat image"""
@@ -778,7 +809,7 @@ class Tools(commands.Cog):
               else:
                 return await ctx.send("Client side error (bad image, out of searches, etc)")
             else:
-              return await ctx.send("Server side error (failed descriptor gen, failed query, etc)")
+              return await ctx.send("Server side error (failed descriptor gen, failed query, etc). Please try again!")
           
           # if successful
           def get_json_field(prefix, parameter):
@@ -856,7 +887,7 @@ class Admin(commands.Cog):
   async def purge(self, ctx, amount: int):
     await ctx.channel.purge(limit=amount+1)
 
-  @commands.command(aliases=['close', 'shutup'])
+  @commands.command(aliases=['close', 'shutup', 'logoff', 'stop'])
   @has_permissions(administrator=True)
   async def shutdown(self, ctx):
     await ctx.send("🛑 Shutting down!")
