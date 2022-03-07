@@ -33,7 +33,14 @@ logger.addHandler(handler)
 
 load_dotenv()
 
-bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='&saucenao'), help_command=commands.MinimalHelpCommand())  # , description=description
+class MyNewHelp(commands.MinimalHelpCommand):
+  async def send_pages(self):
+    destination = self.get_destination()
+    for page in self.paginator.pages:
+      emby = discord.Embed(description=page, color=0xee615b)
+      await destination.send(embed=emby)
+
+bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='&saucenao'), help_command=MyNewHelp(command_attrs = {"hidden": True}))  # , description=description
 
 sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
 
@@ -237,7 +244,6 @@ class Info(commands.Cog):
     start_time = time.time()
     to_edit = await ctx.send("Testing ping...")
     end_time = time.time()
-
     await to_edit.edit(content=f"Pong! {round(bot.latency * 1000)}ms | API: {round((end_time - start_time) * 1000)}ms")
 
 class Fun(commands.Cog):
@@ -400,12 +406,6 @@ class Waifu(commands.Cog):
   async def waifu2(self, ctx):
     text, embed = await get_waifu_im_embed("sfw", "waifu")
     await ctx.send(text, embed=embed)
-
-@bot.command()
-async def embed(ctx):
-  embed = discord.Embed(title="Test embed", url="http://jerichosy.github.io/interactive-map", description="This is a test embed", color=0x00FF00)
-  embed.set_image(url="https://cdn.discordapp.com/avatars/298454523624554501/a_7ff2f55104909f01920a9c086ddda8c5.jpg?size=4096")
-  await ctx.send(embed=embed)
 
 class Roleplay(commands.Cog):
 
@@ -844,7 +844,7 @@ class Tools(commands.Cog):
 
           separator = "" if danbooru == "" and yandere == "" and gelbooru == "" else "\n--------------------------\n"
 
-          await ctx.send(f"<@{ctx.author.id}> This feature is in BETA!\n\n{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}")
+          await ctx.send(f"<@{ctx.author.id}> Note: For anime, use &whatanime\n\n{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}")
 
   @commands.command()
   async def weather(self, ctx, location=None):
@@ -854,7 +854,7 @@ class Tools(commands.Cog):
       async with aiohttp.ClientSession() as session:
         async with session.get(f"https://wttr.in/{location}?0T") as resp:
           print(f"wttr.in response: {resp.status}")
-          if resp.status != 200 or await resp.text() == "" or await resp.text() == "Follow @igor_chubin for wttr.in updates":
+          if await resp.text() == "" or await resp.text() == "Follow @igor_chubin for wttr.in updates":
             return await ctx.send("The weather service is having problems. Please try again later.")
           await ctx.send(f"```{await resp.text()}```")
           #print (await resp.text())
@@ -892,9 +892,8 @@ class Admin(commands.Cog):
   async def shutdown(self, ctx):
     await ctx.send("🛑 Shutting down!")
     await bot.close()
-    #exit()
 
-  @commands.command()
+  @commands.command(aliases=['setstatus'])
   @has_permissions(manage_guild=True)
   async def changestatus(self, ctx):
     status_msg = ctx.message.content[14:]
