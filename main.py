@@ -40,7 +40,7 @@ class MyNewHelp(commands.MinimalHelpCommand):
       emby = discord.Embed(description=page, color=0xee615b)
       await destination.send(embed=emby)
 
-bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='&saucenao'), help_command=MyNewHelp(command_attrs = {"hidden": True}))  # , description=description
+bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='&saucenao'), owner_id = 298454523624554501, help_command=MyNewHelp(command_attrs = {"hidden": True}))  # , description=description
 
 sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
 
@@ -635,7 +635,7 @@ class Tools(commands.Cog):
       amount = 10000
       response += "Max of 10k only allowed!\n"
 
-    for x in range(amount):
+    for _ in range(amount):
       #count.append(coin_flip())
       if coin_flip() == 'Heads':
         heads_count += 1
@@ -646,7 +646,6 @@ class Tools(commands.Cog):
     #await ctx.send(print(count))
     await ctx.send(response)
 
-  # Refrain from using the ff. built-in terms such as but not limited to: str, dict, list, range
   # Note to self: Don't send msg in a coding block to retain markdown support
   # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. I'll work on it when it seems needed.
   @commands.command(aliases=["paimonsbargains", "paimon'sbargains", "viewshop"])
@@ -654,23 +653,10 @@ class Tools(commands.Cog):
     """Views current Paimon's Bargains items for the month"""
     current_month = datetime.now().month
 
-    def determine_character():
-      if current_month > 6:
-        return current_month - 6
-      else:
-        return current_month
-
-    # Even if this function is only relevant to display_future(), do not nest functions unless there's a specific reason to do so
-    def wraparound(current, upper_limit):
-      if current > upper_limit:
-        return current - upper_limit
-      else:
-        return current
-
     def display_future():
       built = "\n\n**Future:**\n"
       for x in range(1, 7):
-        built += months[wraparound(current_month + x, 12) - 1] + " | " + characters[wraparound(determine_character() + x, 6) - 1] + "\n"
+        built += months[((current_month + x) % 12) - 1] + " | " + characters[((current_month + x) % 6) - 1] + "\n"
 
       return built;
 
@@ -679,7 +665,7 @@ class Tools(commands.Cog):
 
     await ctx.send(
       "**Current:**\n"
-      + months[current_month - 1] + " | " + characters[determine_character() - 1]
+      + months[current_month - 1] + " | " + characters[(current_month % 6) - 1]
       + determine_weapon_series()
       + display_future()
     )
@@ -964,5 +950,7 @@ bot.add_cog(Roleplay(bot))
 bot.add_cog(NSFW(bot))
 bot.add_cog(Tools(bot))
 bot.add_cog(Admin(bot))
+
+bot.load_extension('jishaku')
 
 bot.run(os.getenv('BOT_TOKEN'))
