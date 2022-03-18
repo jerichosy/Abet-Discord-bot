@@ -22,6 +22,8 @@ from random import choices
 from datetime import datetime, timedelta
 import time
 import re
+import pkg_resources
+import psutil
 
 import logging
 
@@ -33,6 +35,8 @@ logger.addHandler(handler)
 
 load_dotenv()
 
+intents = discord.Intents.all()
+
 class MyNewHelp(commands.MinimalHelpCommand):
   async def send_pages(self):
     destination = self.get_destination()
@@ -40,7 +44,8 @@ class MyNewHelp(commands.MinimalHelpCommand):
       emby = discord.Embed(description=page, color=0xee615b)
       await destination.send(embed=emby)
 
-bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name='&saucenao'), owner_id = 298454523624554501, help_command=MyNewHelp(command_attrs = {"hidden": True}))  # , description=description
+# Other fields/attrs of bot: https://discordpy.readthedocs.io/en/stable/ext/commands/api.html?highlight=bot#bot
+bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name="I'm back!!!"), intents=intents, owner_id = 298454523624554501, help_command=MyNewHelp(command_attrs = {"hidden": True}))  # , description=
 
 sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
 
@@ -195,7 +200,7 @@ async def get_waifu_im_embed(type, category):
         #{round((end_time - start_time) * 1000)}ms
         #embed.set_footer(text=f"Retrieved in {end_time - start_time} seconds", icon_url="https://waifu.im/favicon.ico")
 
-        print(json_data)
+        #print(json_data)
 
       else:
         error = json_data['message']
@@ -227,11 +232,38 @@ class Info(commands.Cog):
   
   def __init__(self, bot):
     self.bot = bot
+    self.process = psutil.Process()
 
   @commands.command(aliases=['info', 'sourcecode', 'github'])
   async def about(self, ctx):
     """link to documentation & source code on GitHub"""
-    await ctx.send("Source code & documentation: https://github.com/jerichosy/Abet-Discord-bot")
+    # await ctx.send("Source code & documentation: https://github.com/jerichosy/Abet-Discord-bot")
+    # wow = await self.bot
+    # wow2 = wow + awaitapplication_info().owner.displayname
+    # print(wow2)
+
+    embed = discord.Embed(title="FUCK CARL", colour=discord.Colour(0xee615b), url="https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png", description="Source code & documentation: [GitHub repository](https://github.com/jerichosy/Abet-Discord-bot)")
+
+    embed.set_image(url="https://opengraph.githubassets.com/89c81820967bbd8115fc6a68d55ef62a3964c8caf19e47a321f12d969ac3b6e3/jerichosy/Abet-Discord-bot")
+    embed.set_thumbnail(url=bot.user.avatar_url)
+
+    main_guild = self.bot.get_guild(887980840347398144)  #FIXME: 867811644322611200
+    #owner = await self.bot.get_or_fetch_member(main_guild, self.bot.owner_id)
+    print(self.bot.owner_id)
+    owner = main_guild.get_member(self.bot.owner_id)
+    #embed.set_author(name=str(owner), icon_url=owner.display_avatar.url)  # TODO: 2.0 thing
+    embed.set_author(name=str(owner), icon_url=owner.avatar_url)
+    version = pkg_resources.get_distribution('discord.py').version
+    embed.set_footer(text=f"</> with 💖 by KIA and Tre' Industries using Python (discord.py v{version})", icon_url="https://media.discordapp.net/stickers/946824812658065459.png")
+
+    memory_usage = self.process.memory_full_info().uss / 1024**2
+    cpu_usage = self.process.cpu_percent() / psutil.cpu_count()
+    embed.add_field(name='Process', value=f'{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU')
+
+    #embed.add_field(name='Uptime', value=self.get_bot_uptime(brief=True))  # TODO: 2.0 thing
+
+    await ctx.send(embed=embed)
+
 
   @commands.command(aliases=['code'])
   async def showcode(self, ctx):
@@ -609,15 +641,11 @@ class Tools(commands.Cog):
       await ctx.send(random.choice(abet_response))
 
   @commands.command()
-  async def choose(self, ctx):
+  async def choose(self, ctx, *, choices):
     """Returns a random choice from the given words/phrases"""
-    choose_phrases = ctx.message.content[8:].split(", ")  # Split returns a list (square brackets)
+    #choose_phrases = ctx.message.content[8:].split(", ")  # improper way
+    choose_phrases = choices.split(", ")  # Split returns a list (square brackets)
     print("\n", choose_phrases)
-    #print(len(choose_phrases))
-    if len(choose_phrases) > 1:
-      await ctx.send(random.choice(choose_phrases))
-    else:
-      pass
 
   @commands.command(aliases=['coin', 'flipacoin', 'heads', 'tails'])
   async def coinflip(self, ctx):
@@ -647,7 +675,7 @@ class Tools(commands.Cog):
     await ctx.send(response)
 
   # Note to self: Don't send msg in a coding block to retain markdown support
-  # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. I'll work on it when it seems needed.
+  # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. Also, the bot is in NYC. I'll work on it when it seems needed.
   @commands.command(aliases=["paimonsbargains", "paimon'sbargains", "viewshop"])
   async def paimonbargains(self, ctx):
     """Views current Paimon's Bargains items for the month"""
@@ -682,11 +710,8 @@ class Tools(commands.Cog):
       url = ctx.message.attachments[0].url
     
     async with ctx.typing():
-      # consider adding search?cutBorders&url={} to https://soruly.github.io/trace.moe-api/#/docs?id=cut-black-borders
-      start_time = time.time()
-      response = requests.get(f"https://api.trace.moe/search?url={url}", timeout=7)
+      response = requests.get(f"https://api.trace.moe/search?cutBorders&url={url}", timeout=7)
       #response = requests.get(f"https://api.trace.moe/search?anilistInfo&url={url}", timeout=7)
-      #end_time = time.time()
       print(f"Trace.moe: {response}") # debug
       json_data = json.loads(response.text)
 
@@ -704,6 +729,7 @@ class Tools(commands.Cog):
 
         anilist_id = json_data['result'][0]['anilist']
 
+        # Even though we can let Trace.moe API handle contacting AniList GraphQL API on our behalf, we will keep the ff. implementation for future reference:
         query = '''
         query ($id: Int) { # Define which variables will be used in the query (id)
           Media (id: $id, type: ANIME) { # Insert our variables into the query arguments (id) (type: ANIME is hard-coded in the query)
@@ -723,8 +749,6 @@ class Tools(commands.Cog):
         }
 
         response = requests.post("https://graphql.anilist.co/", json={'query': query, 'variables': variables})
-        end_time = time.time()
-        print(f"{round((end_time - start_time) * 1000)}ms")
         print(f"  AniList GraphQL API: {response}") # debug
         json_data = json.loads(response.text)
 
@@ -874,15 +898,16 @@ class Admin(commands.Cog):
     await ctx.channel.purge(limit=amount+1)
 
   @commands.command(aliases=['close', 'shutup', 'logoff', 'stop'])
-  @has_permissions(administrator=True)
+  @has_permissions(administrator=True)  # Retain cause we usually just give alt the Administrator perm or none at all
   async def shutdown(self, ctx):
     await ctx.send("🛑 Shutting down!")
     await bot.close()
 
+  # TODO: Deprecate in favor of slash cmd implementation to expand possible activities aside from playing (cause we want autocomplete)
   @commands.command(aliases=['setstatus'])
   @has_permissions(manage_guild=True)
-  async def changestatus(self, ctx):
-    status_msg = ctx.message.content[14:]
+  async def changestatus(self, ctx, *, new_status):
+    status_msg = new_status
     if status_msg:
       await ctx.message.add_reaction('✅')
       await bot.change_presence(activity=discord.Game(name=status_msg))
@@ -890,15 +915,18 @@ class Admin(commands.Cog):
       await ctx.send("What status would you like me to play?")
 
   @commands.command()
-  async def sendmsg(self, ctx, channel_id: int, content):
+  async def sendmsg(self, ctx, channel_id: int, *, content):
+    #print(content)
     channel = bot.get_channel(channel_id)
-    await channel.send(ctx.message.content[28:])
+    await channel.send(content)
+    await ctx.send(f"**Sent:** {content}\n**Where:** <#{channel_id}>")
 
   @commands.command()
-  async def sendreply(self, ctx, channel_id: int, message_id: int, content):
+  async def sendreply(self, ctx, channel_id: int, message_id: int, *, content):
     channel = bot.get_channel(channel_id)
     message = await channel.fetch_message(message_id)
-    await message.reply(ctx.message.content[50:])
+    await message.reply(content)
+    await ctx.send(f"**Replied:** {content}\n**Which message:** {message.jump_url}")
 
 @bot.event
 async def on_message(message):
@@ -933,12 +961,8 @@ async def on_command_error(ctx, error):
   if isinstance(error, commands.errors.NSFWChannelRequired):
     # Raise exception if NSFW channel setting disabled
     await ctx.send("This is an NSFW command! Please use in the appropriate channel(s).")
-  #elif isinstance(error, commands.errors.MissingRequiredArgument) and (ctx.message.content.startswith("&abet") or ctx.message.content.startswith("&Abet")):
-  #  await ctx.send("What?")
   #elif isinstance(error, commands.errors.CommandNotFound):
   #  pass
-  elif isinstance(error, discord.HTTPException):
-    await ctx.send("You are ratelimited")
   else:
     await ctx.send(error)
   # add more?
