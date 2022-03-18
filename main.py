@@ -439,6 +439,22 @@ class Waifu(commands.Cog):
     text, embed = await get_waifu_im_embed("sfw", "waifu")
     await ctx.send(text, embed=embed)
 
+  @commands.command(aliases=['marin'])
+  async def marin_kitagawa(self, ctx):
+    text, embed = await get_waifu_im_embed("sfw", "marin-kitagawa")
+    await ctx.send(text, embed=embed)
+
+  @commands.command()
+  async def mori_calliope(self, ctx):
+    text, embed = await get_waifu_im_embed("sfw", "mori-calliope")
+    await ctx.send(text, embed=embed)
+
+  @commands.command(aliases=['raiden', 'baal', 'ei'])
+  async def raiden_shogun(self, ctx):
+    text, embed = await get_waifu_im_embed("sfw", "raiden-shogun")
+    await ctx.send(text, embed=embed)
+
+
 class Roleplay(commands.Cog):
 
   def __init__(self, bot):
