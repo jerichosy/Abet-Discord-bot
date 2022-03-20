@@ -24,6 +24,8 @@ import time
 import re
 import pkg_resources
 import psutil
+import genshinstats as gs
+from collections import Counter
 
 import logging
 
@@ -900,7 +902,35 @@ class Tools(commands.Cog):
             return await ctx.send(json_data['error'])
           await ctx.send(json_data['raw'])
         
-  # Create command
+  @commands.command(aliases=['genshin_character_stats', 'genshincharacters', 'genshincharacter', 'genshin_characters', 'genshin_character', 'character_stats', 'character_stat', 'characterstats', 'characterstat', 'genshin', 'genshininfo'])
+  async def genshincharacterstats(self, ctx, uid):
+    gs.set_cookie(ltuid = os.getenv("LTUID"), ltoken = os.getenv("LTOKEN"))
+    async with ctx.typing():
+      data = gs.get_characters(uid)
+      data.sort(key=lambda x: (x["rarity"], x["level"]), reverse=True)
+
+      def tally_artifacts(artifact):
+        if not artifact:
+          return ""
+
+        artifact_list = []
+        for x in artifact:
+          artifact_list.append(x['set']['name'])
+
+        artifact_count = Counter(artifact_list)
+        built2 = ""
+        for artifact_set in artifact_count:
+          built2 += f", {artifact_count[artifact_set]}pc. {artifact_set}" if artifact_count[artifact_set] >= 2 else ""  # This is okay if it reports a "3pc." or "5pc.". It's kinda funny and provokes envy as well!
+
+        return f"\n    {built2[2:]}" if built2[2:] is not None else "(No 2pc. of any set)"  # TODO: Latter is not tested
+
+      #print(json.dumps(data))
+
+      built = f"{uid}\n"
+      for char in data:
+        built += f"{char['name']} ({char['rarity']}* {char['element']}): lvl {char['level']} C{char['constellation']} | {char['weapon']['name']} ({char['weapon']['rarity']}* {char['weapon']['type']}): lvl {char['weapon']['level']} R{char['weapon']['refinement']} {tally_artifacts(char['artifacts'])}\n"
+      await ctx.reply(f"```{built}```")
+
 
 class Admin(commands.Cog):
 
