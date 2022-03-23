@@ -664,6 +664,7 @@ class Tools(commands.Cog):
     #choose_phrases = ctx.message.content[8:].split(", ")  # improper way
     choose_phrases = choices.split(", ")  # Split returns a list (square brackets)
     print("\n", choose_phrases)
+    await ctx.send(random.choice(choose_phrases))
 
   @commands.command(aliases=['coin', 'flipacoin', 'heads', 'tails'])
   async def coinflip(self, ctx):
