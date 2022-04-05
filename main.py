@@ -5,11 +5,13 @@
 
 # Add in commit desc/comment: 
 
-# Notes: requests has issues on IPv6 networks
+# Notes: requests has issues on IPv6 networks, don't set your own tree with `tree = app_commands.CommandTree(bot)`
 
+from xmlrpc.client import Boolean
 import discord
 from discord.ext import commands
-from discord.ext.commands import has_permissions
+from discord.ext.commands import has_permissions, Context
+from discord import app_commands
 from dotenv import load_dotenv
 import os
 import asyncio
@@ -26,6 +28,7 @@ import pkg_resources
 import psutil
 import genshinstats as gs
 from collections import Counter
+from typing import List, Literal, Optional
 
 import logging
 
@@ -38,6 +41,7 @@ logger.addHandler(handler)
 load_dotenv()
 
 intents = discord.Intents.all()
+intents.message_content = True
 
 class MyNewHelp(commands.MinimalHelpCommand):
   async def send_pages(self):
@@ -229,9 +233,9 @@ def coin_flip():
 @bot.event
 async def on_ready():
   print("We have logged in as {0.user}".format(bot))
+  #await bot.tree.sync(guild=discord.Object(id=867811644322611200))
 
 class Info(commands.Cog):
-  
   def __init__(self, bot):
     self.bot = bot
     self.process = psutil.Process()
@@ -240,21 +244,15 @@ class Info(commands.Cog):
   async def about(self, ctx):
     """link to documentation & source code on GitHub"""
     # await ctx.send("Source code & documentation: https://github.com/jerichosy/Abet-Discord-bot")
-    # wow = await self.bot
-    # wow2 = wow + awaitapplication_info().owner.displayname
-    # print(wow2)
 
     embed = discord.Embed(title="FUCK CARL", colour=discord.Colour(0xee615b), url="https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png", description="Source code & documentation: [GitHub repository](https://github.com/jerichosy/Abet-Discord-bot)")
 
     embed.set_image(url="https://opengraph.githubassets.com/89c81820967bbd8115fc6a68d55ef62a3964c8caf19e47a321f12d969ac3b6e3/jerichosy/Abet-Discord-bot")
-    embed.set_thumbnail(url=bot.user.avatar_url)
+    embed.set_thumbnail(url=bot.user.display_avatar.url)
 
     main_guild = self.bot.get_guild(887980840347398144)  #FIXME: 867811644322611200
-    #owner = await self.bot.get_or_fetch_member(main_guild, self.bot.owner_id)
-    print(self.bot.owner_id)
     owner = main_guild.get_member(self.bot.owner_id)
-    #embed.set_author(name=str(owner), icon_url=owner.display_avatar.url)  # TODO: 2.0 thing
-    embed.set_author(name=str(owner), icon_url=owner.avatar_url)
+    embed.set_author(name=str(owner), icon_url=owner.display_avatar.url)
     version = pkg_resources.get_distribution('discord.py').version
     embed.set_footer(text=f"</> with 💖 by KIA and Tre' Industries using Python (discord.py v{version})", icon_url="https://media.discordapp.net/stickers/946824812658065459.png")
 
@@ -281,7 +279,6 @@ class Info(commands.Cog):
     await to_edit.edit(content=f"Pong! {round(bot.latency * 1000)}ms | API: {round((end_time - start_time) * 1000)}ms")
 
 class Fun(commands.Cog):
-  
   def __init__(self, bot):
     self.bot = bot
 
@@ -308,12 +305,20 @@ class Fun(commands.Cog):
       quote = json_data['quote'] + " - Kanye West"
     await ctx.send(quote)
 
-  @commands.command(aliases=['tronald', 'dump', 'donaldtrump', 'tronalddump'])
-  async def trump(self, ctx):
+  @app_commands.command()
+  @app_commands.guilds(discord.Object(id=867811644322611200))
+  async def trump(self, interaction: discord.Interaction, in_image_form: Literal['No', 'Yes'] ='No'):
     """random dumbest things Donald Trump has ever said"""
-    async with ctx.typing():
+    
+    if in_image_form == 'No':
       json_data = await get_json_quote("https://api.tronalddump.io/random/quote")
       quote = json_data['value'] + " - Donald Trump"
+      return await interaction.response.send_message(quote)
+    else:
+      async with aiohttp.ClientSession() as session:
+        async with session.get('https://api.tronalddump.io/random/meme') as r:
+          data = io.BytesIO(await r.read())
+          await interaction.response.send_message(file=discord.File(data, "tronalddump.jpg"))
 
       # If there's a link in the msg, make it not embed
       #def Find(string):
@@ -327,17 +332,6 @@ class Fun(commands.Cog):
       #extracted_url = str(Find(quote)).strip('[\']')
       #quote = quote.replace(extracted_url, f"<{extracted_url}>")
       #print(quote)
-
-    await ctx.send(quote)
-
-  @commands.command(aliases=['tronaldmeme', 'dumpmeme', 'donaldtrumpmeme', 'tronalddumpmeme'])
-  async def trumpmeme(self, ctx):
-    """random dumbest things Donald Trump has ever said"""
-    async with ctx.typing():
-      async with aiohttp.ClientSession() as session:
-        async with session.get('https://api.tronalddump.io/random/meme') as r:
-          data = io.BytesIO(await r.read())
-          await ctx.send(file=discord.File(data, "tronalddump.jpg"))
 
   @commands.command(aliases=['meow'])
   async def cat(self, ctx):
@@ -376,8 +370,39 @@ class Fun(commands.Cog):
       await ctx.send("@everyone", delete_after=2)  # delete after 2 sec
       await asyncio.sleep(interval_in_minutes*60)
 
-class Waifu(commands.Cog):
+  # @app_commands.command()
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
+  # async def fruits(self, interaction: discord.Interaction, fruits: str):
+  #   await interaction.response.send_message(f'Your favourite fruit seems to be {fruits}')
 
+  # @fruits.autocomplete('fruits')
+  # async def fruits_autocomplete(
+  #   interaction: discord.Interaction,
+  #   current: str,
+  #   namespace: app_commands.Namespace
+  # ) -> List[app_commands.Choice[str]]:
+  #   fruits = ['Banana', 'Pineapple', 'Apple', 'Watermelon', 'Melon', 'Cherry']
+  #   return [
+  #     app_commands.Choice(name=fruit, value=fruit) for fruit in fruits if current.lower() in fruit.lower()
+  #   ]
+
+  # TODO: Make this autocomplete
+  @app_commands.command()
+  @app_commands.guilds(discord.Object(id=867811644322611200))
+  async def waifu_im(
+    self, 
+    interaction: discord.Interaction, 
+    tag: Literal['uniform', 'maid', 'waifu', 'marin-kitagawa', 'mori-calliope', 'raiden-shogun', 'oppai', 'selfies'],
+    type: Literal['sfw', 'nsfw'] = 'sfw'
+  ) -> None:
+    """random Waifu images"""
+    if type == 'nsfw' and not interaction.channel.is_nsfw():
+      return await interaction.response.send_message("You requested an NSFW image in a non-NSFW channel! Please use in the appropriate channel(s).", ephemeral=True)
+
+    text, embed = await get_waifu_im_embed(type, tag)
+    await interaction.response.send_message(content=text, embed=embed)
+
+class Waifu(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
@@ -437,35 +462,34 @@ class Waifu(commands.Cog):
   async def cringe(self, ctx):
     await ctx.send(await get_waifu("sfw", "cringe"))
 
-  @commands.command()
-  async def maid(self, ctx):
-    #text1, text2 = await get_waifu_im_embed("sfw", "maid")
-    #await ctx.send(text1 + "\n" + text2)
-    text, embed = await get_waifu_im_embed("sfw", "maid")
-    await ctx.send(text, embed=embed)
+  # @commands.command()
+  # async def maid(self, ctx):
+  #   #text1, text2 = await get_waifu_im_embed("sfw", "maid")
+  #   #await ctx.send(text1 + "\n" + text2)
+  #   text, embed = await get_waifu_im_embed("sfw", "maid")
+  #   await ctx.send(text, embed=embed)
 
-  @commands.command()
-  async def waifu2(self, ctx):
-    text, embed = await get_waifu_im_embed("sfw", "waifu")
-    await ctx.send(text, embed=embed)
+  # @commands.command()
+  # async def waifu2(self, ctx):
+  #   text, embed = await get_waifu_im_embed("sfw", "waifu")
+  #   await ctx.send(text, embed=embed)
 
-  @commands.command(aliases=['marin'])
-  async def marin_kitagawa(self, ctx):
-    text, embed = await get_waifu_im_embed("sfw", "marin-kitagawa")
-    await ctx.send(text, embed=embed)
+  # @commands.command(aliases=['marin'])
+  # async def marin_kitagawa(self, ctx):
+  #   text, embed = await get_waifu_im_embed("sfw", "marin-kitagawa")
+  #   await ctx.send(text, embed=embed)
 
-  @commands.command()
-  async def mori_calliope(self, ctx):
-    text, embed = await get_waifu_im_embed("sfw", "mori-calliope")
-    await ctx.send(text, embed=embed)
+  # @commands.command()
+  # async def mori_calliope(self, ctx):
+  #   text, embed = await get_waifu_im_embed("sfw", "mori-calliope")
+  #   await ctx.send(text, embed=embed)
 
-  @commands.command(aliases=['raiden', 'baal', 'ei'])
-  async def raiden_shogun(self, ctx):
-    text, embed = await get_waifu_im_embed("sfw", "raiden-shogun")
-    await ctx.send(text, embed=embed)
+  # @commands.command(aliases=['raiden', 'baal', 'ei'])
+  # async def raiden_shogun(self, ctx):
+  #   text, embed = await get_waifu_im_embed("sfw", "raiden-shogun")
+  #   await ctx.send(text, embed=embed)
 
 class Roleplay(commands.Cog):
-
   def __init__(self, bot):
     self.bot = bot
 
@@ -541,7 +565,6 @@ class Roleplay(commands.Cog):
 
 # --- NSFW Start ---
 class NSFW(commands.Cog):
-  
   def __init__(self, bot):
     self.bot = bot
 
@@ -586,20 +609,8 @@ class NSFW(commands.Cog):
 
   @commands.command()
   @commands.is_nsfw()
-  async def maidnsfw(self, ctx):
-    text, embed = await get_waifu_im_embed("nsfw", "maid")
-    await ctx.send(text, embed=embed)
-
-  @commands.command()
-  @commands.is_nsfw()
   async def milf(self, ctx):
     text, embed = await get_waifu_im_embed("nsfw", "milf")
-    await ctx.send(text, embed=embed)
-
-  @commands.command()
-  @commands.is_nsfw()
-  async def oppai(self, ctx):
-    text, embed = await get_waifu_im_embed("nsfw", "oppai")
     await ctx.send(text, embed=embed)
 
   @commands.command()
@@ -616,38 +627,13 @@ class NSFW(commands.Cog):
 
   @commands.command()
   @commands.is_nsfw()
-  async def selfies(self, ctx):
-    text, embed = await get_waifu_im_embed("nsfw", "selfies")
-    await ctx.send(text, embed=embed)
-
-  @commands.command()
-  @commands.is_nsfw()
-  async def uniform(self, ctx):
-    text, embed = await get_waifu_im_embed("nsfw", "uniform")
-    await ctx.send(text, embed=embed)
-
-  @commands.command()
-  @commands.is_nsfw()
   async def ecchi(self, ctx):
     text, embed = await get_waifu_im_embed("nsfw", "ecchi")
-    await ctx.send(text, embed=embed)
-
-  @commands.command()
-  @commands.is_nsfw()
-  async def waifunsfw(self, ctx):
-    text, embed = await get_waifu_im_embed("nsfw", "waifu")
-    await ctx.send(text, embed=embed)
-
-  @commands.command()
-  @commands.is_nsfw()
-  async def breast(self, ctx):
-    text, embed = await get_waifu_im_embed("nsfw", "breast")
     await ctx.send(text, embed=embed)
 
 # --- NSFW End ---
 
 class Tools(commands.Cog):
-
   def __init__(self, bot):
     self.bot = bot
 
@@ -667,35 +653,31 @@ class Tools(commands.Cog):
     print("\n", choose_phrases)
     await ctx.send(random.choice(choose_phrases))
 
-  @commands.command(aliases=['coin', 'flipacoin', 'heads', 'tails'])
+  @commands.command(aliases=['coin', 'flipacoin', 'heads', 'tails', 'flip'])
   async def coinflip(self, ctx):
     """Flip a coin"""
     await ctx.send(coin_flip())
 
-  @commands.command(aliases=['cointally', 'flipacointally', 'headstally', 'tailstally', 'countcoins', 'coincount', 'coinscount'])
-  async def coinfliptally(self, ctx, amount: int):
+  @app_commands.command()
+  @app_commands.guilds(discord.Object(id=867811644322611200))  
+  async def coinfliptally(self, interaction: discord.Interaction, amount: app_commands.Range[int, 1, 10000]):
+    """Flip multiple coins at once!"""
     heads_count = 0
     tails_count = 0
-    #count = []
     response = ""
 
-    if amount > 10000:
-      amount = 10000
-      response += "Max of 10k only allowed!\n"
-
     for _ in range(amount):
-      #count.append(coin_flip())
       if coin_flip() == 'Heads':
         heads_count += 1
       else:
         tails_count += 1
 
     response += f"Heads: {heads_count}\nTails: {tails_count}"
-    #await ctx.send(print(count))
-    await ctx.send(response)
+    await interaction.response.send_message(response)
 
   # Note to self: Don't send msg in a coding block to retain markdown support
   # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. Also, the bot is in NYC. I'll work on it when it seems needed.
+  # TODO: Convert to embed?
   @commands.command(aliases=["paimonsbargains", "paimon'sbargains", "viewshop"])
   async def paimonbargains(self, ctx):
     """Views current Paimon's Bargains items for the month"""
@@ -944,7 +926,6 @@ class Tools(commands.Cog):
     await ctx.reply(f"Resin will be fully replenished at: <t:{int(finished_time)}:F> (<t:{int(finished_time)}:R>)")
 
 class Admin(commands.Cog):
-
   def __init__(self, bot):
     self.bot = bot
 
@@ -960,16 +941,23 @@ class Admin(commands.Cog):
     await ctx.send("🛑 Shutting down!")
     await bot.close()
 
-  # TODO: Deprecate in favor of slash cmd implementation to expand possible activities aside from playing (cause we want autocomplete)
-  @commands.command(aliases=['setstatus'])
-  @has_permissions(manage_guild=True)
-  async def changestatus(self, ctx, *, new_status):
-    status_msg = new_status
-    if status_msg:
-      await ctx.message.add_reaction('✅')
+  @app_commands.command()
+  @app_commands.guilds(discord.Object(id=867811644322611200))
+  #@has_permissions(manage_guild=True)
+  #@app_commands.describe(activity='describe...')
+  async def changestatus(self, interaction: discord.Interaction, activity: Literal['Playing', 'Listening to', 'Watching'], status_msg: str):
+    """Change the status/activity of the bot"""
+    # https://discordpy.readthedocs.io/en/master/api.html#discord.ActivityType
+
+    if activity == 'Playing':
       await bot.change_presence(activity=discord.Game(name=status_msg))
-    else:
-      await ctx.send("What status would you like me to play?")
+    elif activity == 'Listening':
+      await bot.change_presence(activity=discord.Activity(name=status_msg, type=discord.ActivityType.listening))
+    elif activity == 'Watching':
+      await bot.change_presence(activity=discord.Activity(name=status_msg, type=discord.ActivityType.watching))
+
+    await interaction.response.send_message(f'✅ My status is now "**{activity} {status_msg}**"')
+
 
   @commands.command()
   async def sendmsg(self, ctx, channel_id: int, *, content):
@@ -984,6 +972,42 @@ class Admin(commands.Cog):
     message = await channel.fetch_message(message_id)
     await message.reply(content)
     await ctx.send(f"**Replied:** {content}\n**Which message:** {message.jump_url}")
+
+  @commands.command()
+  @commands.is_owner()
+  async def sync(self, ctx: Context, guilds: commands.Greedy[discord.Object], spec: Optional[Literal["~"]] = None) -> None:
+    if not guilds:
+      if spec == "~":
+        fmt = await ctx.bot.tree.sync(guild=ctx.guild)
+      else:
+        fmt = await ctx.bot.tree.sync()
+
+      await ctx.send(
+        f"Synced {len(fmt)} commands {'globally' if spec is None else 'to the current guild.'}"
+      )
+      return
+
+    assert guilds is not None
+    fmt = 0
+    for guild in guilds:
+      try:
+        await ctx.bot.tree.sync(guild=guild)
+      except discord.HTTPException:
+        pass
+      else:
+        fmt += 1
+
+    await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
+
+
+  #@commands.command()
+  #async def checksafe(self, ctx):
+    #if ctx.message.channel.is_nsfw():
+      #await ctx.send("Yes")
+
+    # the ff. doesn't work?
+      #raise commands.errors.NSFWChannelRequired
+
 
 @bot.event
 async def on_message(message):
@@ -1024,14 +1048,18 @@ async def on_command_error(ctx, error):
     await ctx.send(error)
   # add more?
 
-bot.add_cog(Info(bot))
-bot.add_cog(Fun(bot))
-bot.add_cog(Waifu(bot))
-bot.add_cog(Roleplay(bot))
-bot.add_cog(NSFW(bot))
-bot.add_cog(Tools(bot))
-bot.add_cog(Admin(bot))
+async def main():
+  async with bot:
+    await bot.add_cog(Info(bot))
+    await bot.add_cog(Fun(bot))
+    await bot.add_cog(Waifu(bot))
+    await bot.add_cog(Roleplay(bot))
+    await bot.add_cog(NSFW(bot))
+    await bot.add_cog(Tools(bot))
+    await bot.add_cog(Admin(bot))
 
-bot.load_extension('jishaku')
+    await bot.load_extension('jishaku')
 
-bot.run(os.getenv('BOT_TOKEN'))
+    await bot.start(os.getenv('BOT_TOKEN'))
+
+asyncio.run(main())
