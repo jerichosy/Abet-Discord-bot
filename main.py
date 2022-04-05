@@ -7,7 +7,6 @@
 
 # Notes: requests has issues on IPv6 networks, don't set your own tree with `tree = app_commands.CommandTree(bot)`
 
-from xmlrpc.client import Boolean
 import discord
 from discord.ext import commands
 from discord.ext.commands import has_permissions, Context
@@ -313,7 +312,7 @@ class Fun(commands.Cog):
     if in_image_form == 'No':
       json_data = await get_json_quote("https://api.tronalddump.io/random/quote")
       quote = json_data['value'] + " - Donald Trump"
-      return await interaction.response.send_message(quote)
+      await interaction.response.send_message(quote)
     else:
       async with aiohttp.ClientSession() as session:
         async with session.get('https://api.tronalddump.io/random/meme') as r:
