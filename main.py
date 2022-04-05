@@ -368,6 +368,14 @@ class Fun(commands.Cog):
     else:
       await ctx.send(f'Oops. It is actually {answer}.')
 
+  # This is so dumb and annoying (thanks to Daniel and Jehu)
+  @commands.command()
+  @commands.is_owner()
+  async def annoy(self, ctx, amount: int, interval_in_minutes: int):
+    for _ in range(amount):
+      await ctx.send("@everyone", delete_after=2)  # delete after 2 sec
+      await asyncio.sleep(interval_in_minutes*60)
+
 class Waifu(commands.Cog):
 
   def __init__(self, bot):
@@ -455,7 +463,6 @@ class Waifu(commands.Cog):
   async def raiden_shogun(self, ctx):
     text, embed = await get_waifu_im_embed("sfw", "raiden-shogun")
     await ctx.send(text, embed=embed)
-
 
 class Roleplay(commands.Cog):
 
@@ -629,12 +636,6 @@ class NSFW(commands.Cog):
   @commands.is_nsfw()
   async def waifunsfw(self, ctx):
     text, embed = await get_waifu_im_embed("nsfw", "waifu")
-    await ctx.send(text, embed=embed)
-
-  @commands.command()
-  @commands.is_nsfw()
-  async def selfies(self, ctx):
-    text, embed = await get_waifu_im_embed("nsfw", "selfies")
     await ctx.send(text, embed=embed)
 
   @commands.command()
@@ -932,6 +933,15 @@ class Tools(commands.Cog):
         built += f"{char['name']} ({char['rarity']}* {char['element']}): lvl {char['level']} C{char['constellation']} | {char['weapon']['name']} ({char['weapon']['rarity']}* {char['weapon']['type']}): lvl {char['weapon']['level']} R{char['weapon']['refinement']} {tally_artifacts(char['artifacts'])}\n"
       await ctx.reply(f"```{built}```")
 
+  @commands.command(aliases=['resinreplenish', 'replenish', 'resins', 'resinsreplenish', 'replenishment', 'resinreplenishment', 'resinsreplenishment', 'resinfinish', 'resinfinished', 'resinsfinish', 'resinsfinished'])
+  async def resin(self, ctx, current_resin: int):
+    if current_resin > 160 or current_resin < 0:
+      return await ctx.send("❌ Inputted resin must be between 0-160.")
+
+    time_to_fully_replenished = (160 - current_resin) * (8 * 60)
+    current_time = time.time()
+    finished_time = current_time + time_to_fully_replenished
+    await ctx.reply(f"Resin will be fully replenished at: <t:{int(finished_time)}:F> (<t:{int(finished_time)}:R>)")
 
 class Admin(commands.Cog):
 
