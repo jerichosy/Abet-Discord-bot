@@ -49,8 +49,25 @@ class MyNewHelp(commands.MinimalHelpCommand):
       emby = discord.Embed(description=page, color=0xee615b)
       await destination.send(embed=emby)
 
+class AbetBot(commands.Bot):
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+
+  async def setup_hook(self) -> None:
+    # Populate the waifu_im_tags list (for slash cmds)
+    async with aiohttp.ClientSession() as cs:
+      async with cs.get('https://api.waifu.im/endpoints') as r:
+        print(f"Waifu.pics endpoint: {r.status}")
+        if r.status == 200:
+          global waifu_im_tags
+          waifu_im_tags = json.loads(await r.text())['versatile']
+
+  async def on_ready(self):
+    print(f'Logged in as {self.user} (ID: {self.user.id})')
+    print('------')
+
 # Other fields/attrs of bot: https://discordpy.readthedocs.io/en/stable/ext/commands/api.html?highlight=bot#bot
-bot = commands.Bot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name="I'm back!!!"), intents=intents, owner_id = 298454523624554501, help_command=MyNewHelp(command_attrs = {"hidden": True}))  # , description=
+bot = AbetBot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name="I'm back!!!"), intents=intents, owner_id = 298454523624554501, help_command=MyNewHelp(command_attrs = {"hidden": True}))  # , description=
 
 sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
 
@@ -229,10 +246,10 @@ def coin_flip():
   weight = [0.1, 0.9]
   return str(choices(population, weight)).strip('[\']')
 
-@bot.event
-async def on_ready():
-  print("We have logged in as {0.user}".format(bot))
-  #await bot.tree.sync(guild=discord.Object(id=867811644322611200))
+
+# @bot.event
+# async def on_ready():
+#   print("We have logged in as {0.user}".format(bot))
 
 class Info(commands.Cog):
   def __init__(self, bot):
@@ -372,34 +389,39 @@ class Fun(commands.Cog):
   # @app_commands.command()
   # @app_commands.guilds(discord.Object(id=867811644322611200))
   # async def fruits(self, interaction: discord.Interaction, fruits: str):
+  #   """This is a test of the autocomplete API"""
   #   await interaction.response.send_message(f'Your favourite fruit seems to be {fruits}')
 
   # @fruits.autocomplete('fruits')
-  # async def fruits_autocomplete(
-  #   interaction: discord.Interaction,
-  #   current: str,
-  #   namespace: app_commands.Namespace
-  # ) -> List[app_commands.Choice[str]]:
+  # async def fruits_autocomplete(self, interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
   #   fruits = ['Banana', 'Pineapple', 'Apple', 'Watermelon', 'Melon', 'Cherry']
-  #   return [
-  #     app_commands.Choice(name=fruit, value=fruit) for fruit in fruits if current.lower() in fruit.lower()
-  #   ]
+  #   #print(waifu_im_tags)
+  #   return [app_commands.Choice(name=fruit, value=fruit) for fruit in fruits if current.lower() in fruit.lower()]
 
-  # TODO: Make this autocomplete
   @app_commands.command()
   @app_commands.guilds(discord.Object(id=867811644322611200))
   async def waifu_im(
     self, 
     interaction: discord.Interaction, 
-    tag: Literal['uniform', 'maid', 'waifu', 'marin-kitagawa', 'mori-calliope', 'raiden-shogun', 'oppai', 'selfies'],
+    tag: str,
     type: Literal['sfw', 'nsfw'] = 'sfw'
   ) -> None:
     """random Waifu images"""
     if type == 'nsfw' and not interaction.channel.is_nsfw():
       return await interaction.response.send_message("You requested an NSFW image in a non-NSFW channel! Please use in the appropriate channel(s).", ephemeral=True)
 
+    #print(waifu_im_tags)
+
     text, embed = await get_waifu_im_embed(type, tag)
     await interaction.response.send_message(content=text, embed=embed)
+
+  @waifu_im.autocomplete('tag')
+  async def waifu_im_autocomplete(self, interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+    return [
+      app_commands.Choice(name=waifu_im_tag, value=waifu_im_tag) 
+      for waifu_im_tag in waifu_im_tags if current.lower() in waifu_im_tag.lower()
+    ]
+
 
 class Waifu(commands.Cog):
   def __init__(self, bot):
