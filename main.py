@@ -3,7 +3,7 @@
 # Additions: Add cogs and cmd desc.
 # Will not fix: Error of converting int when user accidentally types argument(s) containing characters, non-ints, etc.
 
-# Add in commit desc/comment: 
+# Add in commit desc/comment: Made use of new supress_embed attr in send() for trump and whatanime cmd, Renamed waifu_im slash cmd to just waifu and added is_ephemeral attr, Changed coinflip cmd to slash to be consistent with coinfliptally, Brought back wish and mhy word reactions (but nerfed with only 10% probability of occuring, and disabled unhealthy ones), Changed to slash cmd: inspire, kanye, Moved func in their respective classes where used and applicable, Changed guild used to sync for about cmd, Cleaned up comments
 
 # Notes: requests has issues on IPv6 networks, don't set your own tree with `tree = app_commands.CommandTree(bot)`
 
@@ -40,9 +40,9 @@ logger.addHandler(handler)
 load_dotenv()
 
 intents = discord.Intents.all()
-intents.message_content = True
+intents.message_content = True  # This might not be neccessary since we already called Intents.all()
 
-class MyNewHelp(commands.MinimalHelpCommand):
+class AbetHelp(commands.MinimalHelpCommand):
   async def send_pages(self):
     destination = self.get_destination()
     for page in self.paginator.pages:
@@ -67,7 +67,7 @@ class AbetBot(commands.Bot):
     print('------')
 
 # Other fields/attrs of bot: https://discordpy.readthedocs.io/en/stable/ext/commands/api.html?highlight=bot#bot
-bot = AbetBot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name="I'm back!!!"), intents=intents, owner_id = 298454523624554501, help_command=MyNewHelp(command_attrs = {"hidden": True}))  # , description=
+bot = AbetBot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name="Blame my owner if I keep going offline"), intents=intents, owner_id = 298454523624554501, help_command=AbetHelp(command_attrs = {"hidden": True}))  # , description=
 
 sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
 
@@ -117,27 +117,27 @@ yay_response = [
 
 wish_response = [
   "Looks like someone's pulling today!",
-  "I swear a 10 pull seems great right now",  # Unhealthy
+  #"I swear a 10 pull seems great right now",  # Unhealthy
   "What's the worse that could happen? You getting Qiqi?",
   "Don't save your gems you'll get qiqi anyways",
-  "wait don't tell me you're not going to pull?",  # Unhealthy
+  #"wait don't tell me you're not going to pull?",  # Unhealthy
   "I hear that standing in the corner of mondstadt gives you a higher chance to pull a 5 star",
   "the adventurer's guild is calling. They want to watch you pull.",
   "make sure you stream if you pull.",
-  "It's just a game. Pulling won't be the end of the world.",
+  #"It's just a game. Pulling won't be the end of the world.",  # Unhealthy
   "New content?",
   "The Kyoya Intelligence Agency (KIA) will be monitoring your pulls.",
 ]
 
 mhy_response = [
   "Did I hear Mihoyo? That bitch.",
-  "Mihoyo loves you",
-  "Awe, we're trying our best here at Mihoyo",
-  "I promise to give you more primos in future patches - Mihoyo",
-  "Did you just BS Mihoyo? UID Saved, sending to Mihoyo servers...",
-  "Hey people at Mihoyo are just trying to do their jobs",
-  "Please rate our game with a 5 star in the Play Store!",
-  "Please don't leave we need you['re money]",
+  #"Mihoyo loves you",
+  #"Awe, we're trying our best here at Mihoyo",
+  #"I promise to give you more primos in future patches - Mihoyo",
+  #"Did you just BS Mihoyo? UID Saved, sending to Mihoyo servers...",
+  #"Hey people at Mihoyo are just trying to do their jobs",
+  #"Please rate our game with a 5 star in the Play Store!",
+  #"Please don't leave we need you['re money]",
   "We give all the money we make at Mihoyo to Mona",
   "All funds from Mihoyo are sent straight to Zhongli's pockets",
   "We aren't ripping you off. We're just compensating Timmie which is why we couldn't get you better rewards!"
@@ -169,29 +169,7 @@ abet_response = [
   "..."
 ]
 
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-characters = [
-  "Fischl Xiangling",
-  "Beidou Noelle",
-  "Ningguang Xingqiu",
-  "Razor Amber",
-  "Bennett Lisa",
-  "Barbara Kaeya"
-]
-
-def findWholeWord(w):
-    return re.compile(r'\b({0})\b'.format(w), flags=re.IGNORECASE).search
-
-# Do we need to catch exceptions for requests/aiohttp and send an error msg?
-async def get_json_quote(url):
-  #response = requests.get("https://zenquotes.io/api/random", timeout=7)
-  #json_data = json.loads(response.text)
-  async with aiohttp.ClientSession() as session:
-    async with session.get(url) as resp:
-      json_data = await resp.json()
-  return json_data
-
-async def get_waifu(type, category):
+async def get_waifu(type, category):  # Can't make local to a class (being used by class Waifu, class Roleplay, class NSFW)
   url_string = f"https://api.waifu.pics/{type}/{category}"
   async with aiohttp.ClientSession() as session:
     async with session.get(url_string) as r:
@@ -202,12 +180,11 @@ async def get_waifu(type, category):
   
   return waifu
 
-async def get_waifu_im_embed(type, category):
+async def get_waifu_im_embed(type, category):  # Can't make local to a class (being used by class Fun and class NSFW)
   type = "False" if type=="sfw" else "True"
   url_string = f"https://api.waifu.im/random/?selected_tags={category}&is_nsfw={type}"
 
   async with aiohttp.ClientSession() as session:
-    #start_time = time.time()
     async with session.get(url_string) as resp:
       print(f"Waifu.im: {resp.status}")
       json_data = await resp.json()
@@ -218,10 +195,6 @@ async def get_waifu_im_embed(type, category):
 
         source = json_data['images'][0]['source']
 
-        #end_time = time.time()
-        #{round((end_time - start_time) * 1000)}ms
-        #embed.set_footer(text=f"Retrieved in {end_time - start_time} seconds", icon_url="https://waifu.im/favicon.ico")
-
         #print(json_data)
 
       else:
@@ -229,27 +202,6 @@ async def get_waifu_im_embed(type, category):
         print(error)
   
   return source, embed
-
-# Note: discord.Member implements a lot of func of discord.User, but we don't need any of the extras atm
-async def get_roleplay_embed(ctx, user_mentioned, type, category, action):
-  title = f"{ctx.author.name} {action} "
-  if user_mentioned is not None:  # PEP 8
-    name = str(user_mentioned)
-    size = len(name)
-    title += name[:size-5]
-  embed = discord.Embed(title=title, color=0xee615b)
-  embed.set_image(url=await get_waifu(type, category))
-  return embed
-
-def coin_flip():
-  population = ['Heads', 'Tails']
-  weight = [0.1, 0.9]
-  return str(choices(population, weight)).strip('[\']')
-
-
-# @bot.event
-# async def on_ready():
-#   print("We have logged in as {0.user}".format(bot))
 
 class Info(commands.Cog):
   def __init__(self, bot):
@@ -266,7 +218,7 @@ class Info(commands.Cog):
     embed.set_image(url="https://opengraph.githubassets.com/89c81820967bbd8115fc6a68d55ef62a3964c8caf19e47a321f12d969ac3b6e3/jerichosy/Abet-Discord-bot")
     embed.set_thumbnail(url=bot.user.display_avatar.url)
 
-    main_guild = self.bot.get_guild(887980840347398144)  #FIXME: 867811644322611200
+    main_guild = self.bot.get_guild(867811644322611200)
     owner = main_guild.get_member(self.bot.owner_id)
     embed.set_author(name=str(owner), icon_url=owner.display_avatar.url)
     version = pkg_resources.get_distribution('discord.py').version
@@ -298,28 +250,33 @@ class Fun(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
+  async def get_json_quote(self, url):
+    async with aiohttp.ClientSession() as session:
+      async with session.get(url) as resp:
+        json_data = await resp.json()
+    return json_data
+
   # Don't make this into an embed
   @commands.command(aliases=['fuckcarl'])
   async def carl(self, ctx):
     """Dish Carl"""
     await ctx.send("https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png")
 
-  @commands.command(aliases=['inspiration', 'inspo', 'quote'])
-  async def inspire(self, ctx):
+  @app_commands.command()
+  @app_commands.guilds(discord.Object(id=867811644322611200))
+  async def inspire(self, interaction: discord.Interaction):
     """Sends a random inspirational quote"""
-    async with ctx.typing():
-      json_data = await get_json_quote("https://zenquotes.io/api/random")
-      quote = json_data[0]['q'] + " -" + json_data[0]['a']
-      await asyncio.sleep(1)
-    await ctx.send(quote)
+    json_data = await self.get_json_quote("https://zenquotes.io/api/random")
+    quote = json_data[0]['q'] + " -" + json_data[0]['a']
+    await interaction.response.send_message(quote)
 
-  @commands.command(aliases=['west', 'kanyewest', 'ye'])
-  async def kanye(self, ctx):
+  @app_commands.command()
+  @app_commands.guilds(discord.Object(id=867811644322611200))
+  async def kanye(self, interaction: discord.Interaction):
     """random Kanye West quotes (Kanye as a Service)"""
-    async with ctx.typing():
-      json_data = await get_json_quote("https://api.kanye.rest/")
-      quote = json_data['quote'] + " - Kanye West"
-    await ctx.send(quote)
+    json_data = await self.get_json_quote("https://api.kanye.rest/")
+    quote = json_data['quote'] + " - Kanye West"
+    await interaction.response.send_message(quote)
 
   @app_commands.command()
   @app_commands.guilds(discord.Object(id=867811644322611200))
@@ -327,27 +284,14 @@ class Fun(commands.Cog):
     """random dumbest things Donald Trump has ever said"""
     
     if in_image_form == 'No':
-      json_data = await get_json_quote("https://api.tronalddump.io/random/quote")
+      json_data = await self.get_json_quote("https://api.tronalddump.io/random/quote")
       quote = json_data['value'] + " - Donald Trump"
-      await interaction.response.send_message(quote)
+      await interaction.response.send_message(quote, suppress_embeds=True)
     else:
       async with aiohttp.ClientSession() as session:
         async with session.get('https://api.tronalddump.io/random/meme') as r:
           data = io.BytesIO(await r.read())
           await interaction.response.send_message(file=discord.File(data, "tronalddump.jpg"))
-
-      # If there's a link in the msg, make it not embed
-      #def Find(string):
-      #  regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
-      #  url = re.findall(regex, string)
-      #  return [x[0] for x in url]
-
-      # Test the above function
-      #quote = 'Huma calls it a "MESS," the rest of us call it CORRUPT! WikiLeaks catches Crooked in the act - again. #DrainTheSwamp https://t.co/juvdLIJPWu - Donald Trump'
-
-      #extracted_url = str(Find(quote)).strip('[\']')
-      #quote = quote.replace(extracted_url, f"<{extracted_url}>")
-      #print(quote)
 
   @commands.command(aliases=['meow'])
   async def cat(self, ctx):
@@ -400,11 +344,13 @@ class Fun(commands.Cog):
 
   @app_commands.command()
   @app_commands.guilds(discord.Object(id=867811644322611200))
-  async def waifu_im(
+  @app_commands.describe(is_ephemeral='If "Yes", the image will only be visible to you')
+  async def waifu(
     self, 
     interaction: discord.Interaction, 
     tag: str,
-    type: Literal['sfw', 'nsfw'] = 'sfw'
+    type: Literal['sfw', 'nsfw'] = 'sfw',
+    is_ephemeral: Literal['No', 'Yes'] ='No'
   ) -> None:
     """random Waifu images"""
     if type == 'nsfw' and not interaction.channel.is_nsfw():
@@ -413,22 +359,21 @@ class Fun(commands.Cog):
     #print(waifu_im_tags)
 
     text, embed = await get_waifu_im_embed(type, tag)
-    await interaction.response.send_message(content=text, embed=embed)
+    await interaction.response.send_message(content=text, embed=embed, ephemeral=True if is_ephemeral == 'Yes' else False)
 
-  @waifu_im.autocomplete('tag')
-  async def waifu_im_autocomplete(self, interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+  @waifu.autocomplete('tag')
+  async def waifu_autocomplete(self, interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
     return [
       app_commands.Choice(name=waifu_im_tag, value=waifu_im_tag) 
       for waifu_im_tag in waifu_im_tags if current.lower() in waifu_im_tag.lower()
     ]
-
 
 class Waifu(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
   @commands.command()
-  async def waifu(self, ctx):
+  async def waifu(self, ctx):  # Note: Despite the same name with the slash cmd, they are not functionally equivalent.
     await ctx.send(await get_waifu("sfw", "waifu"))
 
   @commands.command()
@@ -483,106 +428,88 @@ class Waifu(commands.Cog):
   async def cringe(self, ctx):
     await ctx.send(await get_waifu("sfw", "cringe"))
 
-  # @commands.command()
-  # async def maid(self, ctx):
-  #   #text1, text2 = await get_waifu_im_embed("sfw", "maid")
-  #   #await ctx.send(text1 + "\n" + text2)
-  #   text, embed = await get_waifu_im_embed("sfw", "maid")
-  #   await ctx.send(text, embed=embed)
-
-  # @commands.command()
-  # async def waifu2(self, ctx):
-  #   text, embed = await get_waifu_im_embed("sfw", "waifu")
-  #   await ctx.send(text, embed=embed)
-
-  # @commands.command(aliases=['marin'])
-  # async def marin_kitagawa(self, ctx):
-  #   text, embed = await get_waifu_im_embed("sfw", "marin-kitagawa")
-  #   await ctx.send(text, embed=embed)
-
-  # @commands.command()
-  # async def mori_calliope(self, ctx):
-  #   text, embed = await get_waifu_im_embed("sfw", "mori-calliope")
-  #   await ctx.send(text, embed=embed)
-
-  # @commands.command(aliases=['raiden', 'baal', 'ei'])
-  # async def raiden_shogun(self, ctx):
-  #   text, embed = await get_waifu_im_embed("sfw", "raiden-shogun")
-  #   await ctx.send(text, embed=embed)
-
 class Roleplay(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  # Note: discord.Member implements a lot of func of discord.User, but we don't need any of the extras atm
+  async def get_roleplay_embed(self, ctx, user_mentioned, type, category, action):
+    title = f"{ctx.author.name} {action} "
+    if user_mentioned is not None:  # PEP 8
+      name = str(user_mentioned)
+      size = len(name)
+      title += name[:size-5]
+    embed = discord.Embed(title=title, color=0xee615b)
+    embed.set_image(url=await get_waifu(type, category))
+    return embed
+
   @commands.command()
   async def cuddle(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "cuddle", "cuddles"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "cuddle", "cuddles"))
 
   @commands.command()
   async def hug(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "hug", "hugs"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "hug", "hugs"))
 
   @commands.command()
   async def kiss(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "kiss", "kisses"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "kiss", "kisses"))
 
   @commands.command()
   async def lick(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "lick", "licks"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "lick", "licks"))
 
   @commands.command()
   async def pat(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "pat", "pats"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "pat", "pats"))
 
   @commands.command()
   async def bonk(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "bonk", "bonks"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "bonk", "bonks"))
 
   @commands.command()
   async def yeet(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "yeet", "yeets"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "yeet", "yeets"))
 
   @commands.command()
   async def wave(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "wave", "waves"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "wave", "waves"))
 
   @commands.command()
   async def highfive(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "highfive", "highfives"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "highfive", "highfives"))
 
   @commands.command()
   async def handhold(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "handhold", "handholds"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "handhold", "handholds"))
 
   @commands.command()
   async def bite(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "bite", "bites"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "bite", "bites"))
 
   @commands.command()
   async def glomp(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "glomp", "glomps"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "glomp", "glomps"))
 
   @commands.command()
   async def slap(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "slap", "slaps"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "slap", "slaps"))
 
   # Add kill Abet bot easter egg (go offline then back on and send some scary/taunting shit)
   @commands.command()
   async def kill(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "kill", "kills"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "kill", "kills"))
 
   @commands.command()
   async def kick(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "kick", "kicks"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "kick", "kicks"))
 
   @commands.command()
   async def wink(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "wink", "winks at"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "wink", "winks at"))
 
   @commands.command()
   async def poke(self, ctx, user_mentioned: discord.User=None):
-    await ctx.send(embed=await get_roleplay_embed(ctx, user_mentioned, "sfw", "poke", "pokes"))
+    await ctx.send(embed=await self.get_roleplay_embed(ctx, user_mentioned, "sfw", "poke", "pokes"))
 
 # --- NSFW Start ---
 class NSFW(commands.Cog):
@@ -657,6 +584,20 @@ class NSFW(commands.Cog):
 class Tools(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
+    self.months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    self.characters = [
+      "Fischl Xiangling",
+      "Beidou Noelle",
+      "Ningguang Xingqiu",
+      "Razor Amber",
+      "Bennett Lisa",
+      "Barbara Kaeya"
+    ]
+
+  def coin_flip(self):
+    population = ['Heads', 'Tails']
+    weight = [0.1, 0.9]
+    return str(choices(population, weight)).strip('[\']')
 
   @commands.command()
   async def abet(self, ctx, has_question=None):
@@ -674,21 +615,23 @@ class Tools(commands.Cog):
     print("\n", choose_phrases)
     await ctx.send(random.choice(choose_phrases))
 
-  @commands.command(aliases=['coin', 'flipacoin', 'heads', 'tails', 'flip'])
-  async def coinflip(self, ctx):
-    """Flip a coin"""
-    await ctx.send(coin_flip())
-
   @app_commands.command()
   @app_commands.guilds(discord.Object(id=867811644322611200))  
+  async def coinflip(self, interaction: discord.Interaction):
+    """Flip a sussy coin"""
+    await interaction.response.send_message(self.coin_flip())
+
+  @app_commands.command()
+  @app_commands.guilds(discord.Object(id=867811644322611200))
+  @app_commands.describe(amount='The amount of sussy coins to flip')
   async def coinfliptally(self, interaction: discord.Interaction, amount: app_commands.Range[int, 1, 10000]):
-    """Flip multiple coins at once!"""
+    """Flip multiple sussy coins at once!"""
     heads_count = 0
     tails_count = 0
     response = ""
 
     for _ in range(amount):
-      if coin_flip() == 'Heads':
+      if self.coin_flip() == 'Heads':
         heads_count += 1
       else:
         tails_count += 1
@@ -707,7 +650,7 @@ class Tools(commands.Cog):
     def display_future():
       built = "\n\n**Future:**\n"
       for x in range(1, 7):
-        built += months[((current_month + x) % 12) - 1] + " | " + characters[((current_month + x) % 6) - 1] + "\n"
+        built += self.months[((current_month + x) % 12) - 1] + " | " + self.characters[((current_month + x) % 6) - 1] + "\n"
 
       return built;
 
@@ -716,7 +659,7 @@ class Tools(commands.Cog):
 
     await ctx.send(
       "**Current:**\n"
-      + months[current_month - 1] + " | " + characters[(current_month % 6) - 1]
+      + self.months[current_month - 1] + " | " + self.characters[(current_month % 6) - 1]
       + determine_weapon_series()
       + display_future()
     )
@@ -778,27 +721,11 @@ class Tools(commands.Cog):
         native = "" if json_data['data']['Media']['title']['native'] is None else f"**{json_data['data']['Media']['title']['native']}**\n"
         romaji = "" if json_data['data']['Media']['title']['romaji'] is None else f"**{json_data['data']['Media']['title']['romaji']}**\n"
         english = "" if json_data['data']['Media']['title']['english'] is None else f"**{json_data['data']['Media']['title']['english']}**\n"
-        #native = ""
-        #romaji = ""
-        #english = ""
-        #title = json_data['data']['Media']['title']['native']
-        #title += 
 
     if reason:
-      # So that if the user accidentally sends a link that embeds, even if the error code were to refer (send) back the URL, it will not embed.
-      # Conflicts with other error types tho
-      #def Find(string):
-      #  regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
-      #  url = re.findall(regex, string)
-      #  return [x[0] for x in url]
-
-      #extracted_url = str(Find(reason)).strip('[\']')
-      #reason = reason.replace(extracted_url, f"<{extracted_url}>")
-
-      await ctx.send(reason)
+      await ctx.send(reason, suppress_embeds=True)
     else:
       await ctx.send(f"<@{ctx.author.id}>\n\n{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity")
-      #await ctx.send(video_url)
 
       if json_data['data']['Media']['isAdult']:
         preview_file_name = "SPOILER_preview.mp4"
@@ -827,7 +754,6 @@ class Tools(commands.Cog):
     
     async with ctx.typing():
       token = os.getenv("SAUCENAO_TOKEN")
-      #response = requests.get(f"https://saucenao.com/search.php?db=999&output_type=2&numres=1&url={url}&api_key={token}", timeout=7)
       async with aiohttp.ClientSession() as session:
         async with session.get(f"https://saucenao.com/search.php?db=999&output_type=2&numres=1&url={url}&api_key={token}") as r:
           print(f"SauceNao: {r.status}")
@@ -890,10 +816,6 @@ class Tools(commands.Cog):
           if await resp.text() == "" or await resp.text() == "Follow @igor_chubin for wttr.in updates":
             return await ctx.send("The weather service is having problems. Please try again later.")
           await ctx.send(f"```{await resp.text()}```")
-          #print (await resp.text())
-      #response = requests.get(f"https://wttr.in/{location}?0")
-    #print(response.text)
-    #await ctx.send(f"```ansi\n{response.text}```")
 
   @commands.command()
   async def metar(self, ctx, airport_code):
@@ -951,7 +873,6 @@ class Admin(commands.Cog):
     self.bot = bot
 
   @commands.command(aliases=['delete'])
-  #@commands.is_owner()
   @has_permissions(manage_messages=True)
   async def purge(self, ctx, amount: int):
     await ctx.channel.purge(limit=amount+1)
@@ -965,7 +886,6 @@ class Admin(commands.Cog):
   @app_commands.command()
   @app_commands.guilds(discord.Object(id=867811644322611200))
   #@has_permissions(manage_guild=True)
-  #@app_commands.describe(activity='describe...')
   async def changestatus(self, interaction: discord.Interaction, activity: Literal['Playing', 'Listening to', 'Watching'], status_msg: str):
     """Change the status/activity of the bot"""
     # https://discordpy.readthedocs.io/en/master/api.html#discord.ActivityType
@@ -1030,6 +950,9 @@ class Admin(commands.Cog):
       #raise commands.errors.NSFWChannelRequired
 
 
+def findWholeWord(w):
+  return re.compile(r'\b({0})\b'.format(w), flags=re.IGNORECASE).search
+
 @bot.event
 async def on_message(message):
   if message.author == bot.user:
@@ -1039,21 +962,23 @@ async def on_message(message):
 
   for x in sad_words:
     if findWholeWord(x)(msg):
-        await message.channel.send(random.choice(sad_response))
-        break
+      await message.channel.send(random.choice(sad_response))
+      break
   
   if any(word in msg for word in yay_words):
     await message.channel.send(random.choice(yay_response))
   
-  #for x in wish_words:
-    #if findWholeWord(x)(msg):
-        #await message.channel.send(random.choice(wish_response))
-        #break
+  for x in wish_words:
+    if findWholeWord(x)(msg):
+      if random.random() < 0.1:
+        await message.channel.send(random.choice(wish_response))
+      break
   
-  #for x in mhy_words:
-    #if findWholeWord(x)(msg):
-        #await message.channel.send(random.choice(mhy_response))
-        #break
+  for x in mhy_words:
+    if findWholeWord(x)(msg):
+      if random.random() < 0.1:
+        await message.channel.send(random.choice(mhy_response))
+      break
 
   await bot.process_commands(message)
 
