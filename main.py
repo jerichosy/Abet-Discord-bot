@@ -3,7 +3,7 @@
 # Additions: Add cogs and cmd desc.
 # Will not fix: Error of converting int when user accidentally types argument(s) containing characters, non-ints, etc.
 
-# Add in commit desc/comment: Made use of new supress_embed attr in send() for trump and whatanime cmd, Renamed waifu_im slash cmd to just waifu and added is_ephemeral attr, Changed coinflip cmd to slash to be consistent with coinfliptally, Brought back wish and mhy word reactions (but nerfed with only 10% probability of occuring, and disabled unhealthy ones), Changed to slash cmd: inspire, kanye, Moved func in their respective classes where used and applicable, Changed guild used to sync for about cmd, Cleaned up comments
+# Add in commit desc/comment: 
 
 # Notes: requests has issues on IPv6 networks, don't set your own tree with `tree = app_commands.CommandTree(bot)`
 
@@ -353,8 +353,8 @@ class Fun(commands.Cog):
     is_ephemeral: Literal['No', 'Yes'] ='No'
   ) -> None:
     """random Waifu images"""
-    if type == 'nsfw' and not interaction.channel.is_nsfw():
-      return await interaction.response.send_message("You requested an NSFW image in a non-NSFW channel! Please use in the appropriate channel(s).", ephemeral=True)
+    if type == 'nsfw' and not interaction.channel.is_nsfw() and is_ephemeral == 'No':
+      return await interaction.response.send_message("You requested a visible NSFW image in a non-NSFW channel! Please use in the appropriate channel(s).", ephemeral=True)
 
     #print(waifu_im_tags)
 
@@ -993,6 +993,17 @@ async def on_command_error(ctx, error):
   else:
     await ctx.send(error)
   # add more?
+
+@bot.event
+async def on_presence_update(before, after):
+  if not after.bot:
+    print("test")
+    print(f"{before.activity}\n   {after.activity}")
+    if after.activity is not None:
+      #if after.activity.name != before.activity.name:
+      if after.activity.name == 'VALORANT':
+        channel = bot.get_channel(867811644322611202)  #867811644322611202
+        await channel.send(f"@everyone\n It's a fine {datetime.today().strftime('%A')}. Ruin it by following {after.mention}'s footsteps and playing {after.activity.name}.")
 
 async def main():
   async with bot:
