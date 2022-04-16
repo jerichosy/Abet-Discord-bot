@@ -57,7 +57,7 @@ class AbetBot(commands.Bot):
     # Populate the waifu_im_tags list (for slash cmds)
     async with aiohttp.ClientSession() as cs:
       async with cs.get('https://api.waifu.im/endpoints') as r:
-        print(f"Waifu.pics endpoint: {r.status}")
+        print(f"Waifu.im endpoint: {r.status}")
         if r.status == 200:
           global waifu_im_tags
           waifu_im_tags = json.loads(await r.text())['versatile']
@@ -173,7 +173,7 @@ async def get_waifu(type, category):  # Can't make local to a class (being used 
   url_string = f"https://api.waifu.pics/{type}/{category}"
   async with aiohttp.ClientSession() as session:
     async with session.get(url_string) as r:
-      print(f"Waifu.pics: {r.status}") # debug
+      logger.info(f"Waifu.pics: {r.status}") # debug
       if r.status == 200:
         json_data = await r.json()
         waifu = json_data['url']
@@ -186,7 +186,7 @@ async def get_waifu_im_embed(type, category):  # Can't make local to a class (be
 
   async with aiohttp.ClientSession() as session:
     async with session.get(url_string) as resp:
-      print(f"Waifu.im: {resp.status}")
+      logger.info(f"Waifu.im: {resp.status}")
       json_data = await resp.json()
       if resp.status in {200, 201}:
         #embed = discord.Embed(color=0xffc0cb)
@@ -612,7 +612,6 @@ class Tools(commands.Cog):
     """Returns a random choice from the given words/phrases"""
     #choose_phrases = ctx.message.content[8:].split(", ")  # improper way
     choose_phrases = choices.split(", ")  # Split returns a list (square brackets)
-    print("\n", choose_phrases)
     await ctx.send(random.choice(choose_phrases))
 
   @app_commands.command()
@@ -678,7 +677,7 @@ class Tools(commands.Cog):
     async with ctx.typing():
       response = requests.get(f"https://api.trace.moe/search?cutBorders&url={url}", timeout=7)
       #response = requests.get(f"https://api.trace.moe/search?anilistInfo&url={url}", timeout=7)
-      print(f"Trace.moe: {response}") # debug
+      logger.info(f"Trace.moe: {response}") # debug
       json_data = json.loads(response.text)
 
       reason = ""
@@ -715,7 +714,7 @@ class Tools(commands.Cog):
         }
 
         response = requests.post("https://graphql.anilist.co/", json={'query': query, 'variables': variables})
-        print(f"  AniList GraphQL API: {response}") # debug
+        logger.info(f"  AniList GraphQL API: {response}") # debug
         json_data = json.loads(response.text)
 
         native = "" if json_data['data']['Media']['title']['native'] is None else f"**{json_data['data']['Media']['title']['native']}**\n"
@@ -756,7 +755,7 @@ class Tools(commands.Cog):
       token = os.getenv("SAUCENAO_TOKEN")
       async with aiohttp.ClientSession() as session:
         async with session.get(f"https://saucenao.com/search.php?db=999&output_type=2&numres=1&url={url}&api_key={token}") as r:
-          print(f"SauceNao: {r.status}")
+          logger.info(f"SauceNao: {r.status}")
           json_data = await r.json()
           #print(json_data)
 
@@ -812,7 +811,7 @@ class Tools(commands.Cog):
     async with ctx.typing():
       async with aiohttp.ClientSession() as session:
         async with session.get(f"https://wttr.in/{location}?0T") as resp:
-          print(f"wttr.in response: {resp.status}")
+          logger.info(f"wttr.in response: {resp.status}")
           if await resp.text() == "" or await resp.text() == "Follow @igor_chubin for wttr.in updates":
             return await ctx.send("The weather service is having problems. Please try again later.")
           await ctx.send(f"```{await resp.text()}```")
@@ -823,7 +822,7 @@ class Tools(commands.Cog):
     async with ctx.typing():
       async with aiohttp.ClientSession(headers={"Authorization": "BEARER " + token}) as session:
         async with session.get(f"https://avwx.rest/api/metar/{airport_code}") as response:
-          print(f"AVWX response: {response.status}")
+          logger.info(f"AVWX response: {response.status}")
           json_data = await response.json()
           if response.status != 200:
             return await ctx.send(json_data['error'])
@@ -997,13 +996,13 @@ async def on_command_error(ctx, error):
 @bot.event
 async def on_presence_update(before, after):
   if not after.bot:
-    print("test")
-    print(f"{before.activity}\n   {after.activity}")
+    logger.info(f"{after} | {after == before}")
+    logger.info(f"  BEFORE: {before.activity}")
+    logger.info(f"  AFTER:  {after.activity}")
     if after.activity is not None:
-      #if after.activity.name != before.activity.name:
-      if after.activity.name == 'VALORANT':
-        channel = bot.get_channel(867811644322611202)  #867811644322611202
-        await channel.send(f"@everyone\n It's a fine {datetime.today().strftime('%A')}. Ruin it by following {after.mention}'s footsteps and playing {after.activity.name}.")
+      if after.activity.name == 'VALORANT' and before.activity is None:  # This invokes from None -> VALORANT, but won't invoke from Spotify, etc. But it's ok
+        channel = bot.get_channel(867811644322611202)  #sala 867811644322611202
+        await channel.send(f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {after.mention}'s footsteps and playing {after.activity.name}!** ⚠️")
 
 async def main():
   async with bot:
