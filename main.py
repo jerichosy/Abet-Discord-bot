@@ -238,7 +238,8 @@ class Info(commands.Cog):
     """Have the bot upload it's own sourcecode here in Discord"""
     await ctx.send(file=discord.File('main.py'))
 
-  @commands.command()
+  @commands.hybrid_command()
+  @app_commands.guilds(discord.Object(id=867811644322611200))
   async def ping(self, ctx):
     """Get the bot's current websocket and API latency"""
     start_time = time.time()
@@ -265,7 +266,7 @@ class Fun(commands.Cog):
   @app_commands.command()
   @app_commands.guilds(discord.Object(id=867811644322611200))
   async def inspire(self, interaction: discord.Interaction):
-    """Sends a random inspirational quote"""
+    """random inspirational quote"""
     json_data = await self.get_json_quote("https://zenquotes.io/api/random")
     quote = json_data[0]['q'] + " -" + json_data[0]['a']
     await interaction.response.send_message(quote)
@@ -293,9 +294,10 @@ class Fun(commands.Cog):
           data = io.BytesIO(await r.read())
           await interaction.response.send_message(file=discord.File(data, "tronalddump.jpg"))
 
-  @commands.command(aliases=['meow'])
+  @commands.hybrid_command(aliases=['meow'])
+  @app_commands.guilds(discord.Object(id=867811644322611200))
   async def cat(self, ctx):
-    """Sends a random cat image"""
+    """random cat pics"""
     async with aiohttp.ClientSession() as session:
       async with session.get('http://aws.random.cat/meow') as r:
         if r.status == 200:
@@ -641,15 +643,16 @@ class Tools(commands.Cog):
   # Note to self: Don't send msg in a coding block to retain markdown support
   # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. Also, the bot is in NYC. I'll work on it when it seems needed.
   # TODO: Convert to embed?
-  @commands.command(aliases=["paimonsbargains", "paimon'sbargains", "viewshop"])
-  async def paimonbargains(self, ctx):
+  @commands.hybrid_command(aliases=["paimonbargains", "paimon'sbargains", "viewshop"])
+  @app_commands.guilds(discord.Object(id=867811644322611200))
+  async def paimonsbargains(self, ctx):
     """Views current Paimon's Bargains items for the month"""
     current_month = datetime.now().month
 
     def display_future():
       built = "\n\n**Future:**\n"
       for x in range(1, 7):
-        built += self.months[((current_month + x) % 12) - 1] + " | " + self.characters[((current_month + x) % 6) - 1] + "\n"
+        built += "`" + self.months[((current_month + x) % 12) - 1] + "` | " + self.characters[((current_month + x) % 6) - 1] + "\n"
 
       return built;
 
@@ -658,7 +661,7 @@ class Tools(commands.Cog):
 
     await ctx.send(
       "**Current:**\n"
-      + self.months[current_month - 1] + " | " + self.characters[(current_month % 6) - 1]
+      + "`" + self.months[current_month - 1] + "` | " + self.characters[(current_month % 6) - 1]
       + determine_weapon_series()
       + display_future()
     )
@@ -804,10 +807,13 @@ class Tools(commands.Cog):
 
           await ctx.send(f"<@{ctx.author.id}> Note: For anime, use &whatanime\n\n{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}")
 
-  @commands.command()
-  async def weather(self, ctx, location=None):
+  @commands.hybrid_command()
+  @app_commands.guilds(discord.Object(id=867811644322611200))
+  @app_commands.describe(location='Check the weather at the specified location')
+  async def weather(self, ctx, location: str = None):
+    """Check the weather!"""
     if location is None:
-      location = ""
+      location = "Pasig City"
     async with ctx.typing():
       async with aiohttp.ClientSession() as session:
         async with session.get(f"https://wttr.in/{location}?0T") as resp:
@@ -828,9 +834,14 @@ class Tools(commands.Cog):
             return await ctx.send(json_data['error'])
           await ctx.send(json_data['raw'])
         
-  @commands.command(aliases=['genshin_character_stats', 'genshincharacters', 'genshincharacter', 'genshin_characters', 'genshin_character', 'character_stats', 'character_stat', 'characterstats', 'characterstat', 'genshin', 'genshininfo'])
-  async def genshincharacterstats(self, ctx, uid):
+  # @app_commands.command()
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
+  # @app_commands.describe(uid='The UID of the person you want to investigate')
+  @commands.command()
+  async def genshinspy(self, ctx, uid: int):  # app_commands.Range[int, 100000000, 999999999]
+    """Get the details of someone's Genshin account"""
     gs.set_cookie(ltuid = os.getenv("LTUID"), ltoken = os.getenv("LTOKEN"))
+
     async with ctx.typing():
       data = gs.get_characters(uid)
       data.sort(key=lambda x: (x["rarity"], x["level"]), reverse=True)
@@ -857,10 +868,13 @@ class Tools(commands.Cog):
         built += f"{char['name']} ({char['rarity']}* {char['element']}): lvl {char['level']} C{char['constellation']} | {char['weapon']['name']} ({char['weapon']['rarity']}* {char['weapon']['type']}): lvl {char['weapon']['level']} R{char['weapon']['refinement']} {tally_artifacts(char['artifacts'])}\n"
       await ctx.reply(f"```{built}```")
 
-  @commands.command(aliases=['resinreplenish', 'replenish', 'resins', 'resinsreplenish', 'replenishment', 'resinreplenishment', 'resinsreplenishment', 'resinfinish', 'resinfinished', 'resinsfinish', 'resinsfinished'])
+  @commands.hybrid_command(aliases=['resinreplenish', 'replenish', 'resins', 'resinsreplenish', 'replenishment', 'resinreplenishment', 'resinsreplenishment', 'resinfinish', 'resinfinished', 'resinsfinish', 'resinsfinished'])
+  @app_commands.guilds(discord.Object(id=867811644322611200))
+  @app_commands.describe(current_resin='The amount of resin that you have right now')
   async def resin(self, ctx, current_resin: int):
-    if current_resin > 160 or current_resin < 0:
-      return await ctx.send("❌ Inputted resin must be between 0-160.")
+    """Calculate when your resin will replenish"""
+    if current_resin > 160:
+      return await ctx.send("❌ Inputted resin must be below 160.")
 
     time_to_fully_replenished = (160 - current_resin) * (8 * 60)
     current_time = time.time()
@@ -896,7 +910,7 @@ class Admin(commands.Cog):
     elif activity == 'Watching':
       await bot.change_presence(activity=discord.Activity(name=status_msg, type=discord.ActivityType.watching))
 
-    await interaction.response.send_message(f'✅ My status is now "**{activity} {status_msg}**"')
+    await interaction.response.send_message(f'✅ My status is now "{activity} **{status_msg}**"')
 
 
   @commands.command()
