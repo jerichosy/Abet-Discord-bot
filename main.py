@@ -616,16 +616,16 @@ class Tools(commands.Cog):
     choose_phrases = choices.split(", ")  # Split returns a list (square brackets)
     await ctx.send(random.choice(choose_phrases))
 
-  @app_commands.command()
+  @commands.hybrid_command()
   @app_commands.guilds(discord.Object(id=867811644322611200))  
-  async def coinflip(self, interaction: discord.Interaction):
+  async def coinflip(self, ctx):
     """Flip a sussy coin"""
-    await interaction.response.send_message(self.coin_flip())
+    await ctx.send(self.coin_flip())
 
-  @app_commands.command()
+  @commands.hybrid_command()
   @app_commands.guilds(discord.Object(id=867811644322611200))
   @app_commands.describe(amount='The amount of sussy coins to flip')
-  async def coinfliptally(self, interaction: discord.Interaction, amount: app_commands.Range[int, 1, 10000]):
+  async def coinfliptally(self, ctx, amount: commands.Range[int, 2, 10000]):
     """Flip multiple sussy coins at once!"""
     heads_count = 0
     tails_count = 0
@@ -638,7 +638,7 @@ class Tools(commands.Cog):
         tails_count += 1
 
     response += f"Heads: {heads_count}\nTails: {tails_count}"
-    await interaction.response.send_message(response)
+    await ctx.send(response)
 
   # Note to self: Don't send msg in a coding block to retain markdown support
   # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. Also, the bot is in NYC. I'll work on it when it seems needed.
@@ -810,20 +810,20 @@ class Tools(commands.Cog):
   @commands.hybrid_command()
   @app_commands.guilds(discord.Object(id=867811644322611200))
   @app_commands.describe(location='Check the weather at the specified location')
-  async def weather(self, ctx, location: str = None):
+  async def weather(self, ctx, location: str = "Pasig City"):
     """Check the weather!"""
-    if location is None:
-      location = "Pasig City"
-    async with ctx.typing():
-      async with aiohttp.ClientSession() as session:
-        async with session.get(f"https://wttr.in/{location}?0T") as resp:
-          logger.info(f"wttr.in response: {resp.status}")
-          if await resp.text() == "" or await resp.text() == "Follow @igor_chubin for wttr.in updates":
-            return await ctx.send("The weather service is having problems. Please try again later.")
-          await ctx.send(f"```{await resp.text()}```")
+    if ctx.interaction is None:
+      await ctx.trigger_typing()
+
+    async with aiohttp.ClientSession() as session:
+      async with session.get(f"https://wttr.in/{location}?0T") as resp:
+        logger.info(f"wttr.in response: {resp.status}")
+        if await resp.text() == "" or await resp.text() == "Follow @igor_chubin for wttr.in updates":
+          return await ctx.send("The weather service is having problems. Please try again later.")
+        await ctx.send(f"```{await resp.text()}```")
 
   @commands.command()
-  async def metar(self, ctx, airport_code):
+  async def metar(self, ctx, airport_code: str = "RPLL"):
     token = os.getenv("METAR_TOKEN")
     async with ctx.typing():
       async with aiohttp.ClientSession(headers={"Authorization": "BEARER " + token}) as session:
@@ -838,7 +838,7 @@ class Tools(commands.Cog):
   # @app_commands.guilds(discord.Object(id=867811644322611200))
   # @app_commands.describe(uid='The UID of the person you want to investigate')
   @commands.command()
-  async def genshinspy(self, ctx, uid: int):  # app_commands.Range[int, 100000000, 999999999]
+  async def genshinspy(self, ctx, uid: commands.Range[int, 100000000, 999999999]):
     """Get the details of someone's Genshin account"""
     gs.set_cookie(ltuid = os.getenv("LTUID"), ltoken = os.getenv("LTOKEN"))
 
@@ -871,10 +871,8 @@ class Tools(commands.Cog):
   @commands.hybrid_command(aliases=['resinreplenish', 'replenish', 'resins', 'resinsreplenish', 'replenishment', 'resinreplenishment', 'resinsreplenishment', 'resinfinish', 'resinfinished', 'resinsfinish', 'resinsfinished'])
   @app_commands.guilds(discord.Object(id=867811644322611200))
   @app_commands.describe(current_resin='The amount of resin that you have right now')
-  async def resin(self, ctx, current_resin: int):
+  async def resin(self, ctx, current_resin: commands.Range[int, None, 160]):
     """Calculate when your resin will replenish"""
-    if current_resin > 160:
-      return await ctx.send("❌ Inputted resin must be below 160.")
 
     time_to_fully_replenished = (160 - current_resin) * (8 * 60)
     current_time = time.time()
@@ -885,9 +883,9 @@ class Admin(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
 
-  @commands.command(aliases=['delete'])
+  @commands.command(aliases=['delete', 'cleanup'])
   @has_permissions(manage_messages=True)
-  async def purge(self, ctx, amount: int):
+  async def purge(self, ctx, amount: commands.Range[int, 1, 25]):
     await ctx.channel.purge(limit=amount+1)
 
   @commands.command(aliases=['close', 'shutup', 'logoff', 'stop'])
@@ -954,13 +952,10 @@ class Admin(commands.Cog):
     await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
 
 
-  #@commands.command()
-  #async def checksafe(self, ctx):
-    #if ctx.message.channel.is_nsfw():
-      #await ctx.send("Yes")
-
-    # the ff. doesn't work?
-      #raise commands.errors.NSFWChannelRequired
+  # @app_commands.command()
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
+  # async def upload(self, interaction: discord.Interaction, attachment: discord.Attachment):
+  #   await interaction.response.send_message(f'Thanks for uploading {attachment.filename}!', ephemeral=True)
 
 
 def findWholeWord(w):
