@@ -8,8 +8,3 @@
 `&ping` - Returns latency information <br /> <br />
 `&about` - Returns a link to this page <br /> <br />
 \*Refer to bot's `&help` command for the latest list
-
-<br>
-
-**Unfinished:** <br />
-- \###
