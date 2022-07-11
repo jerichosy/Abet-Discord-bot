@@ -44,7 +44,7 @@ logger.addHandler(handler)
 
 load_dotenv()
 
-initial_extensions = ["cogs.Fun", "cogs.NSFW"]
+initial_extensions = ["cogs.Fun", "cogs.NSFW", "cogs.Waifu"]
 
 HOME_GUILD = discord.Object(id=867811644322611200)  # Inocencio clique server
 OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
@@ -331,67 +331,6 @@ class Info(commands.Cog):
         )
 
 
-class Waifu(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.command()
-    async def waifu(
-        self, ctx
-    ):  # Note: Despite the same name with the slash cmd, they are not functionally equivalent.
-        await ctx.send(await get_waifu("sfw", "waifu"))
-
-    @commands.command()
-    async def neko(self, ctx):
-        await ctx.send(await get_waifu("sfw", "neko"))
-
-    @commands.command()
-    async def shinobu(self, ctx):
-        await ctx.send(await get_waifu("sfw", "shinobu"))
-
-    @commands.command()
-    async def megumin(self, ctx):
-        await ctx.send(await get_waifu("sfw", "megumin"))
-
-    @commands.command()
-    async def bully(self, ctx):
-        await ctx.send(await get_waifu("sfw", "bully"))
-
-    @commands.command()
-    async def cry(self, ctx):
-        await ctx.send(await get_waifu("sfw", "cry"))
-
-    @commands.command()
-    async def awoo(self, ctx):
-        await ctx.send(await get_waifu("sfw", "awoo"))
-
-    @commands.command()
-    async def smug(self, ctx):
-        await ctx.send(await get_waifu("sfw", "smug"))
-
-    @commands.command()
-    async def blush(self, ctx):
-        await ctx.send(await get_waifu("sfw", "blush"))
-
-    @commands.command()
-    async def smile(self, ctx):
-        await ctx.send(await get_waifu("sfw", "smile"))
-
-    @commands.command()
-    async def nom(self, ctx):
-        await ctx.send(await get_waifu("sfw", "nom"))
-
-    @commands.command()
-    async def happy(self, ctx):
-        await ctx.send(await get_waifu("sfw", "happy"))
-
-    @commands.command()
-    async def dance(self, ctx):
-        await ctx.send(await get_waifu("sfw", "dance"))
-
-    @commands.command()
-    async def cringe(self, ctx):
-        await ctx.send(await get_waifu("sfw", "cringe"))
 
 
 class Roleplay(commands.Cog):
@@ -1293,7 +1232,6 @@ async def on_presence_update(before, after):
 async def main():
     # async with bot:
     await bot.add_cog(Info(bot))
-    await bot.add_cog(Waifu(bot))
     await bot.add_cog(Roleplay(bot))
     await bot.add_cog(Tools(bot))
     await bot.add_cog(Admin(bot))
