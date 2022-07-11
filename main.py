@@ -1,5 +1,5 @@
 # Check: ~~dependencies~~, comments
-# Change: migrate from requests to non-blocking alternative (only whatanime remaining), make it not respond to bots, Fix help cmd in "No Category", Consider pulling AniList info straight from Trace.moe instead to improve response time
+# Change: migrate from requests to non-blocking alternative (only whatanime remaining), Consider pulling AniList info straight from Trace.moe instead to improve response time
 # Additions: Add cogs and cmd desc.
 # Will not fix: Error of converting int when user accidentally types argument(s) containing characters, non-ints, etc.
 
@@ -28,6 +28,7 @@ import psutil
 import genshinstats as gs
 from collections import Counter
 from typing import List, Literal, Optional
+import math
 
 import logging
 
@@ -39,8 +40,11 @@ logger.addHandler(handler)
 
 load_dotenv()
 
+HOME_GUILD = discord.Object(id=867811644322611200)  # Inocencio clique server
+OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
+TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
+
 intents = discord.Intents.all()
-intents.message_content = True  # This might not be neccessary since we already called Intents.all()
 
 class AbetHelp(commands.MinimalHelpCommand):
   async def send_pages(self):
@@ -60,22 +64,26 @@ class AbetBot(commands.Bot):
         print(f"Waifu.im endpoint: {r.status}")
         if r.status == 200:
           global waifu_im_tags
-          waifu_im_tags = json.loads(await r.text())['versatile']
+          waifu_im_tags = json.loads(await r.text())
+
+    self.tree.copy_global_to(guild=TEST_GUILD)
+    fmt = await self.tree.sync(guild=TEST_GUILD)
+    print(f"Copied {len(fmt)} global commands to guild {TEST_GUILD.id}.")
 
   async def on_ready(self):
     print(f'Logged in as {self.user} (ID: {self.user.id})')
     print('------')
 
 # Other fields/attrs of bot: https://discordpy.readthedocs.io/en/stable/ext/commands/api.html?highlight=bot#bot
-bot = AbetBot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name="Blame my owner if I keep going offline"), intents=intents, owner_id = 298454523624554501, help_command=AbetHelp(command_attrs = {"hidden": True}))  # , description=
+bot = AbetBot(case_insensitive=True, command_prefix=commands.when_mentioned_or('&'), activity=discord.Game(name="Hi!"), intents=intents, owner_id = 298454523624554501, application_id=954284775210893344, help_command=AbetHelp(command_attrs = {"hidden": True}))  # , description=
 
 sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
 
 yay_words = ["yay", "freee"]
 
-wish_words = ["should i pull", "pulling", "p\*ll", "rolls", "constellation", "constellations", "primo", "primos", "primogem", "primogems", "c6", "c5", "c4", "c3", "c2", "c1", "c0", "character", "characters"]
+wish_words = ["should i pull", "pulling", "p\*ll", "rolls", "constellation", "constellations", "primo", "primos", "primogem", "primogems", "c6", "c5", "c4", "c3", "c2", "c1", "c0"]
 
-mhy_words = ["mihoyo"]
+mhy_words = ["mihoyo", "hoyoverse"]
 
 sad_response = [
   "Cheer up!",
@@ -143,17 +151,15 @@ mhy_response = [
   "We aren't ripping you off. We're just compensating Timmie which is why we couldn't get you better rewards!"
 ]
 
-abet_response = [
+abet_response_global = [
   "Absolutely!",
   "Without a doubt!",
   "Hell Yeah!",
   "Fuck no",
   "What the fuck are these questions? *Sighs* But yes you will get what you want for some reason",
   "Dude, that's sick. It's a no though.",
-  "You're chances are as high as the amount of Qiqi constellations you have",
   "Maybe, Fine. Yes.",
   "Sinasabi ng aking mahiwagang kristal it's a paking YES putangina.",
-  "I heard buying KofiTreb's Coffee increases your odds",
   "If you haven't taken a bath in the past 3 days it's a yes",
   "Bruh.",
   "Hell no.",
@@ -163,10 +169,18 @@ abet_response = [
   "Dude it already happened.",
   "All you have to do is try what's stopping you?",
   "I'll bet you a hundred dollars that is not going to happen",
+  "..."
+]
+
+abet_response_home = [
+  "You're chances are as high as the amount of Qiqi constellations you have",
+  "I heard buying KofiTreb's Coffee increases your odds"
+]
+
+abet_response_other = [
   "Ask Jericho",
   "Ask Carl",
-  "Bakit ako tinatanong niyo? May Carl kayo diba?",
-  "..."
+  "Bakit ako tinatanong niyo? May Carl kayo diba?"
 ]
 
 async def get_waifu(type, category):  # Can't make local to a class (being used by class Waifu, class Roleplay, class NSFW)
@@ -208,7 +222,7 @@ class Info(commands.Cog):
     self.bot = bot
     self.process = psutil.Process()
 
-  @commands.command(aliases=['info', 'sourcecode', 'github'])
+  @commands.command(aliases=['info', 'github', 'repo', 'repository'])
   async def about(self, ctx):
     """link to documentation & source code on GitHub"""
     # await ctx.send("Source code & documentation: https://github.com/jerichosy/Abet-Discord-bot")
@@ -218,11 +232,11 @@ class Info(commands.Cog):
     embed.set_image(url="https://opengraph.githubassets.com/89c81820967bbd8115fc6a68d55ef62a3964c8caf19e47a321f12d969ac3b6e3/jerichosy/Abet-Discord-bot")
     embed.set_thumbnail(url=bot.user.display_avatar.url)
 
-    main_guild = self.bot.get_guild(867811644322611200)
+    main_guild = self.bot.get_guild(HOME_GUILD.id)
     owner = main_guild.get_member(self.bot.owner_id)
     embed.set_author(name=str(owner), icon_url=owner.display_avatar.url)
     version = pkg_resources.get_distribution('discord.py').version
-    embed.set_footer(text=f"</> with 💖 by KIA and Tre' Industries using Python (discord.py v{version})", icon_url="https://media.discordapp.net/stickers/946824812658065459.png")
+    embed.set_footer(text=f"</> with 💖 by Kyoya Intelligence Agency and Tre' Industries using Python (discord.py v{version})", icon_url="https://media.discordapp.net/stickers/946824812658065459.png")
 
     memory_usage = self.process.memory_full_info().uss / 1024**2
     cpu_usage = self.process.cpu_percent() / psutil.cpu_count()
@@ -233,13 +247,13 @@ class Info(commands.Cog):
     await ctx.send(embed=embed)
 
 
-  @commands.command(aliases=['code'])
-  async def showcode(self, ctx):
+  @commands.command(aliases=['code', 'showcode', 'sc'])
+  async def sourcecode(self, ctx):
     """Have the bot upload it's own sourcecode here in Discord"""
     await ctx.send(file=discord.File('main.py'))
 
   @commands.hybrid_command()
-  @app_commands.guilds(discord.Object(id=867811644322611200))
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
   async def ping(self, ctx):
     """Get the bot's current websocket and API latency"""
     start_time = time.time()
@@ -264,7 +278,7 @@ class Fun(commands.Cog):
     await ctx.send("https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png")
 
   @app_commands.command()
-  @app_commands.guilds(discord.Object(id=867811644322611200))
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
   async def inspire(self, interaction: discord.Interaction):
     """random inspirational quote"""
     json_data = await self.get_json_quote("https://zenquotes.io/api/random")
@@ -272,7 +286,7 @@ class Fun(commands.Cog):
     await interaction.response.send_message(quote)
 
   @app_commands.command()
-  @app_commands.guilds(discord.Object(id=867811644322611200))
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
   async def kanye(self, interaction: discord.Interaction):
     """random Kanye West quotes (Kanye as a Service)"""
     json_data = await self.get_json_quote("https://api.kanye.rest/")
@@ -280,7 +294,7 @@ class Fun(commands.Cog):
     await interaction.response.send_message(quote)
 
   @app_commands.command()
-  @app_commands.guilds(discord.Object(id=867811644322611200))
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
   async def trump(self, interaction: discord.Interaction, in_image_form: Literal['No', 'Yes'] ='No'):
     """random dumbest things Donald Trump has ever said"""
     
@@ -295,7 +309,7 @@ class Fun(commands.Cog):
           await interaction.response.send_message(file=discord.File(data, "tronalddump.jpg"))
 
   @commands.hybrid_command(aliases=['meow'])
-  @app_commands.guilds(discord.Object(id=867811644322611200))
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
   async def cat(self, ctx):
     """random cat pics"""
     async with aiohttp.ClientSession() as session:
@@ -345,8 +359,9 @@ class Fun(commands.Cog):
   #   return [app_commands.Choice(name=fruit, value=fruit) for fruit in fruits if current.lower() in fruit.lower()]
 
   @app_commands.command()
-  @app_commands.guilds(discord.Object(id=867811644322611200))
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
   @app_commands.describe(is_ephemeral='If "Yes", the image will only be visible to you')
+  # @app_commands.choices(tag=[waifu_im_tags])
   async def waifu(
     self, 
     interaction: discord.Interaction, 
@@ -357,8 +372,10 @@ class Fun(commands.Cog):
     """random Waifu images"""
     if type == 'nsfw' and not interaction.channel.is_nsfw() and is_ephemeral == 'No':
       return await interaction.response.send_message("You requested a visible NSFW image in a non-NSFW channel! Please use in the appropriate channel(s).", ephemeral=True)
+    if tag in waifu_im_tags['nsfw']:
+      return await interaction.response.send_message("NSFW tags are not supported in this slash cmd. Please use the traditional equivalent.", ephemeral=True)
 
-    #print(waifu_im_tags)
+    # print(waifu_im_tags)
 
     text, embed = await get_waifu_im_embed(type, tag)
     await interaction.response.send_message(content=text, embed=embed, ephemeral=True if is_ephemeral == 'Yes' else False)
@@ -367,7 +384,7 @@ class Fun(commands.Cog):
   async def waifu_autocomplete(self, interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
     return [
       app_commands.Choice(name=waifu_im_tag, value=waifu_im_tag) 
-      for waifu_im_tag in waifu_im_tags if current.lower() in waifu_im_tag.lower()
+      for waifu_im_tag in waifu_im_tags['versatile'] if current.lower() in waifu_im_tag.lower()
     ]
 
 class Waifu(commands.Cog):
@@ -595,6 +612,98 @@ class Tools(commands.Cog):
       "Bennett Lisa",
       "Barbara Kaeya"
     ]
+    self.characterExpList = [
+      0,
+      1000,
+      1325,
+      1700,
+      2150,
+      2625,
+      3150,
+      3725,
+      4350,
+      5000,
+      5700,
+      6450,
+      7225,
+      8050,
+      8925,
+      9825,
+      10750,
+      11725,
+      12725,
+      13775,
+      14875,
+      16800,
+      18000,
+      19250,
+      20550,
+      21875,
+      23250,
+      24650,
+      26100,
+      27575,
+      29100,
+      30650,
+      32250,
+      33875,
+      35550,
+      37250,
+      38975,
+      40750,
+      42575,
+      44425,
+      46300,
+      50625,
+      52700,
+      54775,
+      56900,
+      59075,
+      61275,
+      63525,
+      65800,
+      68125,
+      70475,
+      76500,
+      79050,
+      81650,
+      84275,
+      86950,
+      89650,
+      92400,
+      95175,
+      98000,
+      100875,
+      108950,
+      112050,
+      115175,
+      118325,
+      121525,
+      124775,
+      128075,
+      131400,
+      134775,
+      138175,
+      148700,
+      152375,
+      156075,
+      159825,
+      163600,
+      167425,
+      171300,
+      175225,
+      179175,
+      183175,
+      216225,
+      243025,
+      273100,
+      306800,
+      344600,
+      386950,
+      434425,
+      487625,
+      547200,
+    ]
 
   def coin_flip(self):
     population = ['Heads', 'Tails']
@@ -606,8 +715,15 @@ class Tools(commands.Cog):
     """customized Magic 8-Ball"""
     if has_question is None:  # PEP 8
       await ctx.send("What?")
+    elif ctx.guild.id == HOME_GUILD.id:
+      print("Home guild")
+      await ctx.send(random.choice(abet_response_global + abet_response_other + abet_response_home))
+    elif ctx.guild.id == OTHER_GUILD.id:
+      print("Other guild")
+      await ctx.send(random.choice(abet_response_global + abet_response_other))
     else:
-      await ctx.send(random.choice(abet_response))
+      print("Global guild")
+      await ctx.send(random.choice(abet_response_global))
 
   @commands.command()
   async def choose(self, ctx, *, choices):
@@ -616,20 +732,39 @@ class Tools(commands.Cog):
     choose_phrases = choices.split(", ")  # Split returns a list (square brackets)
     await ctx.send(random.choice(choose_phrases))
 
-  @commands.hybrid_command()
-  @app_commands.guilds(discord.Object(id=867811644322611200))  
+  @commands.command(aliases=['choosetally'])
+  async def choosebestof(self, ctx, times: Optional[int], *, choices):
+    choose_phrases = choices.split(", ")
+    response = []
+      
+    if times is None:
+      times = (len(choose_phrases) ** 2) + 1
+
+    # if times > 10000:
+      # response.append("Max of 10k only allowed!\n")
+    times = min(10000, max(2, times))
+
+    results = Counter(random.choice(choose_phrases) for _ in range(times))
+    if len(results) > 10:
+      response.append('Only showing top 10 results...')
+    for index, (elem, count) in enumerate(results.most_common(10), start=1):  # TODO: Understand what's going on here
+      response.append(f'{index}. {elem} ({count} {"time" if count == 1 else "times"}, {count/times:.2%})')
+
+    await ctx.send('\n'.join(response))
+
+  @commands.hybrid_command(aliases=['coin'])
+  # @app_commands.guilds(discord.Object(id=867811644322611200))  
   async def coinflip(self, ctx):
     """Flip a sussy coin"""
     await ctx.send(self.coin_flip())
 
-  @commands.hybrid_command()
-  @app_commands.guilds(discord.Object(id=867811644322611200))
+  @commands.hybrid_command(aliases=['cointally'])
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
   @app_commands.describe(amount='The amount of sussy coins to flip')
   async def coinfliptally(self, ctx, amount: commands.Range[int, 2, 10000]):
     """Flip multiple sussy coins at once!"""
     heads_count = 0
     tails_count = 0
-    response = ""
 
     for _ in range(amount):
       if self.coin_flip() == 'Heads':
@@ -637,16 +772,15 @@ class Tools(commands.Cog):
       else:
         tails_count += 1
 
-    response += f"Heads: {heads_count}\nTails: {tails_count}"
-    await ctx.send(response)
+    await ctx.send(f"`Heads`: {heads_count}\n`Tails`: {tails_count}")
 
   # Note to self: Don't send msg in a coding block to retain markdown support
   # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. Also, the bot is in NYC. I'll work on it when it seems needed.
   # TODO: Convert to embed?
   @commands.hybrid_command(aliases=["paimonbargains", "paimon'sbargains", "viewshop"])
-  @app_commands.guilds(discord.Object(id=867811644322611200))
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
   async def paimonsbargains(self, ctx):
-    """Views current Paimon's Bargains items for the month"""
+    """Genshin Impact: Views current Paimon's Bargains items for the month"""
     current_month = datetime.now().month
 
     def display_future():
@@ -755,9 +889,8 @@ class Tools(commands.Cog):
       url = ctx.message.attachments[0].url
     
     async with ctx.typing():
-      token = os.getenv("SAUCENAO_TOKEN")
       async with aiohttp.ClientSession() as session:
-        async with session.get(f"https://saucenao.com/search.php?db=999&output_type=2&numres=1&url={url}&api_key={token}") as r:
+        async with session.get(f"https://saucenao.com/search.php?db=999&output_type=2&numres=1&url={url}&api_key={os.getenv('SAUCENAO_TOKEN')}") as r:
           logger.info(f"SauceNao: {r.status}")
           json_data = await r.json()
           #print(json_data)
@@ -808,7 +941,7 @@ class Tools(commands.Cog):
           await ctx.send(f"<@{ctx.author.id}> Note: For anime, use &whatanime\n\n{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}")
 
   @commands.hybrid_command()
-  @app_commands.guilds(discord.Object(id=867811644322611200))
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
   @app_commands.describe(location='Check the weather at the specified location')
   async def weather(self, ctx, location: str = "Pasig City"):
     """Check the weather!"""
@@ -822,14 +955,15 @@ class Tools(commands.Cog):
           return await ctx.send("The weather service is having problems. Please try again later.")
         await ctx.send(f"```{await resp.text()}```")
 
-  @commands.command()
+  @commands.command(hidden=True)
   async def metar(self, ctx, airport_code: str = "RPLL"):
-    token = os.getenv("METAR_TOKEN")
     async with ctx.typing():
-      async with aiohttp.ClientSession(headers={"Authorization": "BEARER " + token}) as session:
+      async with aiohttp.ClientSession(headers={"Authorization": "BEARER " + os.getenv("METAR_TOKEN")}) as session:
         async with session.get(f"https://avwx.rest/api/metar/{airport_code}") as response:
           logger.info(f"AVWX response: {response.status}")
           json_data = await response.json()
+          if response.status == 204:
+            return await ctx.send("Error 204")
           if response.status != 200:
             return await ctx.send(json_data['error'])
           await ctx.send(json_data['raw'])
@@ -869,15 +1003,54 @@ class Tools(commands.Cog):
       await ctx.reply(f"```{built}```")
 
   @commands.hybrid_command(aliases=['resinreplenish', 'replenish', 'resins', 'resinsreplenish', 'replenishment', 'resinreplenishment', 'resinsreplenishment', 'resinfinish', 'resinfinished', 'resinsfinish', 'resinsfinished'])
-  @app_commands.guilds(discord.Object(id=867811644322611200))
+  # @app_commands.guilds(discord.Object(id=867811644322611200))
   @app_commands.describe(current_resin='The amount of resin that you have right now')
   async def resin(self, ctx, current_resin: commands.Range[int, None, 160]):
-    """Calculate when your resin will replenish"""
+    """Genshin Impact: Calculate when your resin will replenish"""
 
     time_to_fully_replenished = (160 - current_resin) * (8 * 60)
     current_time = time.time()
     finished_time = current_time + time_to_fully_replenished
     await ctx.reply(f"Resin will be fully replenished at: <t:{int(finished_time)}:F> (<t:{int(finished_time)}:R>)")
+
+  @app_commands.command()
+  async def characterexp(self, interaction: discord.Interaction, current_level: app_commands.Range[int, 1, 90], current_experience: app_commands.Range[int, 0, None], target_level: app_commands.Range[int, 1, 90]):
+    """Genshin Impact: Calculate how much Hero's Wit, etc. you need to level/ascend your characters"""
+
+    # validation
+    if current_level >= target_level:
+      return await interaction.response.send_message("Already achieved the target level.")
+    if self.characterExpList[current_level] < current_experience:
+      return await interaction.response.send_message("Current experience exceeds the maximum experience in the current level.")
+    
+    totalExpNeeded = 0
+
+    for i in range(current_level, target_level):
+      if (i == current_level):
+        totalExpNeeded += self.characterExpList[i] - current_experience
+      else:
+        totalExpNeeded += self.characterExpList[i]
+
+    def ceilNumber(num, place):
+      div = 1
+      for _ in range(0, place):
+        div *= 10
+      return math.ceil(num / div) * div
+
+    currentExpNeeded = ceilNumber(totalExpNeeded, 3)
+
+    totalLargeNeeded = math.floor(currentExpNeeded / 20000)
+    currentExpNeeded -= totalLargeNeeded * 20000
+    totalMediumNeeded =  math.floor(currentExpNeeded / 5000)
+    currentExpNeeded -= totalMediumNeeded * 5000
+    totalSmallNeeded = math.floor(currentExpNeeded / 1000)
+
+    response = f"""__To ascend from level {current_level} to {target_level} with current EXP of {current_experience}, you'll need:__
+    
+    `{totalLargeNeeded:>3}` × <:HerosWit:984919059780993134> **Hero's Wit**
+    `{totalMediumNeeded:>3}` × <:AdventurersExperience:984919553366708256> **Adventurer's Experience**
+    `{totalSmallNeeded:>3}` × <:WanderersAdvice:984919638792085505> **Wanderer's Advice**"""
+    await interaction.response.send_message(response)
 
 class Admin(commands.Cog):
   def __init__(self, bot):
@@ -885,17 +1058,18 @@ class Admin(commands.Cog):
 
   @commands.command(aliases=['delete', 'cleanup'])
   @has_permissions(manage_messages=True)
-  async def purge(self, ctx, amount: commands.Range[int, 1, 25]):
+  async def purge(self, ctx, amount: commands.Range[int, 1, 35]):
     await ctx.channel.purge(limit=amount+1)
 
   @commands.command(aliases=['close', 'shutup', 'logoff', 'stop'])
-  @has_permissions(administrator=True)  # Retain cause we usually just give alt the Administrator perm or none at all
+  @commands.is_owner()
   async def shutdown(self, ctx):
     await ctx.send("🛑 Shutting down!")
     await bot.close()
 
+  # TODO: Add permissions?
   @app_commands.command()
-  @app_commands.guilds(discord.Object(id=867811644322611200))
+  @app_commands.guilds(HOME_GUILD)
   #@has_permissions(manage_guild=True)
   async def changestatus(self, interaction: discord.Interaction, activity: Literal['Playing', 'Listening to', 'Watching'], status_msg: str):
     """Change the status/activity of the bot"""
@@ -963,30 +1137,32 @@ def findWholeWord(w):
 
 @bot.event
 async def on_message(message):
-  if message.author == bot.user:
+  # NOTE: This will stay here
+  if message.author.id == bot.user.id:
     return
 
-  msg = message.content.lower()
+  if (message.guild.id == HOME_GUILD.id) and ("rant" not in message.channel.name):
+    msg = message.content.lower()
 
-  for x in sad_words:
-    if findWholeWord(x)(msg):
-      await message.channel.send(random.choice(sad_response))
-      break
-  
-  if any(word in msg for word in yay_words):
-    await message.channel.send(random.choice(yay_response))
-  
-  for x in wish_words:
-    if findWholeWord(x)(msg):
-      if random.random() < 0.1:
-        await message.channel.send(random.choice(wish_response))
-      break
-  
-  for x in mhy_words:
-    if findWholeWord(x)(msg):
-      if random.random() < 0.1:
-        await message.channel.send(random.choice(mhy_response))
-      break
+    for x in sad_words:
+      if findWholeWord(x)(msg):
+        await message.channel.send(random.choice(sad_response))
+        break
+    
+    if any(word in msg for word in yay_words):
+      await message.channel.send(random.choice(yay_response))
+    
+    for x in wish_words:
+      if findWholeWord(x)(msg):
+        if random.random() < 0.1:
+          await message.channel.send(random.choice(wish_response))
+        break
+    
+    for x in mhy_words:
+      if findWholeWord(x)(msg):
+        if random.random() < 0.1:
+          await message.channel.send(random.choice(mhy_response))
+        break
 
   await bot.process_commands(message)
 
@@ -1004,14 +1180,31 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_presence_update(before, after):
-  if not after.bot:
-    logger.info(f"{after} | {after == before}")
-    logger.info(f"  BEFORE: {before.activity}")
-    logger.info(f"  AFTER:  {after.activity}")
-    if after.activity is not None:
-      if after.activity.name == 'VALORANT' and before.activity is None:  # This invokes from None -> VALORANT, but won't invoke from Spotify, etc. But it's ok
-        channel = bot.get_channel(867811644322611202)  #sala 867811644322611202
-        await channel.send(f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {after.mention}'s footsteps and playing {after.activity.name}!** ⚠️")
+  if after.guild.id == HOME_GUILD.id:
+    if not after.bot:
+      logger.info(f"{after} | {after.guild}")
+      logger.info(f"  BEFORE: {before.activity}")
+      logger.info(f"  AFTER:  {after.activity}")
+      if after.activity is not None:
+        # if after.activity.name == 'VALORANT' and before.activity is None:  # This invokes from None -> VALORANT, but won't invoke from Spotify, etc. But it's ok
+        #   channel = bot.get_channel(867811644322611202)  #sala 867811644322611202
+        #   await channel.send(f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {after.mention}'s footsteps and playing {after.activity.name}!** ⚠️")
+
+        def check_offending(member, offending):
+          for activity in member.activities:
+            if activity.name == offending:
+              return True
+          return False
+
+        async def send_alert(member, offending):
+          channel = bot.get_channel(867811644322611202)  #sala
+          # channel = bot.get_channel(870095545992101958)  #bot-spam
+          await channel.send(f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {member.mention}'s footsteps and playing {offending}!** ⚠️")
+
+        if check_offending(after, 'VALORANT') and not check_offending(before, 'VALORANT'):
+        # if check_offending(after, 'Genshin Impact') and not check_offending(before, 'Genshin Impact'):
+          send_alert(after, 'VALORANT')
+
 
 async def main():
   async with bot:
