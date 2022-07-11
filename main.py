@@ -51,7 +51,8 @@ initial_extensions = [
     "cogs.Roleplay",
     "cogs.Info",
     "cogs.Admin",
-    "cogs.Tools"
+    "cogs.Tools",
+    "cogs.Genshin"
 ]
 
 intents = discord.Intents.all()
