@@ -25,7 +25,7 @@ class Info(commands.Cog):
         embed.set_image(
             url="https://opengraph.githubassets.com/89c81820967bbd8115fc6a68d55ef62a3964c8caf19e47a321f12d969ac3b6e3/jerichosy/Abet-Discord-bot"
         )
-        
+
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
 
         main_guild = self.bot.get_guild(self.bot.HOME_GUILD.id)
@@ -48,10 +48,11 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command(aliases=["code", "showcode", "sc"])
-    async def sourcecode(self, ctx):
-        """Have the bot upload it's own sourcecode here in Discord"""
-        await ctx.send(file=discord.File("main.py"))
+    # TODO: Make this accept an input for which file (in whatever way; text input, views/buttons, etc.)
+    # @commands.command(aliases=["code", "showcode", "sc"])
+    # async def sourcecode(self, ctx):
+    #     """Have the bot upload it's own sourcecode here in Discord"""
+    #     await ctx.send(file=discord.File("main.py"))
 
     @commands.hybrid_command()
     # @app_commands.guilds(discord.Object(id=867811644322611200))
