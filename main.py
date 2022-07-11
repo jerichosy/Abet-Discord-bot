@@ -3,8 +3,6 @@
 # Additions: Add cogs and cmd desc.
 # Will not fix: Error of converting int when user accidentally types argument(s) containing characters, non-ints, etc.
 
-# Add in commit desc/comment:
-
 # Notes: requests has issues on IPv6 networks, don't set your own tree with `tree = app_commands.CommandTree(bot)`
 
 import discord
@@ -30,9 +28,10 @@ from collections import Counter
 from typing import List, Literal, Optional
 import math
 
-import logging
 import traceback
 import sys
+
+import logging
 
 logger = logging.getLogger("discord")
 logger.setLevel(logging.INFO)
@@ -52,7 +51,7 @@ initial_extensions = [
     "cogs.Info",
     "cogs.Admin",
     "cogs.Tools",
-    "cogs.Genshin"
+    "cogs.Genshin",
 ]
 
 intents = discord.Intents.all()
@@ -74,15 +73,7 @@ class AbetBot(commands.Bot):
         self.TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
 
     async def setup_hook(self) -> None:
-        # FIXME:
-        # # Populate the waifu_im_tags list (for slash cmds)
-        # async with aiohttp.ClientSession() as cs:
-        #     async with cs.get("https://api.waifu.im/endpoints") as r:
-        #         print(f"Waifu.im endpoint: {r.status}")
-        #         if r.status == 200:
-        #             global waifu_im_tags
-        #             waifu_im_tags = json.loads(await r.text())
-
+        # Load cogs
         for extension in initial_extensions:
             try:
                 await self.load_extension(extension)
@@ -90,10 +81,10 @@ class AbetBot(commands.Bot):
                 print(f"Failed to load extension {extension}.", file=sys.stderr)
                 traceback.print_exc()
 
-        # FIXME:
-        # self.tree.copy_global_to(guild=TEST_GUILD)
-        # synced = await self.tree.sync(guild=TEST_GUILD)
-        # print(f"Copied {len(synced)} global commands to guild {TEST_GUILD.id}.")
+        # Sync global commands to test guild
+        self.tree.copy_global_to(guild=self.TEST_GUILD)
+        synced = await self.tree.sync(guild=self.TEST_GUILD)
+        print(f"Copied {len(synced)} global commands to guild {self.TEST_GUILD.id}.")
 
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
@@ -111,9 +102,8 @@ class AbetBot(commands.Bot):
 
         return waifu
 
-    async def get_waifu_im_embed(
-        self, type, category
-    ):  # Can't make local to a class (being used by class Fun and class NSFW)
+    # Can't make local to a class (being used by class Fun and class NSFW)
+    async def get_waifu_im_embed(self, type, category):
         type = "False" if type == "sfw" else "True"
         url_string = (
             f"https://api.waifu.im/random/?selected_tags={category}&is_nsfw={type}"
@@ -246,8 +236,6 @@ mhy_response = [
     "All funds from Mihoyo are sent straight to Zhongli's pockets",
     "We aren't ripping you off. We're just compensating Timmie which is why we couldn't get you better rewards!",
 ]
-
-
 
 
 def findWholeWord(w):
