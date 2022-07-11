@@ -44,11 +44,14 @@ logger.addHandler(handler)
 
 load_dotenv()
 
-initial_extensions = ["cogs.Fun", "cogs.NSFW", "cogs.Waifu", "cogs.Roleplay"]
-
-HOME_GUILD = discord.Object(id=867811644322611200)  # Inocencio clique server
-OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
-TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
+initial_extensions = [
+    "cogs.Fun",
+    "cogs.NSFW",
+    "cogs.Waifu",
+    "cogs.Roleplay",
+    "cogs.Info",
+    "cogs.Admin",
+]
 
 intents = discord.Intents.all()
 
@@ -64,6 +67,9 @@ class AbetHelp(commands.MinimalHelpCommand):
 class AbetBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.HOME_GUILD = discord.Object(id=867811644322611200)  # Inocencio server
+        self.OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
+        self.TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
 
     async def setup_hook(self) -> None:
         # FIXME:
@@ -271,68 +277,6 @@ abet_response_other = [
     "Ask Carl",
     "Bakit ako tinatanong niyo? May Carl kayo diba?",
 ]
-
-
-class Info(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-        self.process = psutil.Process()
-
-    @commands.command(aliases=["info", "github", "repo", "repository"])
-    async def about(self, ctx):
-        """link to documentation & source code on GitHub"""
-        # await ctx.send("Source code & documentation: https://github.com/jerichosy/Abet-Discord-bot")
-
-        embed = discord.Embed(
-            title="FUCK CARL",
-            colour=discord.Colour(0xEE615B),
-            url="https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png",
-            description="Source code & documentation: [GitHub repository](https://github.com/jerichosy/Abet-Discord-bot)",
-        )
-
-        embed.set_image(
-            url="https://opengraph.githubassets.com/89c81820967bbd8115fc6a68d55ef62a3964c8caf19e47a321f12d969ac3b6e3/jerichosy/Abet-Discord-bot"
-        )
-        embed.set_thumbnail(url=bot.user.display_avatar.url)
-
-        main_guild = self.bot.get_guild(HOME_GUILD.id)
-        owner = main_guild.get_member(self.bot.owner_id)
-        embed.set_author(name=str(owner), icon_url=owner.display_avatar.url)
-        version = pkg_resources.get_distribution("discord.py").version
-        embed.set_footer(
-            text=f"</> with 💖 by Kyoya Intelligence Agency and Tre' Industries using Python (discord.py v{version})",
-            icon_url="https://media.discordapp.net/stickers/946824812658065459.png",
-        )
-
-        memory_usage = self.process.memory_full_info().uss / 1024**2
-        cpu_usage = self.process.cpu_percent() / psutil.cpu_count()
-        embed.add_field(
-            name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU"
-        )
-
-        # embed.add_field(name='Uptime', value=self.get_bot_uptime(brief=True))  # TODO: 2.0 thing
-
-        await ctx.send(embed=embed)
-
-    @commands.command(aliases=["code", "showcode", "sc"])
-    async def sourcecode(self, ctx):
-        """Have the bot upload it's own sourcecode here in Discord"""
-        await ctx.send(file=discord.File("main.py"))
-
-    @commands.hybrid_command()
-    # @app_commands.guilds(discord.Object(id=867811644322611200))
-    async def ping(self, ctx):
-        """Get the bot's current websocket and API latency"""
-        start_time = time.time()
-        to_edit = await ctx.send("Testing ping...")
-        end_time = time.time()
-        await to_edit.edit(
-            content=f"Pong! {round(bot.latency * 1000)}ms | API: {round((end_time - start_time) * 1000)}ms"
-        )
-
-
-
-
 
 
 class Tools(commands.Cog):
@@ -898,104 +842,6 @@ class Tools(commands.Cog):
         await interaction.response.send_message(response)
 
 
-class Admin(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.command(aliases=["delete", "cleanup"])
-    @has_permissions(manage_messages=True)
-    async def purge(self, ctx, amount: commands.Range[int, 1, 35]):
-        await ctx.channel.purge(limit=amount + 1)
-
-    @commands.command(aliases=["close", "shutup", "logoff", "stop"])
-    @commands.is_owner()
-    async def shutdown(self, ctx):
-        await ctx.send("🛑 Shutting down!")
-        await bot.close()
-
-    # TODO: Add permissions?
-    @app_commands.command()
-    @app_commands.guilds(HOME_GUILD)
-    # @has_permissions(manage_guild=True)
-    async def changestatus(
-        self,
-        interaction: discord.Interaction,
-        activity: Literal["Playing", "Listening to", "Watching"],
-        status_msg: str,
-    ):
-        """Change the status/activity of the bot"""
-        # https://discordpy.readthedocs.io/en/master/api.html#discord.ActivityType
-
-        if activity == "Playing":
-            await bot.change_presence(activity=discord.Game(name=status_msg))
-        elif activity == "Listening to":
-            await bot.change_presence(
-                activity=discord.Activity(
-                    name=status_msg, type=discord.ActivityType.listening
-                )
-            )
-        elif activity == "Watching":
-            await bot.change_presence(
-                activity=discord.Activity(
-                    name=status_msg, type=discord.ActivityType.watching
-                )
-            )
-
-        await interaction.response.send_message(
-            f'✅ My status is now "{activity} **{status_msg}**"'
-        )
-
-    @commands.command()
-    async def sendmsg(self, ctx, channel_id: int, *, content):
-        # print(content)
-        channel = bot.get_channel(channel_id)
-        await channel.send(content)
-        await ctx.send(f"**Sent:** {content}\n**Where:** <#{channel_id}>")
-
-    @commands.command()
-    async def sendreply(self, ctx, channel_id: int, message_id: int, *, content):
-        channel = bot.get_channel(channel_id)
-        message = await channel.fetch_message(message_id)
-        await message.reply(content)
-        await ctx.send(f"**Replied:** {content}\n**Which message:** {message.jump_url}")
-
-    @commands.command()
-    @commands.is_owner()
-    async def sync(
-        self,
-        ctx: Context,
-        guilds: commands.Greedy[discord.Object],
-        spec: Optional[Literal["~"]] = None,
-    ) -> None:
-        if not guilds:
-            if spec == "~":
-                fmt = await ctx.bot.tree.sync(guild=ctx.guild)
-            else:
-                fmt = await ctx.bot.tree.sync()
-
-            await ctx.send(
-                f"Synced {len(fmt)} commands {'globally' if spec is None else 'to the current guild.'}"
-            )
-            return
-
-        assert guilds is not None
-        fmt = 0
-        for guild in guilds:
-            try:
-                await ctx.bot.tree.sync(guild=guild)
-            except discord.HTTPException:
-                pass
-            else:
-                fmt += 1
-
-        await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
-
-    # @app_commands.command()
-    # @app_commands.guilds(discord.Object(id=867811644322611200))
-    # async def upload(self, interaction: discord.Interaction, attachment: discord.Attachment):
-    #   await interaction.response.send_message(f'Thanks for uploading {attachment.filename}!', ephemeral=True)
-
-
 def findWholeWord(w):
     return re.compile(r"\b({0})\b".format(w), flags=re.IGNORECASE).search
 
@@ -1006,7 +852,7 @@ async def on_message(message):
     if message.author.id == bot.user.id:
         return
 
-    if (message.guild.id == HOME_GUILD.id) and ("rant" not in message.channel.name):
+    if (message.guild.id == bot.HOME_GUILD.id) and ("rant" not in message.channel.name):
         msg = message.content.lower()
 
         for x in sad_words:
@@ -1049,7 +895,7 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_presence_update(before, after):
-    if after.guild.id == HOME_GUILD.id:
+    if after.guild.id == bot.HOME_GUILD.id:
         if not after.bot:
             logger.info(f"{after} | {after.guild}")
             logger.info(f"  BEFORE: {before.activity}")
@@ -1081,9 +927,7 @@ async def on_presence_update(before, after):
 
 async def main():
     # async with bot:
-    await bot.add_cog(Info(bot))
     await bot.add_cog(Tools(bot))
-    await bot.add_cog(Admin(bot))
 
     await bot.load_extension("jishaku")
     # for extension in initial_extensions:
