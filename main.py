@@ -1,32 +1,19 @@
 # Check: ~~dependencies~~, comments
-# Change: migrate from requests to non-blocking alternative (only whatanime remaining), Consider pulling AniList info straight from Trace.moe instead to improve response time
+# Change: migrate from requests to non-blocking alternative (only whatanime remaining), Consider pulling AniList info straight from Trace.moe instead to improve response time and simplify
 # Additions: Add cogs and cmd desc.
 # Will not fix: Error of converting int when user accidentally types argument(s) containing characters, non-ints, etc.
 
-# Notes: requests has issues on IPv6 networks, don't set your own tree with `tree = app_commands.CommandTree(bot)`
+# Notes: requests has issues on IPv6 networks, don't set your own tree with `tree = app_commands.CommandTree(bot)` as Bot handles it
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import has_permissions, Context
-from discord import app_commands
 from dotenv import load_dotenv
 import os
 import asyncio
-import io
 import aiohttp
-import requests
-import json
 import random
-from random import choices
-from datetime import datetime, timedelta
-import time
+from datetime import datetime
 import re
-import pkg_resources
-import psutil
-import genshinstats as gs
-from collections import Counter
-from typing import List, Literal, Optional
-import math
 
 import traceback
 import sys
@@ -325,12 +312,8 @@ async def main():
     # async with bot:
 
     await bot.load_extension("jishaku")
-    # for extension in initial_extensions:
-    #     await bot.load_extension(extension)
 
     await bot.start(os.getenv("BOT_TOKEN"))
-
-    # await bot.start(os.getenv("BOT_TOKEN"))
 
 
 asyncio.run(main())
