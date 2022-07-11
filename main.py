@@ -44,7 +44,7 @@ logger.addHandler(handler)
 
 load_dotenv()
 
-initial_extensions = ["cogs.Fun"]
+initial_extensions = ["cogs.Fun", "cogs.NSFW"]
 
 HOME_GUILD = discord.Object(id=867811644322611200)  # Inocencio clique server
 OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
@@ -90,6 +90,51 @@ class AbetBot(commands.Bot):
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print("------")
+
+    async def get_waifu(
+        self, type, category
+    ):  # Can't make local to a class (being used by class Waifu, class Roleplay, class NSFW)
+        url_string = f"https://api.waifu.pics/{type}/{category}"
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_string) as r:
+                logger.info(f"Waifu.pics: {r.status}")  # debug
+                if r.status == 200:
+                    json_data = await r.json()
+                    waifu = json_data["url"]
+
+        return waifu
+
+    async def get_waifu_im_embed(
+        self, type, category
+    ):  # Can't make local to a class (being used by class Fun and class NSFW)
+        type = "False" if type == "sfw" else "True"
+        url_string = (
+            f"https://api.waifu.im/random/?selected_tags={category}&is_nsfw={type}"
+        )
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url_string) as resp:
+                logger.info(f"Waifu.im: {resp.status}")
+                json_data = await resp.json()
+                if resp.status in {200, 201}:
+                    # embed = discord.Embed(color=0xffc0cb)
+                    embed = discord.Embed(
+                        color=int(
+                            f"0x{json_data['images'][0]['dominant_color'].lstrip('#')}",
+                            0,
+                        )
+                    )
+                    embed.set_image(url=json_data["images"][0]["url"])
+
+                    source = json_data["images"][0]["source"]
+
+                    # print(json_data)
+
+                else:
+                    error = json_data["message"]
+                    print(error)
+
+        return source, embed
 
 
 # Other fields/attrs of bot: https://discordpy.readthedocs.io/en/stable/ext/commands/api.html?highlight=bot#bot
@@ -226,50 +271,6 @@ abet_response_other = [
     "Ask Carl",
     "Bakit ako tinatanong niyo? May Carl kayo diba?",
 ]
-
-
-async def get_waifu(
-    type, category
-):  # Can't make local to a class (being used by class Waifu, class Roleplay, class NSFW)
-    url_string = f"https://api.waifu.pics/{type}/{category}"
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url_string) as r:
-            logger.info(f"Waifu.pics: {r.status}")  # debug
-            if r.status == 200:
-                json_data = await r.json()
-                waifu = json_data["url"]
-
-    return waifu
-
-
-async def get_waifu_im_embed(
-    type, category
-):  # Can't make local to a class (being used by class Fun and class NSFW)
-    type = "False" if type == "sfw" else "True"
-    url_string = f"https://api.waifu.im/random/?selected_tags={category}&is_nsfw={type}"
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url_string) as resp:
-            logger.info(f"Waifu.im: {resp.status}")
-            json_data = await resp.json()
-            if resp.status in {200, 201}:
-                # embed = discord.Embed(color=0xffc0cb)
-                embed = discord.Embed(
-                    color=int(
-                        f"0x{json_data['images'][0]['dominant_color'].lstrip('#')}", 0
-                    )
-                )
-                embed.set_image(url=json_data["images"][0]["url"])
-
-                source = json_data["images"][0]["source"]
-
-                # print(json_data)
-
-            else:
-                error = json_data["message"]
-                print(error)
-
-    return source, embed
 
 
 class Info(commands.Cog):
@@ -543,78 +544,6 @@ class Roleplay(commands.Cog):
                 ctx, user_mentioned, "sfw", "poke", "pokes"
             )
         )
-
-
-# --- NSFW Start ---
-class NSFW(commands.Cog):
-    def __init__(self, bot):
-        self.bot = bot
-
-    @commands.command()
-    @commands.is_nsfw()
-    async def hentai(self, ctx):
-        """( ͡° ͜ʖ ͡°)"""
-        await ctx.send(await get_waifu("nsfw", "waifu"))
-
-    @commands.command()
-    @commands.is_nsfw()
-    async def nekonsfw(self, ctx):
-        await ctx.send(await get_waifu("nsfw", "neko"))
-
-    @commands.command()
-    @commands.is_nsfw()
-    async def trap(self, ctx):
-        await ctx.send(await get_waifu("nsfw", "trap"))
-
-    @commands.command()
-    @commands.is_nsfw()
-    async def blowjob(self, ctx):
-        await ctx.send(await get_waifu("nsfw", "blowjob"))
-
-    @commands.command()
-    @commands.is_nsfw()
-    async def ass(self, ctx):
-        text, embed = await get_waifu_im_embed("nsfw", "ass")
-        await ctx.send(text, embed=embed)
-
-    @commands.command()
-    @commands.is_nsfw()
-    async def ero(self, ctx):
-        text, embed = await get_waifu_im_embed("nsfw", "ero")
-        await ctx.send(text, embed=embed)
-
-    @commands.command()
-    @commands.is_nsfw()
-    async def hentai2(self, ctx):
-        text, embed = await get_waifu_im_embed("nsfw", "hentai")
-        await ctx.send(text, embed=embed)
-
-    @commands.command()
-    @commands.is_nsfw()
-    async def milf(self, ctx):
-        text, embed = await get_waifu_im_embed("nsfw", "milf")
-        await ctx.send(text, embed=embed)
-
-    @commands.command()
-    @commands.is_nsfw()
-    async def oral(self, ctx):
-        text, embed = await get_waifu_im_embed("nsfw", "oral")
-        await ctx.send(text, embed=embed)
-
-    @commands.command()
-    @commands.is_nsfw()
-    async def paizuri(self, ctx):
-        text, embed = await get_waifu_im_embed("nsfw", "paizuri")
-        await ctx.send(text, embed=embed)
-
-    @commands.command()
-    @commands.is_nsfw()
-    async def ecchi(self, ctx):
-        text, embed = await get_waifu_im_embed("nsfw", "ecchi")
-        await ctx.send(text, embed=embed)
-
-
-# --- NSFW End ---
 
 
 class Tools(commands.Cog):
@@ -1366,7 +1295,6 @@ async def main():
     await bot.add_cog(Info(bot))
     await bot.add_cog(Waifu(bot))
     await bot.add_cog(Roleplay(bot))
-    await bot.add_cog(NSFW(bot))
     await bot.add_cog(Tools(bot))
     await bot.add_cog(Admin(bot))
 
