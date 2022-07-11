@@ -97,9 +97,8 @@ class AbetBot(commands.Bot):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print("------")
 
-    async def get_waifu(
-        self, type, category
-    ):  # Can't make local to a class (being used by class Waifu, class Roleplay, class NSFW)
+    # Can't make local to a class (being used by class Waifu, class Roleplay, class NSFW)
+    async def get_waifu(self, type, category):
         url_string = f"https://api.waifu.pics/{type}/{category}"
         async with aiohttp.ClientSession() as session:
             async with session.get(url_string) as r:
