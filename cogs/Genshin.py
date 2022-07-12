@@ -204,13 +204,11 @@ class Genshin(commands.Cog):
         currentExpNeeded -= totalMediumNeeded * 5000
         totalSmallNeeded = math.floor(currentExpNeeded / 1000)
 
-        response = f"""
-            __To ascend from level {current_level} to {target_level} with current EXP of {current_experience}, you'll need:__
+        response = f"""__To ascend from level {current_level} to {target_level} with current EXP of {current_experience}, you'll need:__
             
     `{totalLargeNeeded:>3}` × <:HerosWit:984919059780993134> **Hero's Wit**
     `{totalMediumNeeded:>3}` × <:AdventurersExperience:984919553366708256> **Adventurer's Experience**
-    `{totalSmallNeeded:>3}` × <:WanderersAdvice:984919638792085505> **Wanderer's Advice**
-        """
+    `{totalSmallNeeded:>3}` × <:WanderersAdvice:984919638792085505> **Wanderer's Advice**"""
 
         await interaction.response.send_message(response)
 
