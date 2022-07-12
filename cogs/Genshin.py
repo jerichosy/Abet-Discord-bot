@@ -235,17 +235,19 @@ class Genshin(commands.Cog):
                 artifact_count = Counter(artifact_list)
                 built2 = ""
                 for artifact_set in artifact_count:
+                    # This is okay if it reports a "3pc." or "5pc.". It's kinda funny and provokes envy as well!
                     built2 += (
                         f", {artifact_count[artifact_set]}pc. {artifact_set}"
                         if artifact_count[artifact_set] >= 2
                         else ""
-                    )  # This is okay if it reports a "3pc." or "5pc.". It's kinda funny and provokes envy as well!
+                    )
 
+                # TODO: Latter is not tested
                 return (
                     f"\n    {built2[2:]}"
                     if built2[2:] is not None
                     else "(No 2pc. of any set)"
-                )  # TODO: Latter is not tested
+                )
 
             # print(json.dumps(data))
 
