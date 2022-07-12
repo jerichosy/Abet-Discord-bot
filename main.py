@@ -261,7 +261,7 @@ async def on_message(message):
     await bot.process_commands(message)
 
 
-# Command error msg sender
+# Command error message sender
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.errors.NSFWChannelRequired):
