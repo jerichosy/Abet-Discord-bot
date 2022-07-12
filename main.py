@@ -9,6 +9,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import os
+import io
 import asyncio
 import aiohttp
 import random
@@ -257,6 +258,26 @@ async def on_message(message):
                 if random.random() < 0.1:
                     await message.channel.send(random.choice(mhy_response))
                 break
+
+    match = re.findall(r"(@[a-zA-z0-9]*)\/.*\/([\d]*)?", message.content)
+    if match:
+        async with message.channel.typing():
+            id = match[0][1]
+            print(id)
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"https://toolav.herokuapp.com/id/?video_id={id}"
+                ) as resp:
+                    print(resp.status)
+                    resp_json = await resp.json(content_type="text/html")
+                    video_link = resp_json["item"]["video"]["downloadAddr"][0]
+                    print(video_link)
+                async with session.get(video_link) as resp:
+                    print(resp.status)
+                    video_data = io.BytesIO(await resp.read())
+                    await message.reply(
+                        mention_author=False, file=discord.File(video_data, f"{id}.mp4")
+                    )
 
     await bot.process_commands(message)
 
