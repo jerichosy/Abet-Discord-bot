@@ -259,7 +259,7 @@ async def on_message(message):
                     await message.channel.send(random.choice(mhy_response))
                 break
 
-    match = re.findall(r"(@[a-zA-z0-9]*)\/.*\/([\d]*)?", message.content)
+    match = re.findall(r"(@[a-zA-Z0-9]*)\/.*\/([\d]*)?", message.content)
     if match:
         async with message.channel.typing():
             id = match[0][1]
