@@ -271,7 +271,7 @@ async def on_message(message):
                     print(resp.status)
                     resp_json = await resp.json(content_type="text/html")
                     video_link = resp_json["item"]["video"]["downloadAddr"][0]
-                    print(video_link)
+                    print(video_link)  # This can also be sent instead and it will embed although it is very long
                 async with session.get(video_link) as resp:
                     print(resp.status)
                     video_data = io.BytesIO(await resp.read())
