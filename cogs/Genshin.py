@@ -251,9 +251,13 @@ class Genshin(commands.Cog):
 
             # print(json.dumps(data))
 
-            built = f"{uid}\n"
+            built = ""
             for char in data:
-                built += f"{char['name']} ({char['rarity']}* {char['element']}): lvl {char['level']} C{char['constellation']} | {char['weapon']['name']} ({char['weapon']['rarity']}* {char['weapon']['type']}): lvl {char['weapon']['level']} R{char['weapon']['refinement']} {tally_artifacts(char['artifacts'])}\n"
+                new = f"{char['name']} ({char['rarity']}* {char['element']}): lvl {char['level']} C{char['constellation']} | {char['weapon']['name']} ({char['weapon']['rarity']}* {char['weapon']['type']}): lvl {char['weapon']['level']} R{char['weapon']['refinement']} {tally_artifacts(char['artifacts'])}\n"
+                if len(built) + len(new) <= 2000:
+                    built += new
+                else:
+                    break
             await ctx.reply(f"```{built}```")
 
     @commands.hybrid_command(
