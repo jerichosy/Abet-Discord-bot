@@ -275,17 +275,17 @@ class Genshin(commands.Cog):
             "resinsfinished",
         ]
     )
-    # @app_commands.guilds(discord.Object(id=867811644322611200))
-    @app_commands.describe(current_resin="The amount of resin that you have right now")
-    async def resin(self, ctx, current_resin: commands.Range[int, None, 160]):
-        """Genshin Impact: Calculate when your resin will replenish"""
+    # Made redundant by Genshin wizard
+    # @app_commands.describe(current_resin="The amount of resin that you have right now")
+    # async def resin(self, ctx, current_resin: commands.Range[int, None, 160]):
+    #     """Genshin Impact: Calculate when your resin will replenish"""
 
-        time_to_fully_replenished = (160 - current_resin) * (8 * 60)
-        current_time = time.time()
-        finished_time = current_time + time_to_fully_replenished
-        await ctx.reply(
-            f"Resin will be fully replenished at: <t:{int(finished_time)}:F> (<t:{int(finished_time)}:R>)"
-        )
+    #     time_to_fully_replenished = (160 - current_resin) * (8 * 60)
+    #     current_time = time.time()
+    #     finished_time = current_time + time_to_fully_replenished
+    #     await ctx.reply(
+    #         f"Resin will be fully replenished at: <t:{int(finished_time)}:F> (<t:{int(finished_time)}:R>)"
+    #     )
 
 
 async def setup(bot):
