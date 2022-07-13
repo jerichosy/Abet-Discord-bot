@@ -260,22 +260,22 @@ class Genshin(commands.Cog):
                     break
             await ctx.reply(f"```{built}```")
 
-    @commands.hybrid_command(
-        aliases=[
-            "resinreplenish",
-            "replenish",
-            "resins",
-            "resinsreplenish",
-            "replenishment",
-            "resinreplenishment",
-            "resinsreplenishment",
-            "resinfinish",
-            "resinfinished",
-            "resinsfinish",
-            "resinsfinished",
-        ]
-    )
     # Made redundant by Genshin wizard
+    # @commands.hybrid_command(
+    #     aliases=[
+    #         "resinreplenish",
+    #         "replenish",
+    #         "resins",
+    #         "resinsreplenish",
+    #         "replenishment",
+    #         "resinreplenishment",
+    #         "resinsreplenishment",
+    #         "resinfinish",
+    #         "resinfinished",
+    #         "resinsfinish",
+    #         "resinsfinished",
+    #     ]
+    # )
     # @app_commands.describe(current_resin="The amount of resin that you have right now")
     # async def resin(self, ctx, current_resin: commands.Range[int, None, 160]):
     #     """Genshin Impact: Calculate when your resin will replenish"""
