@@ -259,24 +259,35 @@ async def on_message(message):
                     await message.channel.send(random.choice(mhy_response))
                 break
 
-    match = re.findall(r"(@[a-zA-Z0-9]*)\/.*\/([\d]*)?", message.content)
-    if match:
+    tiktok_regex = r"(https?://www\.tiktok\.com/(?:embed|@(?P<user_id>[\w\.-]+)/video)/(?P<id>\d+))"
+    tiktok_vm_regex = r"(https?://(?:vm|vt)\.tiktok\.com/\w+)"
+    tiktok_url = re.findall(tiktok_regex, message.content)
+    tiktok_vm_url = re.findall(tiktok_vm_regex, message.content)
+    print(tiktok_url or tiktok_vm_url)
+    if tiktok_url or tiktok_vm_url:
         async with message.channel.typing():
-            id = match[0][1]
-            print(id)
             async with aiohttp.ClientSession() as session:
+                if tiktok_vm_url:
+                    async with session.get(tiktok_vm_url[0]) as resp:
+                        # print(resp.status)
+                        tiktok_url = re.findall(tiktok_regex, str(resp.url))
+                print(tiktok_url)
                 async with session.get(
-                    f"https://toolav.herokuapp.com/id/?video_id={id}"
+                    f"https://aqueous-reef-45135.herokuapp.com/extract?url={tiktok_url[0][0]}"
                 ) as resp:
                     print(resp.status)
-                    resp_json = await resp.json(content_type="text/html")
-                    video_link = resp_json["item"]["video"]["downloadAddr"][0]
-                    print(video_link)  # This can also be sent instead and it will embed although it is very long
-                async with session.get(video_link) as resp:
+                    resp_json = await resp.json()
+                    # This can also be sent instead and it will embed although it is very long
+                    dl_link = resp_json["formats"][0]["url"]
+                    print(dl_link)
+                async with session.get(dl_link) as resp:
                     print(resp.status)
-                    video_data = io.BytesIO(await resp.read())
+                    video_bytes = io.BytesIO(await resp.read())
                     await message.reply(
-                        mention_author=False, file=discord.File(video_data, f"{id}.mp4")
+                        mention_author=False,
+                        file=discord.File(
+                            video_bytes, f"{tiktok_url[0][1]}-{tiktok_url[0][2]}.mp4"
+                        ),
                     )
 
     await bot.process_commands(message)
