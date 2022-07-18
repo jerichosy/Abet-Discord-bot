@@ -4,7 +4,6 @@ from discord import app_commands
 import asyncio
 import io
 import aiohttp
-import json
 import random
 from typing import List, Literal
 
@@ -158,6 +157,6 @@ async def setup(bot):
             print(f"Waifu.im endpoint: {r.status}")
             if r.status == 200:
                 global waifu_im_tags
-                waifu_im_tags = json.loads(await r.text())
+                waifu_im_tags = await r.json()
 
     await bot.add_cog(Fun(bot))
