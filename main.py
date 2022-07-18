@@ -116,8 +116,8 @@ class AbetBot(commands.Bot):
                     # print(json_data)
 
                 else:
-                    error = json_data["message"]
-                    print(error)
+                    # Print error
+                    print(json_data["message"])
 
         return source, embed
 
