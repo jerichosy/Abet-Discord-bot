@@ -280,15 +280,39 @@ async def on_message(message):
                     # This can also be sent instead and it will embed although it is very long
                     dl_link = resp_json["formats"][0]["url"]
                     file_format = resp_json["formats"][0]["ext"]
+                    title = resp_json["title"]
+                    url = resp_json["webpage_url"]
+                    timestamp = resp_json["timestamp"]
+                    views = resp_json["view_count"]
+                    likes = resp_json["like_count"]
+                    comments = resp_json["comment_count"]
+                    author = resp_json["uploader"]
+                    author_url = resp_json["uploader_url"]
                     print(dl_link)
                 async with session.get(dl_link) as resp:
                     print(resp.status)
                     video_bytes = io.BytesIO(await resp.read())
                     print("format:", file_format)
+                    embed = discord.Embed(
+                        title=title,
+                        timestamp=datetime.fromtimestamp(timestamp),
+                        url=url,
+                        color=0xFE2C55,
+                    )
+                    embed.set_author(name=author, url=author_url)
+                    embed.set_footer(
+                        text="TikTok",
+                        icon_url="https://cdn.discordapp.com/attachments/998571531934376006/998571565539139614/TikTok_logo.png",
+                    )
+                    embed.add_field(name="Views", value=views)
+                    embed.add_field(name="Likes", value=likes)
+                    embed.add_field(name="Comments", value=comments)
                     await message.reply(
+                        embed=embed,
                         mention_author=False,
                         file=discord.File(
-                            video_bytes, f"{tiktok_url[0][1]}-{tiktok_url[0][2]}.{file_format}"
+                            video_bytes,
+                            f"{tiktok_url[0][1]}-{tiktok_url[0][2]}.{file_format}",
                         ),
                     )
 
