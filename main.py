@@ -83,7 +83,7 @@ class AbetBot(commands.Bot):
         url_string = f"https://api.waifu.pics/{type}/{category}"
         async with aiohttp.ClientSession() as session:
             async with session.get(url_string) as r:
-                logger.info(f"Waifu.pics: {r.status}")  # debug
+                logger.info(f"Waifu.pics: {r.status}")
                 if r.status == 200:
                     json_data = await r.json()
                     waifu = json_data["url"]
@@ -331,7 +331,7 @@ async def on_command_error(ctx, error):
     #  pass
     else:
         await ctx.send(error)
-    # add more?
+    # Flesh out more?
 
 
 @bot.event
@@ -342,9 +342,6 @@ async def on_presence_update(before, after):
             logger.info(f"  BEFORE: {before.activity}")
             logger.info(f"  AFTER:  {after.activity}")
             if after.activity is not None:
-                # if after.activity.name == 'VALORANT' and before.activity is None:  # This invokes from None -> VALORANT, but won't invoke from Spotify, etc. But it's ok
-                #   channel = bot.get_channel(867811644322611202)  #sala 867811644322611202
-                #   await channel.send(f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {after.mention}'s footsteps and playing {after.activity.name}!** ⚠️")
 
                 def check_offending(member, offending):
                     for activity in member.activities:
@@ -362,13 +359,10 @@ async def on_presence_update(before, after):
                 if check_offending(after, "VALORANT") and not check_offending(
                     before, "VALORANT"
                 ):
-                    # if check_offending(after, 'Genshin Impact') and not check_offending(before, 'Genshin Impact'):
                     send_alert(after, "VALORANT")
 
 
 async def main():
-    # async with bot:
-
     await bot.load_extension("jishaku")
 
     await bot.start(os.getenv("BOT_TOKEN"))
