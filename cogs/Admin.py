@@ -1,8 +1,9 @@
 import discord
 from discord.ext import commands
-from discord.ext.commands import has_permissions, Context
+from discord.ext.commands import has_permissions, Context, Greedy
 from discord import app_commands
 from typing import Literal, Optional
+
 
 class Admin(commands.Cog):
     def __init__(self, bot):
@@ -68,34 +69,41 @@ class Admin(commands.Cog):
 
     @commands.command()
     @commands.is_owner()
+    @commands.guild_only()
     async def sync(
         self,
         ctx: Context,
-        guilds: commands.Greedy[discord.Object],
-        spec: Optional[Literal["~"]] = None,
+        guilds: Greedy[discord.Object],
+        spec: Optional[Literal["~", "*", "^"]] = None,
     ) -> None:
         if not guilds:
             if spec == "~":
-                fmt = await ctx.bot.tree.sync(guild=ctx.guild)
+                synced = await ctx.bot.tree.sync(guild=ctx.guild)
+            elif spec == "*":
+                ctx.bot.tree.copy_global_to(guild=ctx.guild)
+                synced = await ctx.bot.tree.sync(guild=ctx.guild)
+            elif spec == "^":
+                ctx.bot.tree.clear_commands(guild=ctx.guild)
+                await ctx.bot.tree.sync(guild=ctx.guild)
+                synced = []
             else:
-                fmt = await ctx.bot.tree.sync()
+                synced = await ctx.bot.tree.sync()
 
             await ctx.send(
-                f"Synced {len(fmt)} commands {'globally' if spec is None else 'to the current guild.'}"
+                f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
             )
             return
 
-        assert guilds is not None
-        fmt = 0
+        ret = 0
         for guild in guilds:
             try:
                 await ctx.bot.tree.sync(guild=guild)
             except discord.HTTPException:
                 pass
             else:
-                fmt += 1
+                ret += 1
 
-        await ctx.send(f"Synced the tree to {fmt}/{len(guilds)} guilds.")
+        await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
 
 
 async def setup(bot):
