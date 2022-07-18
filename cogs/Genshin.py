@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 import os
 from datetime import datetime
-import genshinstats as gs
+import genshinstats as gs  # FIXME: Not async
 from collections import Counter
 import math
 
