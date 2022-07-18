@@ -279,14 +279,16 @@ async def on_message(message):
                     resp_json = await resp.json()
                     # This can also be sent instead and it will embed although it is very long
                     dl_link = resp_json["formats"][0]["url"]
+                    file_format = resp_json["formats"][0]["ext"]
                     print(dl_link)
                 async with session.get(dl_link) as resp:
                     print(resp.status)
                     video_bytes = io.BytesIO(await resp.read())
+                    print("format:", file_format)
                     await message.reply(
                         mention_author=False,
                         file=discord.File(
-                            video_bytes, f"{tiktok_url[0][1]}-{tiktok_url[0][2]}.mp4"
+                            video_bytes, f"{tiktok_url[0][1]}-{tiktok_url[0][2]}.{file_format}"
                         ),
                     )
 
