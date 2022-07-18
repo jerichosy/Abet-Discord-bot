@@ -3,7 +3,6 @@ from discord.ext import commands
 from discord import app_commands
 import os
 from datetime import datetime
-import time
 import genshinstats as gs
 from collections import Counter
 import math
