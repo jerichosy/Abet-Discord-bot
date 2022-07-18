@@ -4,8 +4,6 @@ from discord import app_commands
 import os
 import io
 import aiohttp
-import requests
-import json
 import random
 from random import choices
 from datetime import timedelta
@@ -138,83 +136,82 @@ class Tools(commands.Cog):
         if url is None:
             url = ctx.message.attachments[0].url
 
-        async with ctx.typing():
-            response = requests.get(
-                f"https://api.trace.moe/search?cutBorders&url={url}", timeout=7
-            )
-            # response = requests.get(f"https://api.trace.moe/search?anilistInfo&url={url}", timeout=7)
-            # logger.info(f"Trace.moe: {response}")  # debug FIXME:
-            json_data = json.loads(response.text)
+        async with aiohttp.ClientSession() as session:
+            async with ctx.typing():
+                # alternatively use f"https://api.trace.moe/search?anilistInfo&url={url}" to query anilist also
+                async with session.get(
+                    f"https://api.trace.moe/search?cutBorders&url={url}"
+                ) as resp:
+                    json_data = await resp.json()
 
-            reason = ""
-            if json_data["error"]:
-                reason = json_data["error"]
-            else:
-                file_name = json_data["result"][0]["filename"]
-                timestamp = ""
-                if json_data["result"][0]["episode"] is not None:
-                    timestamp = f"Episode {json_data['result'][0]['episode']} | "
-                timestamp += str(timedelta(seconds=int(json_data["result"][0]["from"])))
-                similarity = json_data["result"][0]["similarity"]
-                video_url = json_data["result"][0]["video"]
+                reason = ""
+                if json_data["error"]:
+                    reason = json_data["error"]
+                else:
+                    file_name = json_data["result"][0]["filename"]
+                    timestamp = ""
+                    if json_data["result"][0]["episode"] is not None:
+                        timestamp = f"Episode {json_data['result'][0]['episode']} | "
+                    timestamp += str(
+                        timedelta(seconds=int(json_data["result"][0]["from"]))
+                    )
+                    similarity = json_data["result"][0]["similarity"]
+                    video_url = json_data["result"][0]["video"]
 
-                anilist_id = json_data["result"][0]["anilist"]
+                    anilist_id = json_data["result"][0]["anilist"]
 
-                # Even though we can let Trace.moe API handle contacting AniList GraphQL API on our behalf, we will keep the ff. implementation for future reference:
-                query = """
-                    query ($id: Int) { # Define which variables will be used in the query (id)
-                        Media (id: $id, type: ANIME) { # Insert our variables into the query arguments (id) (type: ANIME is hard-coded in the query)
-                            id
-                            title {
-                                romaji
-                                english
-                                native
+                    # Even though we can let Trace.moe API handle contacting AniList GraphQL API on our behalf, we will keep the ff. implementation for future reference:
+                    query = """
+                        query ($id: Int) { # Define which variables will be used in the query (id)
+                            Media (id: $id, type: ANIME) { # Insert our variables into the query arguments (id) (type: ANIME is hard-coded in the query)
+                                id
+                                title {
+                                    romaji
+                                    english
+                                    native
+                                }
+                                isAdult
                             }
-                            isAdult
                         }
-                    }
-                """
+                    """
+                    variables = {"id": anilist_id}
 
-                variables = {"id": anilist_id}
+                    async with session.post(
+                        "https://graphql.anilist.co/",
+                        data={"query": query, "variables": variables},
+                    ) as resp:
+                        json_data = await resp.json()
 
-                response = requests.post(
-                    "https://graphql.anilist.co/",
-                    json={"query": query, "variables": variables},
-                )
-                # logger.info(f"  AniList GraphQL API: {response}")  # debug FIXME:
-                json_data = json.loads(response.text)
+                    native = (
+                        ""
+                        if json_data["data"]["Media"]["title"]["native"] is None
+                        else f"**{json_data['data']['Media']['title']['native']}**\n"
+                    )
+                    romaji = (
+                        ""
+                        if json_data["data"]["Media"]["title"]["romaji"] is None
+                        else f"**{json_data['data']['Media']['title']['romaji']}**\n"
+                    )
+                    english = (
+                        ""
+                        if json_data["data"]["Media"]["title"]["english"] is None
+                        else f"**{json_data['data']['Media']['title']['english']}**\n"
+                    )
 
-                native = (
-                    ""
-                    if json_data["data"]["Media"]["title"]["native"] is None
-                    else f"**{json_data['data']['Media']['title']['native']}**\n"
-                )
-                romaji = (
-                    ""
-                    if json_data["data"]["Media"]["title"]["romaji"] is None
-                    else f"**{json_data['data']['Media']['title']['romaji']}**\n"
-                )
-                english = (
-                    ""
-                    if json_data["data"]["Media"]["title"]["english"] is None
-                    else f"**{json_data['data']['Media']['title']['english']}**\n"
-                )
-
-        if reason:
-            await ctx.send(reason, suppress_embeds=True)
-        else:
-            await ctx.send(
-                f"<@{ctx.author.id}>\n\n{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity"
-            )
-
-            if json_data["data"]["Media"]["isAdult"]:
-                preview_file_name = "SPOILER_preview.mp4"
-                warning = "[NSFW]"
+            if reason:
+                await ctx.send(reason, suppress_embeds=True)
             else:
-                preview_file_name = "preview.mp4"
-                warning = ""
+                await ctx.send(
+                    f"<@{ctx.author.id}>\n\n{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity"
+                )
 
-            async with aiohttp.ClientSession() as session:
+                if json_data["data"]["Media"]["isAdult"]:
+                    preview_file_name = "SPOILER_preview.mp4"
+                    warning = "[NSFW]"
+                else:
+                    preview_file_name = "preview.mp4"
+                    warning = ""
+
                 async with session.get(video_url) as resp:
                     if resp.status != 200:
                         return await ctx.send("Could not download preview...")
