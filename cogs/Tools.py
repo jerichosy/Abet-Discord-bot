@@ -116,9 +116,7 @@ class Tools(commands.Cog):
         results = Counter(random.choice(choose_phrases) for _ in range(times))
         if len(results) > 10:
             response.append("Only showing top 10 results...")
-        for index, (elem, count) in enumerate(
-            results.most_common(10), start=1
-        ):  # TODO: Understand what's going on here
+        for index, (elem, count) in enumerate(results.most_common(10), start=1):
             response.append(
                 f'{index}. {elem} ({count} {"time" if count == 1 else "times"}, {count/times:.2%})'
             )
@@ -236,7 +234,6 @@ class Tools(commands.Cog):
                 async with session.get(
                     f"https://saucenao.com/search.php?db=999&output_type=2&numres=1&url={url}&api_key={os.getenv('SAUCENAO_TOKEN')}"
                 ) as r:
-                    # logger.info(f"SauceNao: {r.status}") FIXME:
                     json_data = await r.json()
                     # print(json_data)
 
@@ -311,7 +308,6 @@ class Tools(commands.Cog):
 
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://wttr.in/{location}?0T") as resp:
-                # logger.info(f"wttr.in response: {resp.status}") FIXME:
                 if (
                     await resp.text() == ""
                     or await resp.text() == "Follow @igor_chubin for wttr.in updates"
@@ -330,7 +326,6 @@ class Tools(commands.Cog):
                 async with session.get(
                     f"https://avwx.rest/api/metar/{airport_code}"
                 ) as response:
-                    # logger.info(f"AVWX response: {response.status}") FIXME:
                     json_data = await response.json()
                     if response.status == 204:
                         return await ctx.send("Error 204")
