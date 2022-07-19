@@ -200,7 +200,7 @@ yay_response = [
 
 wish_response = [
     "Looks like someone's pulling today!",
-    # "I swear a 10 pull seems great right now",  # Unhealthy
+    "I swear a 10 pull seems great right now",
     "What's the worse that could happen? You getting Qiqi?",
     "Don't save your gems you'll get qiqi anyways",
     # "wait don't tell me you're not going to pull?",  # Unhealthy
@@ -218,7 +218,7 @@ mhy_response = [
     # "Awe, we're trying our best here at Mihoyo",
     # "I promise to give you more primos in future patches - Mihoyo",
     # "Did you just BS Mihoyo? UID Saved, sending to Mihoyo servers...",
-    # "Hey people at Mihoyo are just trying to do their jobs",
+    "Hey people at Mihoyo are just trying to do their jobs",
     # "Please rate our game with a 5 star in the Play Store!",
     # "Please don't leave we need you['re money]",
     "We give all the money we make at Mihoyo to Mona",
