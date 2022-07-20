@@ -1,10 +1,7 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-import os
 from datetime import datetime
-import genshinstats as gs  # FIXME: Not async
-from collections import Counter
 import math
 
 
@@ -211,55 +208,53 @@ class Genshin(commands.Cog):
 
         await interaction.response.send_message(response)
 
-    # @app_commands.command()
-    # @app_commands.guilds(discord.Object(id=867811644322611200))
-    # @app_commands.describe(uid='The UID of the person you want to investigate')
-    @commands.command()
-    async def genshinspy(self, ctx, uid: commands.Range[int, 100000000, 999999999]):
-        """Get the details of someone's Genshin account"""
-        gs.set_cookie(ltuid=os.getenv("LTUID"), ltoken=os.getenv("LTOKEN"))
+    # Made redundant by Genshin Wizard bot
+    # @commands.command()
+    # async def genshinspy(self, ctx, uid: commands.Range[int, 100000000, 999999999]):
+    #     """Get the details of someone's Genshin account"""
+    #     gs.set_cookie(ltuid=os.getenv("LTUID"), ltoken=os.getenv("LTOKEN"))
 
-        async with ctx.typing():
-            data = gs.get_characters(uid)
-            data.sort(key=lambda x: (x["rarity"], x["level"]), reverse=True)
+    #     async with ctx.typing():
+    #         data = gs.get_characters(uid)
+    #         data.sort(key=lambda x: (x["rarity"], x["level"]), reverse=True)
 
-            def tally_artifacts(artifact):
-                if not artifact:
-                    return ""
+    #         def tally_artifacts(artifact):
+    #             if not artifact:
+    #                 return ""
 
-                artifact_list = []
-                for x in artifact:
-                    artifact_list.append(x["set"]["name"])
+    #             artifact_list = []
+    #             for x in artifact:
+    #                 artifact_list.append(x["set"]["name"])
 
-                artifact_count = Counter(artifact_list)
-                built2 = ""
-                for artifact_set in artifact_count:
-                    # This is okay if it reports a "3pc." or "5pc.". It's kinda funny and provokes envy as well!
-                    built2 += (
-                        f", {artifact_count[artifact_set]}pc. {artifact_set}"
-                        if artifact_count[artifact_set] >= 2
-                        else ""
-                    )
+    #             artifact_count = Counter(artifact_list)
+    #             built2 = ""
+    #             for artifact_set in artifact_count:
+    #                 # This is okay if it reports a "3pc." or "5pc.". It's kinda funny and provokes envy as well!
+    #                 built2 += (
+    #                     f", {artifact_count[artifact_set]}pc. {artifact_set}"
+    #                     if artifact_count[artifact_set] >= 2
+    #                     else ""
+    #                 )
 
-                # TODO: Latter is not tested
-                return (
-                    f"\n    {built2[2:]}"
-                    if built2[2:] is not None
-                    else "(No 2pc. of any set)"
-                )
+    #             # Latter is not tested
+    #             return (
+    #                 f"\n    {built2[2:]}"
+    #                 if built2[2:] is not None
+    #                 else "(No 2pc. of any set)"
+    #             )
 
-            # print(json.dumps(data))
+    #         # print(json.dumps(data))
 
-            built = ""
-            for char in data:
-                new = f"{char['name']} ({char['rarity']}* {char['element']}): lvl {char['level']} C{char['constellation']} | {char['weapon']['name']} ({char['weapon']['rarity']}* {char['weapon']['type']}): lvl {char['weapon']['level']} R{char['weapon']['refinement']} {tally_artifacts(char['artifacts'])}\n"
-                if len(built) + len(new) <= 2000:
-                    built += new
-                else:
-                    break
-            await ctx.reply(f"```{built}```")
+    #         built = ""
+    #         for char in data:
+    #             new = f"{char['name']} ({char['rarity']}* {char['element']}): lvl {char['level']} C{char['constellation']} | {char['weapon']['name']} ({char['weapon']['rarity']}* {char['weapon']['type']}): lvl {char['weapon']['level']} R{char['weapon']['refinement']} {tally_artifacts(char['artifacts'])}\n"
+    #             if len(built) + len(new) <= 2000:
+    #                 built += new
+    #             else:
+    #                 break
+    #         await ctx.reply(f"```{built}```")
 
-    # Made redundant by Genshin wizard
+    # Made redundant by Genshin Wizard bot
     # @commands.hybrid_command(
     #     aliases=[
     #         "resinreplenish",
