@@ -34,7 +34,6 @@ load_dotenv()
 
 initial_extensions = [
     "cogs.Fun",
-    "cogs.NSFW",
     "cogs.Waifu",
     "cogs.Roleplay",
     "cogs.Info",
@@ -79,7 +78,7 @@ class AbetBot(commands.Bot):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print("------")
 
-    # Can't make local to a class (being used by class Waifu, class Roleplay, class NSFW)
+    # Can't make local to a class (being used by class Waifu, class Roleplay)
     async def get_waifu(self, type, category):
         url_string = f"https://api.waifu.pics/{type}/{category}"
         async with aiohttp.ClientSession() as session:
@@ -91,7 +90,7 @@ class AbetBot(commands.Bot):
 
         return waifu
 
-    # Can't make local to a class (being used by class Fun and class NSFW)
+    # Can't make local to a class (being used by class Fun)
     async def get_waifu_im_embed(self, type, category):
         type = "False" if type == "sfw" else "True"
         url_string = (
@@ -328,15 +327,10 @@ async def on_message(message):
 # Command error message sender
 @bot.event
 async def on_command_error(ctx, error):
-    if isinstance(error, commands.errors.NSFWChannelRequired):
-        # Raise exception if NSFW channel setting disabled
-        await ctx.send(
-            "This is an NSFW command! Please use in the appropriate channel(s)."
-        )
-    # elif isinstance(error, commands.errors.CommandNotFound):
-    #  pass
-    else:
-        await ctx.send(error)
+    # if isinstance(error, commands.errors.CommandNotFound):
+        # pass
+    # else:
+    await ctx.send(error)
     # Flesh out more?
 
 
