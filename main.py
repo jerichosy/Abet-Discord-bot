@@ -126,7 +126,7 @@ class AbetBot(commands.Bot):
 bot = AbetBot(
     case_insensitive=True,
     command_prefix=commands.when_mentioned_or("&"),
-    activity=discord.Game(name="Hi!"),
+    activity=None,
     intents=intents,
     owner_id=298454523624554501,
     application_id=954284775210893344,
