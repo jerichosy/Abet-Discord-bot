@@ -76,6 +76,12 @@ class AbetBot(commands.Bot):
 
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
+        print(
+            "Invite URL:",
+            discord.utils.oauth_url(
+                client_id=self.application_id, permissions=discord.Permissions.text()
+            ),
+        )
         print("------")
 
     # Can't make local to a class (being used by class Waifu, class Roleplay)
