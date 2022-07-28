@@ -17,7 +17,7 @@ class Info(commands.Cog):
 
         embed = discord.Embed(
             title="FUCK CARL",
-            colour=discord.Colour(0xEE615B),
+            colour=discord.Colour(0xFF5C5D),
             url="https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png",
             description="Source code & documentation: [GitHub repository](https://github.com/jerichosy/Abet-Discord-bot)",
         )
