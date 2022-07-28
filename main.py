@@ -234,8 +234,7 @@ def findWholeWord(w):
 async def on_message(message):
     start_time = time.time()
 
-    # NOTE: This will stay here
-    if message.author.id == bot.user.id:
+    if message.author.bot:
         return
 
     if (message.guild.id == bot.HOME_GUILD.id) and ("rant" not in message.channel.name):
@@ -328,7 +327,7 @@ async def on_message(message):
 @bot.event
 async def on_command_error(ctx, error):
     # if isinstance(error, commands.errors.CommandNotFound):
-        # pass
+    # pass
     # else:
     await ctx.send(error)
     # Flesh out more?
