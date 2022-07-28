@@ -1,9 +1,9 @@
 # Check: ~~dependencies~~, comments
-# Change: migrate from requests to non-blocking alternative (only whatanime remaining), Consider pulling AniList info straight from Trace.moe instead to improve response time and simplify
+# Change: Consider pulling AniList info straight from Trace.moe instead to improve response time and simplify
 # Additions: Add cogs and cmd desc.
 # Will not fix: Error of converting int when user accidentally types argument(s) containing characters, non-ints, etc.
 
-# Notes: requests has issues on IPv6 networks, don't set your own tree with `tree = app_commands.CommandTree(bot)` as Bot handles it
+# Notes: don't set your own tree with `tree = app_commands.CommandTree(bot)` as Bot handles it
 
 import discord
 from discord.ext import commands
