@@ -312,10 +312,8 @@ class Tools(commands.Cog):
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get(url) as resp:
-                    # pdf_bytes = io.BytesIO(await resp.read())
-                    # image_bytes = io.BytesIO()
                     images = convert_from_bytes(await resp.read())
-                    # images[0].save("image_bytes.jpg", "JPEG")
+
                     files_list = []
                     for image in images:
                         image_bytes = io.BytesIO()
@@ -324,19 +322,8 @@ class Tools(commands.Cog):
                         files_list.append(
                             discord.File(image_bytes, f"{int(time.time() * 1000)}.jpg")
                         )
-                        print("here")
 
-                    print(files_list)
-
-                    # await ctx.send(images)
-                    # await ctx.reply(file=discord.File(image_bytes.getvalue(), "test.jpg"))
-                    
                     await ctx.reply(files=files_list)
-
-                    # await ctx.reply(file=files_list[0])
-                    # await ctx.reply(file=files_list[1])
-                    # await ctx.reply(file=files_list[2])
-                    # await ctx.reply(file=files_list[3])
 
     @commands.hybrid_command()
     # @app_commands.guilds(discord.Object(id=867811644322611200))
