@@ -60,6 +60,8 @@ class AbetBot(commands.Bot):
         self.OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
         self.TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
 
+        self.INVITE_LINK = discord.utils.oauth_url(client_id=self.application_id, permissions=discord.Permissions.text())
+
     async def setup_hook(self) -> None:
         # Load cogs
         for extension in initial_extensions:
@@ -76,12 +78,7 @@ class AbetBot(commands.Bot):
 
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
-        print(
-            "Invite URL:",
-            discord.utils.oauth_url(
-                client_id=self.application_id, permissions=discord.Permissions.text()
-            ),
-        )
+        print("Invite URL:", self.INVITE_LINK)
         print("------")
 
     # Can't make local to a class (being used by class Waifu, class Roleplay)

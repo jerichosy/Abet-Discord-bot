@@ -65,6 +65,11 @@ class Info(commands.Cog):
             content=f"Pong! {round(self.bot.latency * 1000)}ms | API: {round((end_time - start_time) * 1000)}ms"
         )
 
+    @commands.hybrid_command()
+    async def invite(self, ctx):
+        """Add Abet bot to your server!"""
+        await ctx.send(self.bot.INVITE_LINK)
+
 
 async def setup(bot):
     await bot.add_cog(Info(bot))
