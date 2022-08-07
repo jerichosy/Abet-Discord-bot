@@ -16,7 +16,7 @@ from pdf2image import convert_from_bytes
 class Tools(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.abet_response_global = [
+        self.ABET_RESPONSE_GLOBAL = [
             "Absolutely!",
             "Without a doubt!",
             "Hell Yeah!",
@@ -36,11 +36,11 @@ class Tools(commands.Cog):
             "I'll bet you a hundred dollars that is not going to happen",
             "...",
         ]
-        self.abet_response_home = [
+        self.ABET_RESPONSE_HOME = [
             "You're chances are as high as the amount of Qiqi constellations you have",
             "I heard buying KofiTreb's Coffee increases your odds",
         ]
-        self.abet_response_other = [
+        self.ABET_RESPONSE_OTHER = [
             "Ask Jericho",
             "Ask Carl",
             "Bakit ako tinatanong niyo? May Carl kayo diba?",
@@ -82,19 +82,19 @@ class Tools(commands.Cog):
             print("Home guild")
             await ctx.send(
                 random.choice(
-                    self.abet_response_global
-                    + self.abet_response_other
-                    + self.abet_response_home
+                    self.ABET_RESPONSE_GLOBAL
+                    + self.ABET_RESPONSE_OTHER
+                    + self.ABET_RESPONSE_HOME
                 )
             )
         elif ctx.guild.id == self.bot.OTHER_GUILD.id:
             print("Other guild")
             await ctx.send(
-                random.choice(self.abet_response_global + self.abet_response_other)
+                random.choice(self.ABET_RESPONSE_GLOBAL + self.ABET_RESPONSE_OTHER)
             )
         else:
             print("Global guild")
-            await ctx.send(random.choice(self.abet_response_global))
+            await ctx.send(random.choice(self.ABET_RESPONSE_GLOBAL))
 
     @commands.command()
     async def choose(self, ctx, *, choices):

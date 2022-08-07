@@ -8,7 +8,7 @@ import math
 class Genshin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.months = [
+        self.MONTHS = [
             "Jan",
             "Feb",
             "Mar",
@@ -22,7 +22,7 @@ class Genshin(commands.Cog):
             "Nov",
             "Dec",
         ]
-        self.characters = [
+        self.CHARACTERS = [
             "Fischl Xiangling",
             "Beidou Noelle",
             "Ningguang Xingqiu",
@@ -30,7 +30,7 @@ class Genshin(commands.Cog):
             "Bennett Lisa",
             "Barbara Kaeya",
         ]
-        self.characterExpList = [
+        self.CHARACTER_EXP_LIST = [
             0,
             1000,
             1325,
@@ -137,9 +137,9 @@ class Genshin(commands.Cog):
             for x in range(1, 7):
                 built += (
                     "`"
-                    + self.months[((current_month + x) % 12) - 1]
+                    + self.MONTHS[((current_month + x) % 12) - 1]
                     + "` | "
-                    + self.characters[((current_month + x) % 6) - 1]
+                    + self.CHARACTERS[((current_month + x) % 6) - 1]
                     + "\n"
                 )
 
@@ -151,9 +151,9 @@ class Genshin(commands.Cog):
         await ctx.send(
             "**Current:**\n"
             + "`"
-            + self.months[current_month - 1]
+            + self.MONTHS[current_month - 1]
             + "` | "
-            + self.characters[(current_month % 6) - 1]
+            + self.CHARACTERS[(current_month % 6) - 1]
             + determine_weapon_series()
             + display_future()
         )
@@ -173,7 +173,7 @@ class Genshin(commands.Cog):
             return await interaction.response.send_message(
                 "Already achieved the target level."
             )
-        if self.characterExpList[current_level] < current_experience:
+        if self.CHARACTER_EXP_LIST[current_level] < current_experience:
             return await interaction.response.send_message(
                 "Current experience exceeds the maximum experience in the current level."
             )
@@ -182,9 +182,9 @@ class Genshin(commands.Cog):
 
         for i in range(current_level, target_level):
             if i == current_level:
-                totalExpNeeded += self.characterExpList[i] - current_experience
+                totalExpNeeded += self.CHARACTER_EXP_LIST[i] - current_experience
             else:
-                totalExpNeeded += self.characterExpList[i]
+                totalExpNeeded += self.CHARACTER_EXP_LIST[i]
 
         def ceilNumber(num, place):
             div = 1
