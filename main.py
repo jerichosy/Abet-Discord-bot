@@ -327,6 +327,7 @@ async def on_message(message):
 
     end_time = time.time()
     print(f"on_message execution time: {round((end_time - start_time) * 1000)}ms")
+    print("The message was:", message.content)
 
 
 # Command error message sender
@@ -336,35 +337,37 @@ async def on_command_error(ctx, error):
     # pass
     # else:
     await ctx.send(error)
-    # Flesh out more?
+    # TODO: Flesh out more?
 
 
 @bot.event
 async def on_presence_update(before, after):
+    if after.bot:
+        return
+
     if after.guild.id == bot.HOME_GUILD.id:
-        if not after.bot:
-            logger.info(f"{after} | {after.guild}")
-            logger.info(f"  BEFORE: {before.activity}")
-            logger.info(f"  AFTER:  {after.activity}")
-            if after.activity is not None:
+        logger.info(f"{after} | {after.guild}")
+        logger.info(f"  BEFORE: {before.activity}")
+        logger.info(f"  AFTER:  {after.activity}")
+        if after.activity is not None:
 
-                def check_offending(member, offending):
-                    for activity in member.activities:
-                        if activity.name == offending:
-                            return True
-                    return False
+            def check_offending(member, offending):
+                for activity in member.activities:
+                    if activity.name == offending:
+                        return True
+                return False
 
-                async def send_alert(member, offending):
-                    channel = bot.get_channel(867811644322611202)  # sala
-                    # channel = bot.get_channel(870095545992101958)  #bot-spam
-                    await channel.send(
-                        f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {member.mention}'s footsteps and playing {offending}!** ⚠️"
-                    )
+            async def send_alert(member, offending):
+                channel = bot.get_channel(867811644322611202)  # sala
+                # channel = bot.get_channel(870095545992101958)  #bot-spam
+                await channel.send(
+                    f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {member.mention}'s footsteps and playing {offending}!** ⚠️"
+                )
 
-                if check_offending(after, "VALORANT") and not check_offending(
-                    before, "VALORANT"
-                ):
-                    send_alert(after, "VALORANT")
+            if check_offending(after, "VALORANT") and not check_offending(
+                before, "VALORANT"
+            ):
+                send_alert(after, "VALORANT")
 
 
 async def main():
