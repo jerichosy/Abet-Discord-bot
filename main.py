@@ -60,7 +60,9 @@ class AbetBot(commands.Bot):
         self.OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
         self.TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
 
-        self.INVITE_LINK = discord.utils.oauth_url(client_id=self.application_id, permissions=discord.Permissions.text())
+        self.INVITE_LINK = discord.utils.oauth_url(
+            client_id=self.application_id, permissions=discord.Permissions.text()
+        )
 
     async def setup_hook(self) -> None:
         # Load cogs
@@ -263,10 +265,10 @@ async def on_message(message):
                     await message.channel.send(random.choice(mhy_response))
                 break
 
-    tiktok_regex = r"(https?://www\.tiktok\.com/(?:embed|@(?P<user_id>[\w\.-]+)/video)/(?P<id>\d+))"
-    tiktok_vm_regex = r"(https?://(?:vm|vt)\.tiktok\.com/\w+)"
-    tiktok_url = re.findall(tiktok_regex, message.content)
-    tiktok_vm_url = re.findall(tiktok_vm_regex, message.content)
+    TIKTOK_REGEX = r"(https?://www\.tiktok\.com/(?:embed|@(?P<user_id>[\w\.-]+)/video)/(?P<id>\d+))"
+    TIKTOK_VM_REGEX = r"(https?://(?:vm|vt)\.tiktok\.com/\w+)"
+    tiktok_url = re.findall(TIKTOK_REGEX, message.content)
+    tiktok_vm_url = re.findall(TIKTOK_VM_REGEX, message.content)
     print(tiktok_url or tiktok_vm_url)
     if tiktok_url or tiktok_vm_url:
         async with message.channel.typing():
@@ -274,7 +276,7 @@ async def on_message(message):
                 if tiktok_vm_url:
                     async with session.get(tiktok_vm_url[0]) as resp:
                         # print(resp.status)
-                        tiktok_url = re.findall(tiktok_regex, str(resp.url))
+                        tiktok_url = re.findall(TIKTOK_REGEX, str(resp.url))
                 print(tiktok_url)
                 async with session.get(
                     f"https://aqueous-reef-45135.herokuapp.com/extract?url={tiktok_url[0][0]}"
