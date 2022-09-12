@@ -352,7 +352,7 @@ async def on_message(message):
                         title=desc,
                         timestamp=datetime.fromtimestamp(timestamp),
                         url=url,
-                        color=0xbc2a8d,
+                        color=0xBC2A8D,
                     )
                     embed.set_author(name=author, url=author_url)
                     embed.set_footer(
@@ -369,6 +369,58 @@ async def on_message(message):
                             f"{author}-{ig_reel_url[0][1]}.{file_format}",
                         ),
                     )
+
+    FB_REEL_REGEX = r"(https?:\/\/(?:[\w-]+\.)?facebook\.com\/reel\/(?P<id>\d+))"
+    fb_reel_url = re.findall(FB_REEL_REGEX, message.content)
+    print(fb_reel_url)
+    if fb_reel_url:
+        async with message.channel.typing():
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"https://aqueous-reef-45135.herokuapp.com/extract?url={fb_reel_url[0][0]}"
+                ) as resp:
+                    print(resp.status)
+                    if resp.status == 200:
+                        resp_json = await resp.json()
+                        # This can also be sent instead and it will embed although it is very long
+                        dl_link = resp_json["formats"][3]["url"]
+                        file_format = resp_json["formats"][3]["ext"]
+                        desc = resp_json["description"]
+                        # url = resp_json["webpage_url"]
+                        # timestamp = resp_json["timestamp"]
+                        # likes = resp_json["like_count"]
+                        # comments = resp_json["comment_count"]
+                        # author = resp_json["channel"]
+                        # author_url = f"https://instagram.com/{author}"
+                        print(dl_link)
+
+                        async with session.get(dl_link) as resp:
+                            print(resp.status)
+                            video_bytes = io.BytesIO(await resp.read())
+                            print("format:", file_format)
+                            # embed = discord.Embed(
+                            #     title=desc,
+                            #     # timestamp=datetime.fromtimestamp(timestamp),
+                            #     url=fb_reel_url[0][0],
+                            #     color=0xBC2A8D,
+                            # )
+                            # # embed.set_author(name=author, url=author_url)
+                            # embed.set_footer(
+                            #     text="Facebook Reels",
+                            #     icon_url="https://cdn.discordapp.com/attachments/998571531934376006/1010817764203712572/68d99ba29cc8.png",
+                            # )
+                            # embed.add_field(name="Likes", value=likes)
+                            # embed.add_field(name="Comments", value=comments)
+                            await message.reply(
+                                # embed=embed,
+                                mention_author=False,
+                                file=discord.File(
+                                    video_bytes,
+                                    f"{fb_reel_url[0][1]}.{file_format}",
+                                ),
+                            )
+                    else:
+                        print("Did not return 200 status code")
 
     await bot.process_commands(message)
 
