@@ -265,6 +265,7 @@ async def on_message(message):
                     await message.channel.send(random.choice(mhy_response))
                 break
 
+    # TODO: Either try to make it consistent accross or think of a better/flexible/DRY solution
     TIKTOK_REGEX = r"(https?://www\.tiktok\.com/(?:embed|@(?P<user_id>[\w\.-]+)/video)/(?P<id>\d+))"
     TIKTOK_VM_REGEX = r"(https?://(?:vm|vt)\.tiktok\.com/\w+)"
     tiktok_url = re.findall(TIKTOK_REGEX, message.content)
@@ -282,45 +283,49 @@ async def on_message(message):
                     f"https://aqueous-reef-45135.herokuapp.com/extract?url={tiktok_url[0][0]}"
                 ) as resp:
                     print(resp.status)
-                    resp_json = await resp.json()
-                    # This can also be sent instead and it will embed although it is very long
-                    dl_link = resp_json["formats"][0]["url"]
-                    file_format = resp_json["formats"][0]["ext"]
-                    title = resp_json["title"]
-                    url = resp_json["webpage_url"]
-                    timestamp = resp_json["timestamp"]
-                    views = resp_json["view_count"]
-                    likes = resp_json["like_count"]
-                    comments = resp_json["comment_count"]
-                    author = resp_json["uploader"]
-                    author_url = resp_json["uploader_url"]
-                    print(dl_link)
-                async with session.get(dl_link) as resp:
-                    print(resp.status)
-                    video_bytes = io.BytesIO(await resp.read())
-                    print("format:", file_format)
-                    embed = discord.Embed(
-                        title=title,
-                        timestamp=datetime.fromtimestamp(timestamp),
-                        url=url,
-                        color=0xFE2C55,
-                    )
-                    embed.set_author(name=author, url=author_url)
-                    embed.set_footer(
-                        text="TikTok",
-                        icon_url="https://cdn.discordapp.com/attachments/998571531934376006/998571565539139614/TikTok_logo.png",
-                    )
-                    embed.add_field(name="Views", value=views)
-                    embed.add_field(name="Likes", value=likes)
-                    embed.add_field(name="Comments", value=comments)
-                    await message.reply(
-                        embed=embed,
-                        mention_author=False,
-                        file=discord.File(
-                            video_bytes,
-                            f"{tiktok_url[0][1]}-{tiktok_url[0][2]}.{file_format}",
-                        ),
-                    )
+                    if resp.status == 200:
+                        resp_json = await resp.json()
+                        # This can also be sent instead and it will embed although it is very long
+                        dl_link = resp_json["formats"][0]["url"]
+                        file_format = resp_json["formats"][0]["ext"]
+                        title = resp_json["title"]
+                        url = resp_json["webpage_url"]
+                        timestamp = resp_json["timestamp"]
+                        views = resp_json["view_count"]
+                        likes = resp_json["like_count"]
+                        comments = resp_json["comment_count"]
+                        author = resp_json["uploader"]
+                        author_url = resp_json["uploader_url"]
+                        print(dl_link)
+
+                        async with session.get(dl_link) as resp:
+                            print(resp.status)
+                            video_bytes = io.BytesIO(await resp.read())
+                            print("format:", file_format)
+                            embed = discord.Embed(
+                                title=title,
+                                timestamp=datetime.fromtimestamp(timestamp),
+                                url=url,
+                                color=0xFE2C55,
+                            )
+                            embed.set_author(name=author, url=author_url)
+                            embed.set_footer(
+                                text="TikTok",
+                                icon_url="https://cdn.discordapp.com/attachments/998571531934376006/998571565539139614/TikTok_logo.png",
+                            )
+                            embed.add_field(name="Views", value=views)
+                            embed.add_field(name="Likes", value=likes)
+                            embed.add_field(name="Comments", value=comments)
+                            await message.reply(
+                                embed=embed,
+                                mention_author=False,
+                                file=discord.File(
+                                    video_bytes,
+                                    f"{tiktok_url[0][1]}-{tiktok_url[0][2]}.{file_format}",
+                                ),
+                            )
+                    else:
+                        print("Did not return 200 status code")
 
     IG_REEL_REGEX = r"(?P<url>https?:\/\/(?:www\.)?instagram\.com(?:\/[^\/]+)?\/(?:reel)\/(?P<id>[^\/?#&]+))"
     ig_reel_url = re.findall(IG_REEL_REGEX, message.content)
@@ -332,43 +337,47 @@ async def on_message(message):
                     f"https://aqueous-reef-45135.herokuapp.com/extract?url={ig_reel_url[0][0]}"
                 ) as resp:
                     print(resp.status)
-                    resp_json = await resp.json()
-                    # This can also be sent instead and it will embed although it is very long
-                    dl_link = resp_json["formats"][0]["url"]
-                    file_format = resp_json["formats"][0]["ext"]
-                    desc = resp_json["description"]
-                    url = resp_json["webpage_url"]
-                    timestamp = resp_json["timestamp"]
-                    likes = resp_json["like_count"]
-                    comments = resp_json["comment_count"]
-                    author = resp_json["channel"]
-                    author_url = f"https://instagram.com/{author}"
-                    print(dl_link)
-                async with session.get(dl_link) as resp:
-                    print(resp.status)
-                    video_bytes = io.BytesIO(await resp.read())
-                    print("format:", file_format)
-                    embed = discord.Embed(
-                        title=desc,
-                        timestamp=datetime.fromtimestamp(timestamp),
-                        url=url,
-                        color=0xBC2A8D,
-                    )
-                    embed.set_author(name=author, url=author_url)
-                    embed.set_footer(
-                        text="Instagram Reels",
-                        icon_url="https://cdn.discordapp.com/attachments/998571531934376006/1010817764203712572/68d99ba29cc8.png",
-                    )
-                    embed.add_field(name="Likes", value=likes)
-                    embed.add_field(name="Comments", value=comments)
-                    await message.reply(
-                        embed=embed,
-                        mention_author=False,
-                        file=discord.File(
-                            video_bytes,
-                            f"{author}-{ig_reel_url[0][1]}.{file_format}",
-                        ),
-                    )
+                    if resp.status == 200:
+                        resp_json = await resp.json()
+                        # This can also be sent instead and it will embed although it is very long
+                        dl_link = resp_json["formats"][0]["url"]
+                        file_format = resp_json["formats"][0]["ext"]
+                        desc = resp_json["description"]
+                        url = resp_json["webpage_url"]
+                        timestamp = resp_json["timestamp"]
+                        likes = resp_json["like_count"]
+                        comments = resp_json["comment_count"]
+                        author = resp_json["channel"]
+                        author_url = f"https://instagram.com/{author}"
+                        print(dl_link)
+
+                        async with session.get(dl_link) as resp:
+                            print(resp.status)
+                            video_bytes = io.BytesIO(await resp.read())
+                            print("format:", file_format)
+                            embed = discord.Embed(
+                                title=desc,
+                                timestamp=datetime.fromtimestamp(timestamp),
+                                url=url,
+                                color=0xBC2A8D,
+                            )
+                            embed.set_author(name=author, url=author_url)
+                            embed.set_footer(
+                                text="Instagram Reels",
+                                icon_url="https://cdn.discordapp.com/attachments/998571531934376006/1010817764203712572/68d99ba29cc8.png",
+                            )
+                            embed.add_field(name="Likes", value=likes)
+                            embed.add_field(name="Comments", value=comments)
+                            await message.reply(
+                                embed=embed,
+                                mention_author=False,
+                                file=discord.File(
+                                    video_bytes,
+                                    f"{author}-{ig_reel_url[0][1]}.{file_format}",
+                                ),
+                            )
+                    else:
+                        print("Did not return 200 status code")
 
     FB_REEL_REGEX = r"(https?:\/\/(?:[\w-]+\.)?facebook\.com\/reel\/(?P<id>\d+))"
     fb_reel_url = re.findall(FB_REEL_REGEX, message.content)
