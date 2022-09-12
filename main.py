@@ -289,7 +289,6 @@ async def on_message(message):
                         dl_link = resp_json["formats"][0]["url"]
                         file_format = resp_json["formats"][0]["ext"]
                         title = resp_json["title"]
-                        url = resp_json["webpage_url"]
                         timestamp = resp_json["timestamp"]
                         views = resp_json["view_count"]
                         likes = resp_json["like_count"]
@@ -305,7 +304,7 @@ async def on_message(message):
                             embed = discord.Embed(
                                 title=title,
                                 timestamp=datetime.fromtimestamp(timestamp),
-                                url=url,
+                                url=tiktok_url[0][0],
                                 color=0xFE2C55,
                             )
                             embed.set_author(name=author, url=author_url)
@@ -343,7 +342,6 @@ async def on_message(message):
                         dl_link = resp_json["formats"][0]["url"]
                         file_format = resp_json["formats"][0]["ext"]
                         desc = resp_json["description"]
-                        url = resp_json["webpage_url"]
                         timestamp = resp_json["timestamp"]
                         likes = resp_json["like_count"]
                         comments = resp_json["comment_count"]
@@ -358,7 +356,7 @@ async def on_message(message):
                             embed = discord.Embed(
                                 title=desc,
                                 timestamp=datetime.fromtimestamp(timestamp),
-                                url=url,
+                                url=ig_reel_url[0][0],
                                 color=0xBC2A8D,
                             )
                             embed.set_author(name=author, url=author_url)
@@ -395,7 +393,6 @@ async def on_message(message):
                         dl_link = resp_json["formats"][3]["url"]
                         file_format = resp_json["formats"][3]["ext"]
                         desc = resp_json["description"]
-                        # url = resp_json["webpage_url"]
                         # timestamp = resp_json["timestamp"]
                         # likes = resp_json["like_count"]
                         # comments = resp_json["comment_count"]
