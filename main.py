@@ -266,6 +266,7 @@ async def on_message(message):
                 break
 
     # TODO: Either try to make it consistent across or think of a better/flexible/DRY solution
+    # Error checking is only arbitarily implemented
     TIKTOK_REGEX = r"(https?://www\.tiktok\.com/(?:embed|@(?P<user_id>[\w\.-]+)/video)/(?P<id>\d+))"
     TIKTOK_VM_REGEX = r"(https?://(?:vm|vt)\.tiktok\.com/\w+)"
     tiktok_url = re.findall(TIKTOK_REGEX, message.content)
