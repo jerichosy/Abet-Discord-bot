@@ -304,7 +304,9 @@ async def on_message(message):
                                 video_bytes = io.BytesIO(await resp.read())
                                 print("format:", file_format)
                                 embed = discord.Embed(
-                                    title=title,
+                                    title=(title[:253] + "...")
+                                    if len(title) > 253
+                                    else title,
                                     timestamp=datetime.fromtimestamp(timestamp),
                                     url=tiktok_url[0][0],
                                     color=0xFE2C55,
@@ -359,7 +361,9 @@ async def on_message(message):
                                 video_bytes = io.BytesIO(await resp.read())
                                 print("format:", file_format)
                                 embed = discord.Embed(
-                                    title=desc,
+                                    title=(desc[:253] + "...")
+                                    if len(desc) > 253
+                                    else desc,
                                     timestamp=datetime.fromtimestamp(timestamp),
                                     url=ig_reel_url[0][0],
                                     color=0xBC2A8D,
