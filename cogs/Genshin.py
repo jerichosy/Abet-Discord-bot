@@ -159,7 +159,7 @@ class Genshin(commands.Cog):
         )
 
     @app_commands.command()
-    async def characterexp(
+    async def calc(
         self,
         interaction: discord.Interaction,
         current_level: app_commands.Range[int, 1, 90],
