@@ -1,15 +1,16 @@
-import discord
-from discord.ext import commands
-from discord import app_commands
-import os
 import io
-import aiohttp
+import os
 import random
-from random import choices
-from datetime import timedelta
 import time
 from collections import Counter
+from datetime import timedelta
+from random import choices
 from typing import Optional
+
+import aiohttp
+import discord
+from discord import app_commands
+from discord.ext import commands
 from pdf2image import convert_from_bytes
 
 
@@ -140,7 +141,7 @@ class Tools(commands.Cog):
             async with ctx.typing():
                 # alternatively use f"https://api.trace.moe/search?anilistInfo&url={url}" to query anilist also
                 async with session.get(
-                    f"https://api.trace.moe/search?cutBorders&url={url}"
+                    f"https://api.trace.moe/search?cutBorders&anilistInfo&url={url}"
                 ) as resp:
                     json_data = await resp.json()
 
@@ -158,44 +159,22 @@ class Tools(commands.Cog):
                     similarity = json_data["result"][0]["similarity"]
                     video_url = json_data["result"][0]["video"]
 
-                    anilist_id = json_data["result"][0]["anilist"]
-
-                    # Even though we can let Trace.moe API handle contacting AniList GraphQL API on our behalf, we will keep the ff. implementation for future reference:
-                    query = """
-                        query ($id: Int) { # Define which variables will be used in the query (id)
-                            Media (id: $id, type: ANIME) { # Insert our variables into the query arguments (id) (type: ANIME is hard-coded in the query)
-                                id
-                                title {
-                                    romaji
-                                    english
-                                    native
-                                }
-                                isAdult
-                            }
-                        }
-                    """
-                    variables = {"id": anilist_id}
-
-                    async with session.post(
-                        "https://graphql.anilist.co/",
-                        data={"query": query, "variables": variables},
-                    ) as resp:
-                        json_data = await resp.json()
+                    # anilist_id = json_data["result"][0]["anilist"]
 
                     native = (
                         ""
-                        if json_data["data"]["Media"]["title"]["native"] is None
-                        else f"**{json_data['data']['Media']['title']['native']}**\n"
+                        if json_data['result'][0]['anilist']['title']['native'] is None
+                        else f"**{json_data['result'][0]['anilist']['title']['native']}**\n"
                     )
                     romaji = (
                         ""
-                        if json_data["data"]["Media"]["title"]["romaji"] is None
-                        else f"**{json_data['data']['Media']['title']['romaji']}**\n"
+                        if json_data['result'][0]['anilist']['title']['romaji'] is None
+                        else f"**{json_data['result'][0]['anilist']['title']['romaji']}**\n"
                     )
                     english = (
                         ""
-                        if json_data["data"]["Media"]["title"]["english"] is None
-                        else f"**{json_data['data']['Media']['title']['english']}**\n"
+                        if json_data['result'][0]['anilist']['title']['english'] is None
+                        else f"**{json_data['result'][0]['anilist']['title']['english']}**\n"
                     )
 
             if reason:
@@ -205,7 +184,7 @@ class Tools(commands.Cog):
                     f"<@{ctx.author.id}>\n\n{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity"
                 )
 
-                if json_data["data"]["Media"]["isAdult"]:
+                if json_data['result'][0]['anilist']['isAdult']:
                     preview_file_name = "SPOILER_preview.mp4"
                     warning = "[NSFW]"
                 else:
