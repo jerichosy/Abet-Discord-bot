@@ -5,22 +5,21 @@
 
 # Notes: Don't set your own tree with `tree = app_commands.CommandTree(bot)` as Bot handles it. Don't globally and locally restrict cmds to guild-only.
 
+import asyncio
+import io
+import logging
+import os
+import random
+import re
+import sys
+import time
+import traceback
+from datetime import datetime
+
+import aiohttp
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-import os
-import io
-import asyncio
-import aiohttp
-import random
-from datetime import datetime
-import time
-import re
-
-import traceback
-import sys
-
-import logging
 
 logger = logging.getLogger("discord")
 logger.setLevel(logging.INFO)
@@ -265,72 +264,73 @@ async def on_message(message):
                     await message.channel.send(random.choice(mhy_response))
                 break
 
-    # TODO: Either try to make it consistent across or think of a better/flexible/DRY solution
-    # Error checking is only arbitarily implemented
-    TIKTOK_REGEX = r"(https?://www\.tiktok\.com/(?:embed|@(?P<user_id>[\w\.-]+)/video)/(?P<id>\d+))"
-    TIKTOK_VM_REGEX = r"(https?://(?:vm|vt)\.tiktok\.com/\w+)"
-    tiktok_url = re.findall(TIKTOK_REGEX, message.content)
-    tiktok_vm_url = re.findall(TIKTOK_VM_REGEX, message.content)
-    print(tiktok_url or tiktok_vm_url)
-    if tiktok_url or tiktok_vm_url:
-        async with message.channel.typing():
-            async with aiohttp.ClientSession() as session:
-                if tiktok_vm_url:
-                    async with session.get(tiktok_vm_url[0]) as resp:
-                        # print(resp.status)
-                        tiktok_url = re.findall(TIKTOK_REGEX, str(resp.url))
-                print(tiktok_url)
-                async with session.get(
-                    f"https://aqueous-reef-45135.herokuapp.com/extract?url={tiktok_url[0][0]}"
-                ) as resp:
-                    print(resp.status)
-                    if resp.status == 200:
-                        resp_json = await resp.json()
-                        # This can also be sent instead and it will embed although it is very long
-                        dl_link = resp_json["formats"][0]["url"]
-                        file_format = resp_json["formats"][0]["ext"]
-                        title = resp_json["title"]
-                        timestamp = resp_json["timestamp"]
-                        views = resp_json["view_count"]
-                        likes = resp_json["like_count"]
-                        comments = resp_json["comment_count"]
-                        author = resp_json["uploader"]
-                        author_url = resp_json["uploader_url"]
-                        print(dl_link)
+    # Made redundant by QuickVids bot
+    # # TODO: Either try to make it consistent across or think of a better/flexible/DRY solution
+    # # Error checking is only arbitarily implemented
+    # TIKTOK_REGEX = r"(https?://www\.tiktok\.com/(?:embed|@(?P<user_id>[\w\.-]+)/video)/(?P<id>\d+))"
+    # TIKTOK_VM_REGEX = r"(https?://(?:vm|vt)\.tiktok\.com/\w+)"
+    # tiktok_url = re.findall(TIKTOK_REGEX, message.content)
+    # tiktok_vm_url = re.findall(TIKTOK_VM_REGEX, message.content)
+    # print(tiktok_url or tiktok_vm_url)
+    # if tiktok_url or tiktok_vm_url:
+    #     async with message.channel.typing():
+    #         async with aiohttp.ClientSession() as session:
+    #             if tiktok_vm_url:
+    #                 async with session.get(tiktok_vm_url[0]) as resp:
+    #                     # print(resp.status)
+    #                     tiktok_url = re.findall(TIKTOK_REGEX, str(resp.url))
+    #             print(tiktok_url)
+    #             async with session.get(
+    #                 f"https://aqueous-reef-45135.herokuapp.com/extract?url={tiktok_url[0][0]}"
+    #             ) as resp:
+    #                 print(resp.status)
+    #                 if resp.status == 200:
+    #                     resp_json = await resp.json()
+    #                     # This can also be sent instead and it will embed although it is very long
+    #                     dl_link = resp_json["formats"][0]["url"]
+    #                     file_format = resp_json["formats"][0]["ext"]
+    #                     title = resp_json["title"]
+    #                     timestamp = resp_json["timestamp"]
+    #                     views = resp_json["view_count"]
+    #                     likes = resp_json["like_count"]
+    #                     comments = resp_json["comment_count"]
+    #                     author = resp_json["uploader"]
+    #                     author_url = resp_json["uploader_url"]
+    #                     print(dl_link)
 
-                        async with session.get(dl_link) as resp:
-                            print(resp.status)
-                            if resp.status == 200:
-                                video_bytes = io.BytesIO(await resp.read())
-                                print("format:", file_format)
-                                embed = discord.Embed(
-                                    title=(title[:253] + "...")
-                                    if len(title) > 253
-                                    else title,
-                                    timestamp=datetime.fromtimestamp(timestamp),
-                                    url=tiktok_url[0][0],
-                                    color=0xFE2C55,
-                                )
-                                embed.set_author(name=author, url=author_url)
-                                embed.set_footer(
-                                    text="TikTok",
-                                    icon_url="https://cdn.discordapp.com/attachments/998571531934376006/998571565539139614/TikTok_logo.png",
-                                )
-                                embed.add_field(name="Views", value=views)
-                                embed.add_field(name="Likes", value=likes)
-                                embed.add_field(name="Comments", value=comments)
-                                await message.reply(
-                                    embed=embed,
-                                    mention_author=False,
-                                    file=discord.File(
-                                        video_bytes,
-                                        f"{tiktok_url[0][1]}-{tiktok_url[0][2]}.{file_format}",
-                                    ),
-                                )
-                            else:
-                                print("Did not return 200 status code")
-                    else:
-                        print("Did not return 200 status code")
+    #                     async with session.get(dl_link) as resp:
+    #                         print(resp.status)
+    #                         if resp.status == 200:
+    #                             video_bytes = io.BytesIO(await resp.read())
+    #                             print("format:", file_format)
+    #                             embed = discord.Embed(
+    #                                 title=(title[:253] + "...")
+    #                                 if len(title) > 253
+    #                                 else title,
+    #                                 timestamp=datetime.fromtimestamp(timestamp),
+    #                                 url=tiktok_url[0][0],
+    #                                 color=0xFE2C55,
+    #                             )
+    #                             embed.set_author(name=author, url=author_url)
+    #                             embed.set_footer(
+    #                                 text="TikTok",
+    #                                 icon_url="https://cdn.discordapp.com/attachments/998571531934376006/998571565539139614/TikTok_logo.png",
+    #                             )
+    #                             embed.add_field(name="Views", value=views)
+    #                             embed.add_field(name="Likes", value=likes)
+    #                             embed.add_field(name="Comments", value=comments)
+    #                             await message.reply(
+    #                                 embed=embed,
+    #                                 mention_author=False,
+    #                                 file=discord.File(
+    #                                     video_bytes,
+    #                                     f"{tiktok_url[0][1]}-{tiktok_url[0][2]}.{file_format}",
+    #                                 ),
+    #                             )
+    #                         else:
+    #                             print("Did not return 200 status code")
+    #                 else:
+    #                     print("Did not return 200 status code")
 
     IG_REEL_REGEX = r"(?P<url>https?:\/\/(?:www\.)?instagram\.com(?:\/[^\/]+)?\/(?:reel)\/(?P<id>[^\/?#&]+))"
     ig_reel_url = re.findall(IG_REEL_REGEX, message.content)
