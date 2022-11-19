@@ -180,10 +180,6 @@ class Tools(commands.Cog):
             if reason:
                 await ctx.send(reason, suppress_embeds=True)
             else:
-                await ctx.send(
-                    f"<@{ctx.author.id}>\n\n{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity"
-                )
-
                 if json_data['result'][0]['anilist']['isAdult']:
                     preview_file_name = "SPOILER_preview.mp4"
                     warning = "[NSFW]"
@@ -193,9 +189,12 @@ class Tools(commands.Cog):
 
                 async with session.get(video_url) as resp:
                     if resp.status != 200:
-                        return await ctx.send("Could not download preview...")
+                        warning = "Could not download preview..."
                     data = io.BytesIO(await resp.read())
-                    await ctx.send(warning, file=discord.File(data, preview_file_name))
+
+                await ctx.send(
+                    f"<@{ctx.author.id}>\n\n{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity\n\n{warning}", file=discord.File(data, preview_file_name)
+                )
 
     @commands.command(
         aliases=["sauce", "source", "getsource", "artsource", "getartsource"]
