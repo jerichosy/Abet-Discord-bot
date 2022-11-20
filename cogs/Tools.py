@@ -189,8 +189,8 @@ class Tools(commands.Cog):
                         warning = "Could not download preview..."
                     data = io.BytesIO(await resp.read())
 
-                await ctx.send(
-                    f"<@{ctx.author.id}>\n\n{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity\n\n{warning}", file=discord.File(data, preview_file_name)
+                await ctx.reply(
+                    f"{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity\n\n{warning}", file=discord.File(data, preview_file_name)
                 )
 
     @commands.command(
