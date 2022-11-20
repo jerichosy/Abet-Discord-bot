@@ -139,7 +139,6 @@ class Tools(commands.Cog):
 
         async with aiohttp.ClientSession() as session:
             async with ctx.typing():
-                # alternatively use f"https://api.trace.moe/search?anilistInfo&url={url}" to query anilist also
                 async with session.get(
                     f"https://api.trace.moe/search?cutBorders&anilistInfo&url={url}"
                 ) as resp:
@@ -158,8 +157,6 @@ class Tools(commands.Cog):
                     )
                     similarity = json_data["result"][0]["similarity"]
                     video_url = json_data["result"][0]["video"]
-
-                    # anilist_id = json_data["result"][0]["anilist"]
 
                     native = (
                         ""
