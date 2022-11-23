@@ -375,14 +375,19 @@ async def on_message(message):
                                 )
                                 embed.add_field(name="Likes", value=likes)
                                 embed.add_field(name="Comments", value=comments)
-                                await message.reply(
-                                    embed=embed,
-                                    mention_author=False,
-                                    file=discord.File(
-                                        video_bytes,
-                                        f"{author}-{ig_reel_url[0][1]}.{file_format}",
-                                    ),
-                                )
+                                try:
+                                    await message.reply(
+                                        embed=embed,
+                                        mention_author=False,
+                                        file=discord.File(
+                                            video_bytes,
+                                            f"{author}-{ig_reel_url[0][1]}.{file_format}",
+                                        ),
+                                    )
+                                except discord.HTTPException:
+                                    print("IG Reel Reposter send error: Likely too big")
+                                else:
+                                    await message.edit(suppress=True)
                             else:
                                 print("Did not return 200 status code")
                     else:
@@ -429,14 +434,19 @@ async def on_message(message):
                                 # )
                                 # embed.add_field(name="Likes", value=likes)
                                 # embed.add_field(name="Comments", value=comments)
-                                await message.reply(
-                                    # embed=embed,
-                                    mention_author=False,
-                                    file=discord.File(
-                                        video_bytes,
-                                        f"{fb_reel_url[0][1]}.{file_format}",
-                                    ),
-                                )
+                                try:
+                                    await message.reply(
+                                        # embed=embed,
+                                        mention_author=False,
+                                        file=discord.File(
+                                            video_bytes,
+                                            f"{fb_reel_url[0][1]}.{file_format}",
+                                        ),
+                                    )
+                                except discord.HTTPException:
+                                    print("FB Reel Reposter send error: Likely too big")
+                                else:
+                                    await message.edit(suppress=True)
                             else:
                                 print("Did not return 200 status code")
                     else:
