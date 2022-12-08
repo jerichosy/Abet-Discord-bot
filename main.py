@@ -361,9 +361,7 @@ async def on_message(message):
                                 video_bytes = io.BytesIO(await resp.read())
                                 print("format:", file_format)
                                 embed = discord.Embed(
-                                    title=(desc[:253] + "...")
-                                    if len(desc) > 253
-                                    else desc,
+                                    title=((desc[:253] + "...") if len(desc) > 253 else desc) if desc else None,
                                     timestamp=datetime.fromtimestamp(timestamp),
                                     url=ig_reel_url[0][0],
                                     color=0xBC2A8D,
