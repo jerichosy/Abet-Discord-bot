@@ -275,8 +275,8 @@ class Tools(commands.Cog):
                         f"<@{ctx.author.id}> Note: For anime, use &whatanime\n\n{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}"
                     )
 
-    @commands.command()
-    async def pdf(self, ctx, url=None):
+    @commands.hybrid_command()
+    async def pdf(self, ctx, url=None, attachment: Optional[discord.Attachment]=None):
         if url is None and len(ctx.message.attachments) == 0:
             await ctx.send("Please attach a PDF / provide a link or URL")
             return
@@ -284,34 +284,39 @@ class Tools(commands.Cog):
         if url is None:
             url = ctx.message.attachments[0].url
 
-        async with ctx.typing():
-            async with aiohttp.ClientSession() as session:
-                async with session.get(url) as resp:
-                    if resp.headers.get('Content-Type') != 'application/pdf':
-                        return await ctx.send("ERROR: Given link is not a PDF file")
+        if ctx.interaction is None:
+            await ctx.typing()
+        else:
+            await ctx.interaction.response.defer()
 
-                    images = convert_from_bytes(await resp.read())
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                if resp.headers.get('Content-Type') != 'application/pdf':
+                    return await ctx.send("ERROR: Given link is not a PDF file")
 
-                    files_list = []
-                    for image in images:
-                        image_bytes = io.BytesIO()
-                        image.save(image_bytes, "JPEG")
-                        image_bytes.seek(0)
-                        files_list.append(
-                            discord.File(image_bytes, f"{int(time.time() * 1000)}.jpg")
-                        )
+                images = convert_from_bytes(await resp.read())
 
-                    chunks = [files_list[x:x+10] for x in range(0, len(files_list), 10)]
+                files_list = []
+                for image in images:
+                    image_bytes = io.BytesIO()
+                    image.save(image_bytes, "JPEG")
+                    image_bytes.seek(0)
+                    files_list.append(
+                        discord.File(image_bytes, f"{int(time.time() * 1000)}.jpg")
+                    )
 
-                    for idx, chunk in enumerate(chunks):
-                        page_increment = 10 * idx
-                        start = page_increment + 1
-                        end = (len(chunk) - 1) + start
+                chunks = [files_list[x:x+10] for x in range(0, len(files_list), 10)]
 
-                        if idx == 0:
-                            await ctx.reply(f"Page {start}-{end}/{len(files_list)}", files=chunk)
-                        else:
-                            await ctx.send(f"Page {start}-{end}/{len(files_list)}", files=chunk)
+                for idx, chunk in enumerate(chunks):
+                    page_increment = 10 * idx
+                    start = page_increment + 1
+                    end = (len(chunk) - 1) + start
+
+                    if idx == 0:
+                        await ctx.reply(f"Page {start}-{end}/{len(files_list)}", files=chunk)
+                    else:
+                        # ctx.channel needed for slash (hybrid) so it refers to the channel instead of the initial interaction response
+                        await ctx.channel.send(f"Page {start}-{end}/{len(files_list)}", files=chunk)
 
     @commands.hybrid_command()
     # @app_commands.guilds(discord.Object(id=867811644322611200))
