@@ -298,16 +298,16 @@ class Tools(commands.Cog):
 
                 images = convert_from_bytes(await resp.read())
 
-                files_list = []
+                image_list = []
                 for image in images:
                     image_bytes = io.BytesIO()
                     image.save(image_bytes, "JPEG")
                     image_bytes.seek(0)
-                    files_list.append(
+                    image_list.append(
                         discord.File(image_bytes, f"{int(time.time() * 1000)}.jpg")
                     )
 
-                chunks = [files_list[x:x+10] for x in range(0, len(files_list), 10)]
+                chunks = [image_list[x:x+10] for x in range(0, len(image_list), 10)]
 
                 for idx, chunk in enumerate(chunks):
                     page_increment = 10 * idx
@@ -315,10 +315,10 @@ class Tools(commands.Cog):
                     end = (len(chunk) - 1) + start
 
                     if idx == 0:
-                        await ctx.reply(f"Page {start}-{end}/{len(files_list)}", files=chunk)
+                        await ctx.reply(f"Page {start}-{end}/{len(image_list)}", files=chunk)
                     else:
                         # ctx.channel needed for slash (hybrid) so it refers to the channel instead of the initial interaction response
-                        await ctx.channel.send(f"Page {start}-{end}/{len(files_list)}", files=chunk)
+                        await ctx.channel.send(f"Page {start}-{end}/{len(image_list)}", files=chunk)
 
     @commands.hybrid_command()
     # @app_commands.guilds(discord.Object(id=867811644322611200))
