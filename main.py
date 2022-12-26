@@ -1,5 +1,4 @@
 # Check: ~~dependencies~~, comments
-# Change: Consider pulling AniList info straight from Trace.moe instead to improve response time and simplify.
 # Additions: Add cogs and cmd desc.
 # Will not fix: Error of converting int when user accidentally types argument(s) containing characters, non-ints, etc.
 
