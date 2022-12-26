@@ -283,8 +283,7 @@ class Tools(commands.Cog):
             await ctx.send("Please attach a PDF / provide a link or URL")
             return
 
-        if url is None:
-            url = ctx.message.attachments[0].url
+        url = ctx.message.attachments[0].url if ctx.message.attachments else url     
 
         if ctx.interaction is None:
             await ctx.typing()
