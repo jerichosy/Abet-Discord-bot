@@ -319,7 +319,7 @@ class Tools(commands.Cog):
     async def weather(self, ctx, location: str = "Pasig City"):
         """Check the weather!"""
         if ctx.interaction is None:
-            await ctx.trigger_typing()
+            await ctx.typing()
 
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://wttr.in/{location}?0T") as resp:
