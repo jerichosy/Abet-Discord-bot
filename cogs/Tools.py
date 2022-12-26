@@ -301,7 +301,17 @@ class Tools(commands.Cog):
                             discord.File(image_bytes, f"{int(time.time() * 1000)}.jpg")
                         )
 
-                    await ctx.reply(files=files_list)
+                    chunks = [files_list[x:x+10] for x in range(0, len(files_list), 10)]
+
+                    for idx, chunk in enumerate(chunks):
+                        page_increment = 10 * idx
+                        start = page_increment + 1
+                        end = (len(chunk) - 1) + start
+
+                        if idx == 0:
+                            await ctx.reply(f"Page {start}-{end}/{len(files_list)}", files=chunk)
+                        else:
+                            await ctx.send(f"Page {start}-{end}/{len(files_list)}", files=chunk)
 
     @commands.hybrid_command()
     # @app_commands.guilds(discord.Object(id=867811644322611200))
