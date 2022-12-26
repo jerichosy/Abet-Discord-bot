@@ -294,7 +294,7 @@ class Tools(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
                 if resp.headers.get('Content-Type') != 'application/pdf':
-                    return await ctx.send("ERROR: Given link is not a PDF file")
+                    return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
 
                 images = convert_from_bytes(await resp.read())
 
