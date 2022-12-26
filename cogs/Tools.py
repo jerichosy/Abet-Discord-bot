@@ -276,7 +276,9 @@ class Tools(commands.Cog):
                     )
 
     @commands.hybrid_command()
-    async def pdf(self, ctx, url=None, attachment: Optional[discord.Attachment]=None):
+    # "attachment" is not accessed as the attachment is already retrievable by message.attachments[0].url
+    # and to maintain compatibility with traditional cmd usage. But the arg. is necessary to indicate as a slash cmd arg. for the user
+    async def pdf(self, ctx, url=None, attachment: Optional[discord.Attachment]=None):  
         if url is None and len(ctx.message.attachments) == 0:
             await ctx.send("Please attach a PDF / provide a link or URL")
             return
