@@ -278,7 +278,7 @@ class Tools(commands.Cog):
     @commands.hybrid_command()
     # "attachment" is not accessed as the attachment is already retrievable by message.attachments[0].url
     # and to maintain compatibility with traditional cmd usage. But the arg. is necessary to indicate as a slash cmd arg. for the user
-    async def pdf(self, ctx, url=None, attachment: Optional[discord.Attachment]=None):  
+    async def pdf(self, ctx, url=None, attachment: Optional[discord.Attachment]=None, start: commands.Range[int, 1]=1, end: commands.Range[int, 1]=None):  
         if url is None and len(ctx.message.attachments) == 0:
             await ctx.send("Please attach a PDF / provide a link or URL")
             return
@@ -306,18 +306,26 @@ class Tools(commands.Cog):
                         discord.File(image_bytes, f"{int(time.time() * 1000)}.jpg")
                     )
 
+                image_list = image_list[start-1:end]
+
                 chunks = [image_list[x:x+10] for x in range(0, len(image_list), 10)]
 
                 for idx, chunk in enumerate(chunks):
                     page_increment = 10 * idx
-                    start = page_increment + 1
-                    end = (len(chunk) - 1) + start
+                    low = page_increment + 1
+                    high = (len(chunk) - 1) + low
+
+                    source_page_cnt = ''
+                    if start != 1 or end:
+                        low_source = page_increment + start
+                        high_source = (len(chunk) - 1) + low_source
+                        source_page_cnt = f"({low_source}-{high_source})"
 
                     if idx == 0:
-                        await ctx.reply(f"Page {start}-{end}/{len(image_list)}", files=chunk)
+                        await ctx.reply(f"Page {low}-{high}/{len(image_list)} {source_page_cnt}", files=chunk)
                     else:
                         # ctx.channel needed for slash (hybrid) so it refers to the channel instead of the initial interaction response
-                        await ctx.channel.send(f"Page {start}-{end}/{len(image_list)}", files=chunk)
+                        await ctx.channel.send(f"Page {low}-{high}/{len(image_list)} {source_page_cnt}", files=chunk)
 
     @commands.hybrid_command()
     # @app_commands.guilds(discord.Object(id=867811644322611200))
