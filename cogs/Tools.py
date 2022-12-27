@@ -1,7 +1,7 @@
 import io
 import os
 import random
-import time
+import uuid
 from collections import Counter
 from datetime import timedelta
 from random import choices
@@ -303,7 +303,7 @@ class Tools(commands.Cog):
                     image.save(image_bytes, "JPEG")
                     image_bytes.seek(0)
                     image_list.append(
-                        discord.File(image_bytes, f"{int(time.time() * 1000)}.jpg")
+                        discord.File(image_bytes, f"{uuid.uuid4()}.jpg")
                     )
 
                 image_list = image_list[start-1:end]
