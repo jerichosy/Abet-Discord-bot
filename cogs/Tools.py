@@ -286,6 +286,8 @@ class Tools(commands.Cog):
         url = ctx.message.attachments[0].url if ctx.message.attachments else url     
 
         if ctx.interaction is None:
+            if start != 1 or end:
+                return await ctx.send("Please use the slash cmd version to use extra args")
             await ctx.typing()
         else:
             await ctx.interaction.response.defer()
