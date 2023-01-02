@@ -42,7 +42,7 @@ class Info(commands.Cog):
         )
         return "\n".join(self.format_commit(c) for c in commits)
 
-    @commands.command(aliases=["info", "github", "repo", "repository"])
+    @commands.hybrid_command(aliases=["info", "github", "repo", "repository"])
     async def about(self, ctx):
         """link to documentation & source code on GitHub"""
 
