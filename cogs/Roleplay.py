@@ -9,12 +9,10 @@ class Roleplay(commands.Cog):
         self.bot = bot
 
     @staticmethod
-    async def get_roleplay_embed(ctx, user_mentioned, type, category, action):
-        title = f"{ctx.author.name} {action} "
-        if user_mentioned is not None:  # PEP 8
-            name = str(user_mentioned)
-            size = len(name)
-            title += name[: size - 5]
+    async def get_roleplay_embed(author_name, user_mentioned, type, category, action):
+        title = (
+            f"{author_name} {action} {user_mentioned.name if user_mentioned else ''}"
+        )
         embed = discord.Embed(title=title, color=0xEE615B)
         embed.set_image(url=await get_waifu(type, category))
         return embed
@@ -23,7 +21,7 @@ class Roleplay(commands.Cog):
     async def cuddle(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "cuddle", "cuddles"
+                ctx.author.name, user_mentioned, "sfw", "cuddle", "cuddles"
             )
         )
 
@@ -31,7 +29,7 @@ class Roleplay(commands.Cog):
     async def hug(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "hug", "hugs"
+                ctx.author.name, user_mentioned, "sfw", "hug", "hugs"
             )
         )
 
@@ -39,7 +37,7 @@ class Roleplay(commands.Cog):
     async def kiss(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "kiss", "kisses"
+                ctx.author.name, user_mentioned, "sfw", "kiss", "kisses"
             )
         )
 
@@ -47,7 +45,7 @@ class Roleplay(commands.Cog):
     async def lick(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "lick", "licks"
+                ctx.author.name, user_mentioned, "sfw", "lick", "licks"
             )
         )
 
@@ -55,7 +53,7 @@ class Roleplay(commands.Cog):
     async def pat(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "pat", "pats"
+                ctx.author.name, user_mentioned, "sfw", "pat", "pats"
             )
         )
 
@@ -63,7 +61,7 @@ class Roleplay(commands.Cog):
     async def bonk(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "bonk", "bonks"
+                ctx.author.name, user_mentioned, "sfw", "bonk", "bonks"
             )
         )
 
@@ -71,7 +69,7 @@ class Roleplay(commands.Cog):
     async def yeet(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "yeet", "yeets"
+                ctx.author.name, user_mentioned, "sfw", "yeet", "yeets"
             )
         )
 
@@ -79,7 +77,7 @@ class Roleplay(commands.Cog):
     async def wave(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "wave", "waves"
+                ctx.author.name, user_mentioned, "sfw", "wave", "waves"
             )
         )
 
@@ -87,7 +85,7 @@ class Roleplay(commands.Cog):
     async def highfive(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "highfive", "highfives"
+                ctx.author.name, user_mentioned, "sfw", "highfive", "highfives"
             )
         )
 
@@ -95,7 +93,7 @@ class Roleplay(commands.Cog):
     async def handhold(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "handhold", "handholds"
+                ctx.author.name, user_mentioned, "sfw", "handhold", "handholds"
             )
         )
 
@@ -103,7 +101,7 @@ class Roleplay(commands.Cog):
     async def bite(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "bite", "bites"
+                ctx.author.name, user_mentioned, "sfw", "bite", "bites"
             )
         )
 
@@ -111,7 +109,7 @@ class Roleplay(commands.Cog):
     async def glomp(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "glomp", "glomps"
+                ctx.author.name, user_mentioned, "sfw", "glomp", "glomps"
             )
         )
 
@@ -119,7 +117,7 @@ class Roleplay(commands.Cog):
     async def slap(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "slap", "slaps"
+                ctx.author.name, user_mentioned, "sfw", "slap", "slaps"
             )
         )
 
@@ -128,7 +126,7 @@ class Roleplay(commands.Cog):
     async def kill(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "kill", "kills"
+                ctx.author.name, user_mentioned, "sfw", "kill", "kills"
             )
         )
 
@@ -136,7 +134,7 @@ class Roleplay(commands.Cog):
     async def kick(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "kick", "kicks"
+                ctx.author.name, user_mentioned, "sfw", "kick", "kicks"
             )
         )
 
@@ -144,7 +142,7 @@ class Roleplay(commands.Cog):
     async def wink(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "wink", "winks at"
+                ctx.author.name, user_mentioned, "sfw", "wink", "winks at"
             )
         )
 
@@ -152,7 +150,7 @@ class Roleplay(commands.Cog):
     async def poke(self, ctx, user_mentioned: discord.User = None):
         await ctx.send(
             embed=await self.get_roleplay_embed(
-                ctx, user_mentioned, "sfw", "poke", "pokes"
+                ctx.author.name, user_mentioned, "sfw", "poke", "pokes"
             )
         )
 
