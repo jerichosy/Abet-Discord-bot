@@ -420,7 +420,7 @@ async def on_message(message):
 @bot.event
 async def on_command_error(ctx, error):
     # if isinstance(error, commands.errors.CommandNotFound):
-    # pass
+    #     pass
     # else:
     await ctx.send(error)
     # TODO: Flesh out more?
