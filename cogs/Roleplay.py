@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 
+from cogs.utils.waifupics import get_waifu
+
 
 class Roleplay(commands.Cog):
     def __init__(self, bot):
@@ -13,7 +15,7 @@ class Roleplay(commands.Cog):
             size = len(name)
             title += name[: size - 5]
         embed = discord.Embed(title=title, color=0xEE615B)
-        embed.set_image(url=await self.bot.get_waifu(type, category))
+        embed.set_image(url=await get_waifu(type, category))
         return embed
 
     @commands.command()

@@ -81,18 +81,6 @@ class AbetBot(commands.Bot):
         print("Invite URL:", self.INVITE_LINK)
         print("------")
 
-    # Can't make local to a class (being used by class Waifu, class Roleplay)
-    async def get_waifu(self, type, category):
-        url_string = f"https://api.waifu.pics/{type}/{category}"
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url_string) as r:
-                logger.info(f"Waifu.pics: {r.status}")
-                if r.status == 200:
-                    json_data = await r.json()
-                    waifu = json_data["url"]
-
-        return waifu
-
     # Can't make local to a class (being used by class Fun)
     async def get_waifu_im_embed(self, type, category):
         type = "False" if type == "sfw" else "True"
@@ -360,7 +348,13 @@ async def on_message(message):
                                 video_bytes = io.BytesIO(await resp.read())
                                 print("format:", file_format)
                                 embed = discord.Embed(
-                                    title=((desc[:253] + "...") if len(desc) > 253 else desc) if desc else None,
+                                    title=(
+                                        (desc[:253] + "...")
+                                        if len(desc) > 253
+                                        else desc
+                                    )
+                                    if desc
+                                    else None,
                                     timestamp=datetime.fromtimestamp(timestamp),
                                     url=ig_reel_url[0][0],
                                     color=0xBC2A8D,
