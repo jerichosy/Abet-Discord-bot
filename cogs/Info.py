@@ -1,8 +1,13 @@
+import datetime
+import itertools
+
 import discord
-from discord.ext import commands
-import psutil
 import pkg_resources
-import time
+import psutil
+import pygit2
+from discord.ext import commands
+
+from cogs.utils import time
 
 
 class Info(commands.Cog):
@@ -10,16 +15,41 @@ class Info(commands.Cog):
         self.bot = bot
         self.process = psutil.Process()
 
+    @staticmethod
+    def format_commit(commit: pygit2.Commit) -> str:
+        short, _, _ = commit.message.partition("\n")
+        short_sha2 = commit.hex[0:6]
+        commit_tz = datetime.timezone(
+            datetime.timedelta(minutes=commit.commit_time_offset)
+        )
+        commit_time = datetime.datetime.fromtimestamp(commit.commit_time).astimezone(
+            commit_tz
+        )
+
+        # [`hash`](url) message (offset)
+        offset = time.format_relative(commit_time.astimezone(datetime.timezone.utc))
+        return f"[`{short_sha2}`](https://github.com/jerichosy/Abet-Discord-bot/commit/{commit.hex}) {short} ({offset})"
+
+    def get_last_commits(self, count=3):
+        repo = pygit2.Repository(".git")
+        commits = list(
+            itertools.islice(
+                repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL), count
+            )
+        )
+        return "\n".join(self.format_commit(c) for c in commits)
+
     @commands.command(aliases=["info", "github", "repo", "repository"])
     async def about(self, ctx):
         """link to documentation & source code on GitHub"""
-        # await ctx.send("Source code & documentation: https://github.com/jerichosy/Abet-Discord-bot")
+
+        revision = self.get_last_commits()
 
         embed = discord.Embed(
             title="FUCK CARL",
             color=0xEE615B,
             url="https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png",
-            description="Source code & documentation: [GitHub repository](https://github.com/jerichosy/Abet-Discord-bot)",
+            description=f"Latest Changes:\n{revision}\n\nSource code & documentation: [GitHub repository](https://github.com/jerichosy/Abet-Discord-bot)",
         )
 
         embed.set_image(
