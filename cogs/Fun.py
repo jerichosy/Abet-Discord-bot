@@ -20,7 +20,7 @@ class Fun(commands.Cog):
         return json_data
 
     # Don't make this into an embed
-    @commands.command(aliases=["fuckcarl"])
+    @commands.hybrid_command(aliases=["fuckcarl"])
     async def carl(self, ctx):
         """Dish Carl"""
         await ctx.send(
