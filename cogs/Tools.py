@@ -47,7 +47,8 @@ class Tools(commands.Cog):
             "Bakit ako tinatanong niyo? May Carl kayo diba?",
         ]
 
-    def coin_flip(self):
+    @staticmethod
+    def coin_flip():
         population = ["Heads", "Tails"]
         weight = [0.1, 0.9]
         return str(choices(population, weight)).strip("[']")
@@ -360,22 +361,6 @@ class Tools(commands.Cog):
                         "The weather service is having problems. Please try again later."
                     )
                 await ctx.send(f"```{await resp.text()}```")
-
-    @commands.command(hidden=True)
-    async def metar(self, ctx, airport_code: str = "RPLL"):
-        async with ctx.typing():
-            async with aiohttp.ClientSession(
-                headers={"Authorization": "BEARER " + os.getenv("METAR_TOKEN")}
-            ) as session:
-                async with session.get(
-                    f"https://avwx.rest/api/metar/{airport_code}"
-                ) as response:
-                    json_data = await response.json()
-                    if response.status == 204:
-                        return await ctx.send("Error 204")
-                    if response.status != 200:
-                        return await ctx.send(json_data["error"])
-                    await ctx.send(json_data["raw"])
 
 
 async def setup(bot):
