@@ -57,15 +57,15 @@ class Admin(commands.Cog):
     async def sendmsg(self, ctx, channel_id: int, *, content):
         # print(content)
         channel = self.bot.get_channel(channel_id)
-        await channel.send(content)
-        await ctx.send(f"**Sent:** {content}\n**Where:** <#{channel_id}>")
+        sent = await channel.send(content)
+        await ctx.send(f"**Sent:** {content}\n**Where:** <{sent.jump_url}>")
 
     @commands.command()
     async def sendreply(self, ctx, channel_id: int, message_id: int, *, content):
         channel = self.bot.get_channel(channel_id)
         message = await channel.fetch_message(message_id)
-        await message.reply(content)
-        await ctx.send(f"**Replied:** {content}\n**Which message:** {message.jump_url}")
+        sent = await message.reply(content)
+        await ctx.send(f"**Replied:** {content}\n**Where:** <{sent.jump_url}>")
 
     @commands.command()
     @commands.is_owner()
