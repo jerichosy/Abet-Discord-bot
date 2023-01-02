@@ -10,6 +10,7 @@ class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    # ? Will this end up deleting any msg sent during cleanup?
     @commands.command(aliases=["delete", "cleanup"])
     @has_permissions(manage_messages=True)
     async def purge(self, ctx, amount: commands.Range[int, 1, 35]):
