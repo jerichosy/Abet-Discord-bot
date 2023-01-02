@@ -72,9 +72,9 @@ class AbetBot(commands.Bot):
                 traceback.print_exc()
 
         # Sync global commands to test guild
-        self.tree.copy_global_to(guild=self.TEST_GUILD)
-        synced = await self.tree.sync(guild=self.TEST_GUILD)
-        print(f"Copied {len(synced)} global commands to guild {self.TEST_GUILD.id}.")
+        # self.tree.copy_global_to(guild=self.TEST_GUILD)
+        # synced = await self.tree.sync(guild=self.TEST_GUILD)
+        # print(f"Copied {len(synced)} global commands to guild {self.TEST_GUILD.id}.")
 
     async def on_ready(self):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
