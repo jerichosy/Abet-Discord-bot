@@ -295,7 +295,7 @@ async def on_message(message):
         async with message.channel.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    f"https://aqueous-reef-45135.herokuapp.com/extract?url={ig_reel_url[0][0]}"
+                    f"{os.getenv('YT_DLP_MICROSERVICE')}{ig_reel_url[0][0]}"
                 ) as resp:
                     print(resp.status)
                     if resp.status == 200:
@@ -360,7 +360,7 @@ async def on_message(message):
         async with message.channel.typing():
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    f"https://aqueous-reef-45135.herokuapp.com/extract?url={fb_reel_url[0][0]}"
+                    f"{os.getenv('YT_DLP_MICROSERVICE')}{fb_reel_url[0][0]}"
                 ) as resp:
                     print(resp.status)
                     if resp.status == 200:
