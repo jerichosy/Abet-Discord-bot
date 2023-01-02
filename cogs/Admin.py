@@ -1,8 +1,9 @@
-import discord
-from discord.ext import commands
-from discord.ext.commands import has_permissions, Context, Greedy
-from discord import app_commands
 from typing import Literal, Optional
+
+import discord
+from discord import app_commands
+from discord.ext import commands
+from discord.ext.commands import Context, Greedy, has_permissions
 
 
 class Admin(commands.Cog):
@@ -20,38 +21,36 @@ class Admin(commands.Cog):
         await ctx.send("🛑 Shutting down!")
         await self.bot.close()
 
-    # TODO: Add permissions?
-    # FIXME:
-    # @app_commands.command()
-    # @app_commands.guilds(self.bot.HOME_GUILD)
-    # # @has_permissions(manage_guild=True)
-    # async def changestatus(
-    #     self,
-    #     interaction: discord.Interaction,
-    #     activity: Literal["Playing", "Listening to", "Watching"],
-    #     status_msg: str,
-    # ):
-    #     """Change the status/activity of the bot"""
-    #     # https://discordpy.readthedocs.io/en/master/api.html#discord.ActivityType
+    # TODO: Store current status to db or file so it persists upon restart
+    @app_commands.command()
+    @app_commands.guilds(887980840347398144)
+    async def changestatus(
+        self,
+        interaction: discord.Interaction,
+        activity: Literal["Playing", "Listening to", "Watching"],
+        status_msg: str,
+    ):
+        """Change the status/activity of the bot"""
+        # https://discordpy.readthedocs.io/en/master/api.html#discord.ActivityType
 
-    #     if activity == "Playing":
-    #         await self.bot.change_presence(activity=discord.Game(name=status_msg))
-    #     elif activity == "Listening to":
-    #         await self.bot.change_presence(
-    #             activity=discord.Activity(
-    #                 name=status_msg, type=discord.ActivityType.listening
-    #             )
-    #         )
-    #     elif activity == "Watching":
-    #         await self.bot.change_presence(
-    #             activity=discord.Activity(
-    #                 name=status_msg, type=discord.ActivityType.watching
-    #             )
-    #         )
+        if activity == "Playing":
+            await self.bot.change_presence(activity=discord.Game(name=status_msg))
+        elif activity == "Listening to":
+            await self.bot.change_presence(
+                activity=discord.Activity(
+                    name=status_msg, type=discord.ActivityType.listening
+                )
+            )
+        elif activity == "Watching":
+            await self.bot.change_presence(
+                activity=discord.Activity(
+                    name=status_msg, type=discord.ActivityType.watching
+                )
+            )
 
-    #     await interaction.response.send_message(
-    #         f'✅ My status is now "{activity} **{status_msg}**"'
-    #     )
+        await interaction.response.send_message(
+            f'✅ My status is now "{activity} **{status_msg}**"'
+        )
 
     @commands.command()
     async def sendmsg(self, ctx, channel_id: int, *, content):
