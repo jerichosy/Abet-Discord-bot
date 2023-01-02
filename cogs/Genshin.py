@@ -9,7 +9,16 @@ from discord.ext import commands
 class Genshin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.MONTHS = [
+
+    # Note to self: Don't send msg in a coding block to retain markdown support
+    # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. Also, the bot is in NYC. I'll work on it when it seems needed.
+    # TODO: Convert to embed?
+    @commands.hybrid_command(aliases=["paimonbargains", "paimon'sbargains", "viewshop"])
+    async def paimonsbargains(self, ctx):
+        """Genshin Impact: Views current Paimon's Bargains items for the month"""
+        current_month = datetime.now().month
+
+        MONTHS = [
             "Jan",
             "Feb",
             "Mar",
@@ -23,7 +32,7 @@ class Genshin(commands.Cog):
             "Nov",
             "Dec",
         ]
-        self.CHARACTERS = [
+        CHARACTERS = [
             "Fischl Xiangling",
             "Beidou Noelle",
             "Ningguang Xingqiu",
@@ -31,7 +40,44 @@ class Genshin(commands.Cog):
             "Bennett Lisa",
             "Barbara Kaeya",
         ]
-        self.CHARACTER_EXP_LIST = [
+
+        def display_future():
+            built = "\n\n**Future:**\n"
+            for x in range(1, 7):
+                built += (
+                    "`"
+                    + MONTHS[((current_month + x) % 12) - 1]
+                    + "` | "
+                    + CHARACTERS[((current_month + x) % 6) - 1]
+                    + "\n"
+                )
+
+            return built
+
+        def determine_weapon_series():
+            return "\n  Blackcliff series" if current_month % 2 else "\n  Royal series"
+
+        await ctx.send(
+            "**Current:**\n"
+            + "`"
+            + MONTHS[current_month - 1]
+            + "` | "
+            + CHARACTERS[(current_month % 6) - 1]
+            + determine_weapon_series()
+            + display_future()
+        )
+
+    @app_commands.command()
+    async def calc(
+        self,
+        interaction: discord.Interaction,
+        current_level: app_commands.Range[int, 1, 90],
+        current_experience: app_commands.Range[int, 0, None],
+        target_level: app_commands.Range[int, 1, 90],
+    ):
+        """Genshin Impact: Calculate how much Hero's Wit, etc. you need to level/ascend your characters"""
+
+        CHARACTER_EXP_LIST = [
             0,
             1000,
             1325,
@@ -124,56 +170,12 @@ class Genshin(commands.Cog):
             547200,
         ]
 
-    # Note to self: Don't send msg in a coding block to retain markdown support
-    # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. Also, the bot is in NYC. I'll work on it when it seems needed.
-    # TODO: Convert to embed?
-    @commands.hybrid_command(aliases=["paimonbargains", "paimon'sbargains", "viewshop"])
-    async def paimonsbargains(self, ctx):
-        """Genshin Impact: Views current Paimon's Bargains items for the month"""
-        current_month = datetime.now().month
-
-        def display_future():
-            built = "\n\n**Future:**\n"
-            for x in range(1, 7):
-                built += (
-                    "`"
-                    + self.MONTHS[((current_month + x) % 12) - 1]
-                    + "` | "
-                    + self.CHARACTERS[((current_month + x) % 6) - 1]
-                    + "\n"
-                )
-
-            return built
-
-        def determine_weapon_series():
-            return "\n  Blackcliff series" if current_month % 2 else "\n  Royal series"
-
-        await ctx.send(
-            "**Current:**\n"
-            + "`"
-            + self.MONTHS[current_month - 1]
-            + "` | "
-            + self.CHARACTERS[(current_month % 6) - 1]
-            + determine_weapon_series()
-            + display_future()
-        )
-
-    @app_commands.command()
-    async def calc(
-        self,
-        interaction: discord.Interaction,
-        current_level: app_commands.Range[int, 1, 90],
-        current_experience: app_commands.Range[int, 0, None],
-        target_level: app_commands.Range[int, 1, 90],
-    ):
-        """Genshin Impact: Calculate how much Hero's Wit, etc. you need to level/ascend your characters"""
-
         # validation
         if current_level >= target_level:
             return await interaction.response.send_message(
                 "Already achieved the target level."
             )
-        if self.CHARACTER_EXP_LIST[current_level] < current_experience:
+        if CHARACTER_EXP_LIST[current_level] < current_experience:
             return await interaction.response.send_message(
                 "Current experience exceeds the maximum experience in the current level."
             )
@@ -182,9 +184,9 @@ class Genshin(commands.Cog):
 
         for i in range(current_level, target_level):
             if i == current_level:
-                totalExpNeeded += self.CHARACTER_EXP_LIST[i] - current_experience
+                totalExpNeeded += CHARACTER_EXP_LIST[i] - current_experience
             else:
-                totalExpNeeded += self.CHARACTER_EXP_LIST[i]
+                totalExpNeeded += CHARACTER_EXP_LIST[i]
 
         def ceilNumber(num, place):
             div = 1
@@ -207,79 +209,6 @@ class Genshin(commands.Cog):
     `{totalSmallNeeded:>3}` × <:WanderersAdvice:984919638792085505> **Wanderer's Advice**"""
 
         await interaction.response.send_message(response)
-
-    # Made redundant by Genshin Wizard bot
-    # @commands.command()
-    # async def genshinspy(self, ctx, uid: commands.Range[int, 100000000, 999999999]):
-    #     """Get the details of someone's Genshin account"""
-    #     gs.set_cookie(ltuid=os.getenv("LTUID"), ltoken=os.getenv("LTOKEN"))
-
-    #     async with ctx.typing():
-    #         data = gs.get_characters(uid)
-    #         data.sort(key=lambda x: (x["rarity"], x["level"]), reverse=True)
-
-    #         def tally_artifacts(artifact):
-    #             if not artifact:
-    #                 return ""
-
-    #             artifact_list = []
-    #             for x in artifact:
-    #                 artifact_list.append(x["set"]["name"])
-
-    #             artifact_count = Counter(artifact_list)
-    #             built2 = ""
-    #             for artifact_set in artifact_count:
-    #                 # This is okay if it reports a "3pc." or "5pc.". It's kinda funny and provokes envy as well!
-    #                 built2 += (
-    #                     f", {artifact_count[artifact_set]}pc. {artifact_set}"
-    #                     if artifact_count[artifact_set] >= 2
-    #                     else ""
-    #                 )
-
-    #             # Latter is not tested
-    #             return (
-    #                 f"\n    {built2[2:]}"
-    #                 if built2[2:] is not None
-    #                 else "(No 2pc. of any set)"
-    #             )
-
-    #         # print(json.dumps(data))
-
-    #         built = ""
-    #         for char in data:
-    #             new = f"{char['name']} ({char['rarity']}* {char['element']}): lvl {char['level']} C{char['constellation']} | {char['weapon']['name']} ({char['weapon']['rarity']}* {char['weapon']['type']}): lvl {char['weapon']['level']} R{char['weapon']['refinement']} {tally_artifacts(char['artifacts'])}\n"
-    #             if len(built) + len(new) <= 2000:
-    #                 built += new
-    #             else:
-    #                 break
-    #         await ctx.reply(f"```{built}```")
-
-    # Made redundant by Genshin Wizard bot
-    # @commands.hybrid_command(
-    #     aliases=[
-    #         "resinreplenish",
-    #         "replenish",
-    #         "resins",
-    #         "resinsreplenish",
-    #         "replenishment",
-    #         "resinreplenishment",
-    #         "resinsreplenishment",
-    #         "resinfinish",
-    #         "resinfinished",
-    #         "resinsfinish",
-    #         "resinsfinished",
-    #     ]
-    # )
-    # @app_commands.describe(current_resin="The amount of resin that you have right now")
-    # async def resin(self, ctx, current_resin: commands.Range[int, None, 160]):
-    #     """Genshin Impact: Calculate when your resin will replenish"""
-
-    #     time_to_fully_replenished = (160 - current_resin) * (8 * 60)
-    #     current_time = time.time()
-    #     finished_time = current_time + time_to_fully_replenished
-    #     await ctx.reply(
-    #         f"Resin will be fully replenished at: <t:{int(finished_time)}:F> (<t:{int(finished_time)}:R>)"
-    #     )
 
 
 async def setup(bot):
