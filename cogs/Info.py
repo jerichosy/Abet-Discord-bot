@@ -1,5 +1,6 @@
 import datetime
 import itertools
+import time
 
 import discord
 import pkg_resources
@@ -7,7 +8,7 @@ import psutil
 import pygit2
 from discord.ext import commands
 
-from cogs.utils import time
+from cogs.utils import timeutils
 
 
 class Info(commands.Cog):
@@ -27,7 +28,9 @@ class Info(commands.Cog):
         )
 
         # [`hash`](url) message (offset)
-        offset = time.format_relative(commit_time.astimezone(datetime.timezone.utc))
+        offset = timeutils.format_relative(
+            commit_time.astimezone(datetime.timezone.utc)
+        )
         return f"[`{short_sha2}`](https://github.com/jerichosy/Abet-Discord-bot/commit/{commit.hex}) {short} ({offset})"
 
     def get_last_commits(self, count=3):
