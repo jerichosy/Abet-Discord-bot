@@ -82,7 +82,6 @@ class Info(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.hybrid_command()
-    # @app_commands.guilds(discord.Object(id=867811644322611200))
     async def ping(self, ctx):
         """Get the bot's current websocket and API latency"""
         start_time = time.time()

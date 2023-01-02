@@ -53,13 +53,11 @@ class Tools(commands.Cog):
         return str(choices(population, weight)).strip("[']")
 
     @commands.hybrid_command(aliases=["coin"])
-    # @app_commands.guilds(discord.Object(id=867811644322611200))
     async def coinflip(self, ctx):
         """Flip a sussy coin"""
         await ctx.send(self.coin_flip())
 
     @commands.hybrid_command(aliases=["cointally"])
-    # @app_commands.guilds(discord.Object(id=867811644322611200))
     @app_commands.describe(amount="The amount of sussy coins to flip")
     async def coinfliptally(self, ctx, amount: commands.Range[int, 2, 10000]):
         """Flip multiple sussy coins at once!"""
@@ -160,24 +158,24 @@ class Tools(commands.Cog):
 
                     native = (
                         ""
-                        if json_data['result'][0]['anilist']['title']['native'] is None
+                        if json_data["result"][0]["anilist"]["title"]["native"] is None
                         else f"**{json_data['result'][0]['anilist']['title']['native']}**\n"
                     )
                     romaji = (
                         ""
-                        if json_data['result'][0]['anilist']['title']['romaji'] is None
+                        if json_data["result"][0]["anilist"]["title"]["romaji"] is None
                         else f"**{json_data['result'][0]['anilist']['title']['romaji']}**\n"
                     )
                     english = (
                         ""
-                        if json_data['result'][0]['anilist']['title']['english'] is None
+                        if json_data["result"][0]["anilist"]["title"]["english"] is None
                         else f"**{json_data['result'][0]['anilist']['title']['english']}**\n"
                     )
 
             if reason:
                 await ctx.send(reason, suppress_embeds=True)
             else:
-                if json_data['result'][0]['anilist']['isAdult']:
+                if json_data["result"][0]["anilist"]["isAdult"]:
                     preview_file_name = "SPOILER_preview.mp4"
                     warning = "[NSFW]"
                 else:
@@ -190,7 +188,8 @@ class Tools(commands.Cog):
                     data = io.BytesIO(await resp.read())
 
                 await ctx.reply(
-                    f"{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity\n\n{warning}", file=discord.File(data, preview_file_name)
+                    f"{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity\n\n{warning}",
+                    file=discord.File(data, preview_file_name),
                 )
 
     @commands.command(
@@ -278,24 +277,35 @@ class Tools(commands.Cog):
     @commands.hybrid_command()
     # "attachment" is not accessed as the attachment is already retrievable by message.attachments[0].url
     # and to maintain compatibility with traditional cmd usage. But the arg. is necessary to indicate as a slash cmd arg. for the user
-    async def pdf(self, ctx, url=None, attachment: Optional[discord.Attachment]=None, start: commands.Range[int, 1]=1, end: commands.Range[int, 1]=None):  
+    async def pdf(
+        self,
+        ctx,
+        url=None,
+        attachment: Optional[discord.Attachment] = None,
+        start: commands.Range[int, 1] = 1,
+        end: commands.Range[int, 1] = None,
+    ):
         if url is None and len(ctx.message.attachments) == 0:
             await ctx.send("Please attach a PDF / provide a link or URL")
             return
 
-        url = ctx.message.attachments[0].url if ctx.message.attachments else url     
+        url = ctx.message.attachments[0].url if ctx.message.attachments else url
 
         if ctx.interaction is None:
             if start != 1 or end:
-                return await ctx.send("Please use the slash cmd version to use extra args")
+                return await ctx.send(
+                    "Please use the slash cmd version to use extra args"
+                )
             await ctx.typing()
         else:
             await ctx.interaction.response.defer()
 
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as resp:
-                if resp.headers.get('Content-Type') != 'application/pdf':
-                    return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
+                if resp.headers.get("Content-Type") != "application/pdf":
+                    return await ctx.send(
+                        "ERROR: Given file / link or URL is not a PDF file"
+                    )
 
                 images = convert_from_bytes(await resp.read())
 
@@ -304,33 +314,36 @@ class Tools(commands.Cog):
                     image_bytes = io.BytesIO()
                     image.save(image_bytes, "JPEG")
                     image_bytes.seek(0)
-                    image_list.append(
-                        discord.File(image_bytes, f"{uuid.uuid4()}.jpg")
-                    )
+                    image_list.append(discord.File(image_bytes, f"{uuid.uuid4()}.jpg"))
 
-                image_list = image_list[start-1:end]
+                image_list = image_list[start - 1 : end]
 
-                chunks = [image_list[x:x+10] for x in range(0, len(image_list), 10)]
+                chunks = [image_list[x : x + 10] for x in range(0, len(image_list), 10)]
 
                 for idx, chunk in enumerate(chunks):
                     page_increment = 10 * idx
                     low = page_increment + 1
                     high = (len(chunk) - 1) + low
 
-                    source_page_cnt = ''
+                    source_page_cnt = ""
                     if start != 1 or end:
                         low_source = page_increment + start
                         high_source = (len(chunk) - 1) + low_source
                         source_page_cnt = f"({low_source}-{high_source})"
 
                     if idx == 0:
-                        await ctx.reply(f"Page {low}-{high}/{len(image_list)} {source_page_cnt}", files=chunk)
+                        await ctx.reply(
+                            f"Page {low}-{high}/{len(image_list)} {source_page_cnt}",
+                            files=chunk,
+                        )
                     else:
                         # ctx.channel needed for slash (hybrid) so it refers to the channel instead of the initial interaction response
-                        await ctx.channel.send(f"Page {low}-{high}/{len(image_list)} {source_page_cnt}", files=chunk)
+                        await ctx.channel.send(
+                            f"Page {low}-{high}/{len(image_list)} {source_page_cnt}",
+                            files=chunk,
+                        )
 
     @commands.hybrid_command()
-    # @app_commands.guilds(discord.Object(id=867811644322611200))
     @app_commands.describe(location="Check the weather at the specified location")
     async def weather(self, ctx, location: str = "Pasig City"):
         """Check the weather!"""

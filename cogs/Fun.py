@@ -1,11 +1,12 @@
-import discord
-from discord.ext import commands
-from discord import app_commands
 import asyncio
 import io
-import aiohttp
 import random
 from typing import List, Literal
+
+import aiohttp
+import discord
+from discord import app_commands
+from discord.ext import commands
 
 
 class Fun(commands.Cog):
@@ -41,7 +42,6 @@ class Fun(commands.Cog):
         await ctx.send(quote)
 
     @app_commands.command()
-    # @app_commands.guilds(discord.Object(id=867811644322611200))
     async def trump(
         self,
         interaction: discord.Interaction,
@@ -64,7 +64,6 @@ class Fun(commands.Cog):
                     )
 
     @commands.hybrid_command(aliases=["meow"])
-    # @app_commands.guilds(discord.Object(id=867811644322611200))
     async def cat(self, ctx):
         """random cat pics"""
         async with aiohttp.ClientSession() as session:
@@ -102,7 +101,6 @@ class Fun(commands.Cog):
     #         await asyncio.sleep(interval_in_minutes * 60)
 
     @app_commands.command()
-    # @app_commands.guilds(discord.Object(id=867811644322611200))
     @app_commands.describe(
         is_ephemeral='If "Yes", the image will only be visible to you'
     )

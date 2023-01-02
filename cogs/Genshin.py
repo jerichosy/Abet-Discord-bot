@@ -1,8 +1,9 @@
-import discord
-from discord.ext import commands
-from discord import app_commands
-from datetime import datetime
 import math
+from datetime import datetime
+
+import discord
+from discord import app_commands
+from discord.ext import commands
 
 
 class Genshin(commands.Cog):
@@ -127,7 +128,6 @@ class Genshin(commands.Cog):
     # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. Also, the bot is in NYC. I'll work on it when it seems needed.
     # TODO: Convert to embed?
     @commands.hybrid_command(aliases=["paimonbargains", "paimon'sbargains", "viewshop"])
-    # @app_commands.guilds(discord.Object(id=867811644322611200))
     async def paimonsbargains(self, ctx):
         """Genshin Impact: Views current Paimon's Bargains items for the month"""
         current_month = datetime.now().month
