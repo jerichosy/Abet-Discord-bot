@@ -17,7 +17,7 @@ class Info(commands.Cog):
 
         embed = discord.Embed(
             title="FUCK CARL",
-            colour=discord.Colour(0xFF5C5D),
+            color=0xEE615B,
             url="https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png",
             description="Source code & documentation: [GitHub repository](https://github.com/jerichosy/Abet-Discord-bot)",
         )
@@ -30,7 +30,10 @@ class Info(commands.Cog):
 
         main_guild = self.bot.get_guild(self.bot.HOME_GUILD.id)
         owner = main_guild.get_member(self.bot.owner_id)
-        embed.set_author(name=str(owner), icon_url=owner.display_avatar.url)
+        embed.set_author(
+            name=f"{owner.name}#{owner.discriminator}",
+            icon_url=owner.display_avatar.url,
+        )
 
         version = pkg_resources.get_distribution("discord.py").version
         embed.set_footer(
@@ -44,7 +47,7 @@ class Info(commands.Cog):
             name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU"
         )
 
-        # embed.add_field(name='Uptime', value=self.get_bot_uptime(brief=True))  # TODO: 2.0 thing
+        # embed.add_field(name='Uptime', value=self.get_bot_uptime(brief=True))  # TODO: Follow https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/stats.py#L301
 
         await ctx.send(embed=embed)
 
