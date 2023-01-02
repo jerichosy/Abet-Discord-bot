@@ -13,12 +13,6 @@ class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def get_json_quote(self, url):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                json_data = await resp.json()
-        return json_data
-
     # Don't make this into an embed
     @commands.hybrid_command(aliases=["fuckcarl"])
     async def carl(self, ctx):
@@ -26,6 +20,13 @@ class Fun(commands.Cog):
         await ctx.send(
             "https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png"
         )
+
+    @staticmethod
+    async def get_json_quote(url):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                json_data = await resp.json()
+        return json_data
 
     @commands.hybrid_command(aliases=["inspo", "inspiration"])
     async def inspire(self, ctx):
@@ -91,14 +92,6 @@ class Fun(commands.Cog):
             await ctx.send("You are right!")
         else:
             await ctx.send(f"Oops. It is actually {answer}.")
-
-    # # This is so dumb and annoying (thanks to Daniel and Jehu)
-    # @commands.command()
-    # @commands.is_owner()
-    # async def annoy(self, ctx, amount: int, interval_in_minutes: int):
-    #     for _ in range(amount):
-    #         await ctx.send("@everyone", delete_after=2)  # delete after 2 sec
-    #         await asyncio.sleep(interval_in_minutes * 60)
 
     @app_commands.command()
     @app_commands.describe(
