@@ -81,12 +81,6 @@ class Info(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    # TODO: Make this accept an input for which file (in whatever way; text input, views/buttons, etc.)
-    # @commands.command(aliases=["code", "showcode", "sc"])
-    # async def sourcecode(self, ctx):
-    #     """Have the bot upload it's own sourcecode here in Discord"""
-    #     await ctx.send(file=discord.File("main.py"))
-
     @commands.hybrid_command()
     # @app_commands.guilds(discord.Object(id=867811644322611200))
     async def ping(self, ctx):
