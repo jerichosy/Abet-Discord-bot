@@ -8,7 +8,8 @@ class Roleplay(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def get_roleplay_embed(self, ctx, user_mentioned, type, category, action):
+    @staticmethod
+    async def get_roleplay_embed(ctx, user_mentioned, type, category, action):
         title = f"{ctx.author.name} {action} "
         if user_mentioned is not None:  # PEP 8
             name = str(user_mentioned)
