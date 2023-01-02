@@ -14,7 +14,6 @@ from cogs.utils import timeutils
 class Info(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.process = psutil.Process()
 
     @staticmethod
     def format_commit(commit: pygit2.Commit) -> str:
@@ -74,8 +73,10 @@ class Info(commands.Cog):
             icon_url="https://media.discordapp.net/stickers/946824812658065459.png",
         )
 
-        memory_usage = self.process.memory_full_info().uss / 1024**2
-        cpu_usage = self.process.cpu_percent() / psutil.cpu_count()
+        process = psutil.Process()
+
+        memory_usage = process.memory_full_info().uss / 1024**2
+        cpu_usage = process.cpu_percent() / psutil.cpu_count()
         embed.add_field(
             name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU"
         )
