@@ -42,6 +42,9 @@ load_dotenv()
 
 
 class AbetBot(commands.Bot):
+    # Technically, other event listeners can go in here.
+    # However, prefer current approach with only those ones related to startup inside, like so:
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.HOME_GUILD = discord.Object(id=867811644322611200)  # Inocencio server
