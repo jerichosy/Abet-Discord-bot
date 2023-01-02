@@ -81,11 +81,11 @@ class Admin(commands.Cog):
         # `Object` -> `discord.Object`
         # `typing.Optional` and `typing.Literal`
 
-        """Works like:
+        """Works like:*
         `&sync` -> global sync
-        `&sync \~` -> sync current guild
-        `&sync \*` -> copies all global app commands to current guild and syncs
-        `&sync \^` -> clears all commands from the current guild target and syncs (removes guild commands)
+        `&sync ~` -> sync current guild
+        `&sync *` -> copies all global app commands to current guild and syncs
+        `&sync ^` -> clears all commands from the current guild target and syncs (removes guild commands)
         `&sync id_1 id_2` -> syncs guilds with id 1 and 2
         """
 
