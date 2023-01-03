@@ -105,6 +105,7 @@ async def on_message(message):
     if (message.guild.id == bot.HOME_GUILD.id) and ("rant" not in message.channel.name):
         msg = message.content.lower()
 
+        # This whole section cost 0ms, so it's kind of okay to be here
         sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
         yay_words = ["yay", "freee"]
         wish_words = [
