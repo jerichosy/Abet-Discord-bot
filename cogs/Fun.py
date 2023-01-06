@@ -1,7 +1,7 @@
 import asyncio
 import io
 import random
-from typing import List, Literal
+from typing import Literal
 
 import aiohttp
 import discord
