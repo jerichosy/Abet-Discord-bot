@@ -273,6 +273,7 @@ class Tools(commands.Cog):
                         f"<@{ctx.author.id}> Note: For anime, use &whatanime\n\n{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}"
                     )
 
+    # FIXME: This is blocking
     @commands.hybrid_command()
     # "attachment" is not accessed as the attachment is already retrievable by message.attachments[0].url
     # and to maintain compatibility with traditional cmd usage. But the arg. is necessary to indicate as a slash cmd arg. for the user
