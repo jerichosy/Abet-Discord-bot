@@ -47,13 +47,12 @@ class AbetBot(commands.Bot):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self.HOME_GUILD = discord.Object(id=867811644322611200)  # Inocencio server
         self.OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
         self.TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
 
-        self.INVITE_LINK = discord.utils.oauth_url(
-            client_id=self.application_id, permissions=discord.Permissions.advanced()
-        )
+        self.INVITE_LINK = discord.utils.oauth_url(client_id=self.application_id, permissions=discord.Permissions.advanced())
 
     async def setup_hook(self) -> None:
         # Load cogs
