@@ -118,6 +118,27 @@ class Admin(commands.Cog):
 
         await ctx.send(f"Synced the tree to {ret}/{len(guilds)}.")
 
+    @commands.command()
+    @commands.is_owner()
+    async def reset_bot_nicknames(self, ctx):
+        success = []
+        fail = []
+
+        async with ctx.typing():
+            for member in ctx.guild.members:
+                if member.bot:
+                    print(member.name)
+                    try:
+                        await member.edit(nick=None)
+                        success.append(member.mention)
+                    except discord.Forbidden:
+                        fail.append(member.mention)
+
+            NEWLINE = "\n"  # Workaround for limitation that f-string expressions part cannot contain backslashes
+            await ctx.send(
+                f"Successfully reset the nicknames of the following bots:\n{NEWLINE.join(success)}\n\nI don't have permission to reset the nicknames of the following bots:\n{NEWLINE.join(fail)}"
+            )
+
 
 async def setup(bot):
     await bot.add_cog(Admin(bot))
