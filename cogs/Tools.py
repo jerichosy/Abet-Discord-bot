@@ -296,7 +296,7 @@ class Tools(commands.Cog):
                 return await ctx.send(
                     "Please use the slash cmd version to use extra args"
                 )
-            await ctx.typing()
+            await ctx.typing()  # FIXME: This will only last 10 sec which might be too short
         else:
             await ctx.interaction.response.defer()
 
