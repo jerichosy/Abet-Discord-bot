@@ -52,7 +52,7 @@ class AbetBot(commands.Bot):
         self.TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
 
         self.INVITE_LINK = discord.utils.oauth_url(
-            client_id=self.application_id, permissions=discord.Permissions.text()
+            client_id=self.application_id, permissions=discord.Permissions.advanced()
         )
 
     async def setup_hook(self) -> None:
