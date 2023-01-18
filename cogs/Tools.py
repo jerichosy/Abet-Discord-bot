@@ -12,6 +12,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from pdf2image import convert_from_bytes
+from rembg import remove
 
 
 class Tools(commands.Cog):
@@ -342,6 +343,35 @@ class Tools(commands.Cog):
                             f"Page {low}-{high}/{len(image_list)} {source_page_cnt}",
                             files=chunk,
                         )
+
+    @commands.hybrid_command(aliases=["rembg"])
+    async def removebg(
+        self, ctx, url=None, attachment: Optional[discord.Attachment] = None
+    ):
+        """Remove background from an image"""
+
+        if url is None and len(ctx.message.attachments) == 0:
+            await ctx.send("Please attach an image / provide a link or URL")
+            return
+
+        url = ctx.message.attachments[0].url if ctx.message.attachments else url
+        # ? Should we add support for multiple images at once?
+
+        if ctx.interaction is None:
+            await ctx.typing()
+        else:
+            await ctx.interaction.response.defer()
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                print(resp.status)
+                print(resp.headers.get("Content-Type"))
+                # I think PIL in rembg code should handle errors related to non-image urls
+
+                output = remove(await resp.read())
+                await ctx.send(
+                    file=discord.File(io.BytesIO(output), f"{uuid.uuid4()}.png")
+                )
 
     @commands.hybrid_command()
     @app_commands.describe(location="Check the weather at the specified location")
