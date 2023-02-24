@@ -1,4 +1,5 @@
 import io
+import mimetypes
 import os
 import random
 import uuid
@@ -390,6 +391,40 @@ class Tools(commands.Cog):
                         "The weather service is having problems. Please try again later."
                     )
                 await ctx.send(f"```{await resp.text()}```")
+
+    @app_commands.command()
+    @app_commands.describe(url="The direct link to the file")
+    async def repost(self, interaction: discord.Interaction, url: str):
+        """Reposts the file located at the given URL (subject to 8MB non-boosted server limitation)"""
+
+        await interaction.response.defer()
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                url
+            ) as resp:  # TODO: Currently does not validate URLs
+                print(resp.status)
+                if resp.status == 200:
+                    file_bytes = io.BytesIO(await resp.read())
+                    file_format = mimetypes.guess_extension(
+                        resp.headers.get("Content-Type")
+                    )
+                    print(file_format)
+                    try:
+                        await interaction.followup.send(
+                            file=discord.File(
+                                file_bytes,
+                                f"{uuid.uuid4()}{file_format}",
+                            ),
+                        )
+                    except discord.HTTPException:
+                        await interaction.followup.send(
+                            content="Repost cmd error: Likely too big", ephemeral=True
+                        )
+                else:
+                    await interaction.followup.send(
+                        content="Did not return 200 status code", ephemeral=True
+                    )
 
 
 async def setup(bot):
