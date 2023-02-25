@@ -52,7 +52,9 @@ class AbetBot(commands.Bot):
         self.OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
         self.TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
 
-        self.INVITE_LINK = discord.utils.oauth_url(client_id=self.application_id, permissions=discord.Permissions.advanced())
+        self.INVITE_LINK = discord.utils.oauth_url(
+            client_id=self.application_id, permissions=discord.Permissions.advanced()
+        )
 
     async def setup_hook(self) -> None:
         # Load cogs
@@ -88,7 +90,7 @@ bot = AbetBot(
     command_prefix=commands.when_mentioned_or("&"),
     activity=None,
     intents=discord.Intents.all(),
-    owner_id=298454523624554501,
+    owner_ids=set([298454523624554501, 784478723448635444]),
     application_id=954284775210893344,
     help_command=AbetHelp(command_attrs={"hidden": True}),
 )  # , description=

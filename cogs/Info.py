@@ -61,7 +61,7 @@ class Info(commands.Cog):
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
 
         main_guild = self.bot.get_guild(self.bot.HOME_GUILD.id)
-        owner = main_guild.get_member(self.bot.owner_id)
+        owner = main_guild.get_member(list(self.bot.owner_ids)[1])
         embed.set_author(
             name=f"{owner.name}#{owner.discriminator}",
             icon_url=owner.display_avatar.url,
