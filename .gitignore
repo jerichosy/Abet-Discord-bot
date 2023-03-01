@@ -3,4 +3,3 @@ venv/
 discord.log
 nohup.out
 .env
-ytdl-extract_info-dump.json
