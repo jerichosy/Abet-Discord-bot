@@ -25,6 +25,5 @@ class ExchangeRateUSDPHP:
             await self.update()
 
     async def latest_exchange_rate(self):
-        await asyncio.sleep(10)
         await self.check_latest()
         return self.exchange_rate["php"]
