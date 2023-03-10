@@ -16,7 +16,7 @@ class OpenAI(commands.Cog):
         self.bot = bot
 
     # TODO: Make this a hybrid cmd without 10 sec await time limitation for traditional invokation
-    @commands.command(aliases=["ask", "ask-gpt"])
+    @commands.command(aliases=["ask", "ask-gpt", "chat"])
     async def chatgpt(self, ctx, *, prompt: str):
         """Ask ChatGPT! Powered by OpenAI's gpt-3.5-turbo model."""
 
