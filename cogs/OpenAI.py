@@ -22,18 +22,18 @@ class OpenAI(commands.Cog):
 
         # print(prompt)
         async with ctx.typing():
-            headers = {
-                "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
-                "Content-Type": "application/json",
-            }
-            data = {
-                "model": "gpt-3.5-turbo",
-                "messages": [
-                    # {"role": "system", "content": "You must respond in 2000 characters or less"},
-                    {"role": "user", "content": prompt},
-                ],
-            }
             async with aiohttp.ClientSession() as session:
+                headers = {
+                    "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
+                    "Content-Type": "application/json",
+                }
+                data = {
+                    "model": "gpt-3.5-turbo",
+                    "messages": [
+                        # {"role": "system", "content": "You must respond in 2000 characters or less"},
+                        {"role": "user", "content": prompt},
+                    ],
+                }
                 async with session.post(
                     "https://api.openai.com/v1/chat/completions",
                     headers=headers,
