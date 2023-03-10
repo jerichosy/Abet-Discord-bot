@@ -19,7 +19,7 @@ class OpenAI(commands.Cog):
     async def chatgpt(self, ctx, *, prompt: str):
         """Ask ChatGPT! Powered by OpenAI's gpt-3.5-turbo model."""
 
-        print(prompt)
+        # print(prompt)
         async with ctx.typing():
             try:
                 response = openai.ChatCompletion.create(
@@ -38,7 +38,7 @@ class OpenAI(commands.Cog):
                 )
             else:
                 answer = response["choices"][0]["message"]["content"]
-                print("Length: ", len(answer))
+                # print("Length: ", len(answer))
 
                 print(await currency_USD_PHP.latest_exchange_rate())
                 # Calculate token cost
@@ -60,11 +60,11 @@ class OpenAI(commands.Cog):
                     answer = answer[:1996] + " ..."
                     embed.title = "Truncated due to 2000 character limit"
 
-                print("Truncated length: ", len(answer))
+                # print("Truncated length: ", len(answer))
 
                 await ctx.send(answer, embed=embed)
 
-                print(response)
+                # print(response)
 
 
 async def setup(bot):
