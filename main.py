@@ -28,6 +28,7 @@ initial_extensions = [
     "cogs.Admin",
     "cogs.Tools",
     "cogs.Genshin",
+    "cogs.OpenAI",
 ]
 
 logger = logging.getLogger("discord")
