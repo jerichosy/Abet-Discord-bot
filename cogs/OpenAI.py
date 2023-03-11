@@ -44,11 +44,11 @@ class OpenAI(commands.Cog):
                     print(resp.status)
                     if resp.status != 200:
                         if resp.status == 500:
-                            return await ctx.send(
+                            return await ctx.reply(
                                 "The server had an error while processing your request. Please try again."
                             )
                         else:
-                            return await ctx.send(
+                            return await ctx.reply(
                                 f"Uh oh, looks like <@298454523624554501> needs to take a look at this:\n> {response['error']['message']}"
                             )
 
@@ -75,7 +75,7 @@ class OpenAI(commands.Cog):
 
             # print("Truncated length: ", len(answer))
 
-            await ctx.send(answer, embed=embed)
+            await ctx.reply(answer, embed=embed)
 
             # print(response)
 
