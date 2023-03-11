@@ -21,7 +21,7 @@ class ExchangeRateUSDPHP:
         # self.exchange_rate = response['php']
 
     async def check_latest(self):
-        if time.time() - self.last_updated > 86400:
+        if time.time() - self.last_updated >= 86400:
             await self.update()
 
     async def latest_exchange_rate(self):
