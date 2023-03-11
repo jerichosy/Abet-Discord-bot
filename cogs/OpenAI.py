@@ -55,7 +55,6 @@ class OpenAI(commands.Cog):
             answer = response["choices"][0]["message"]["content"]
             # print("Length: ", len(answer))
 
-            print(await currency_USD_PHP.latest_exchange_rate())
             # Calculate token cost
             # gpt-3.5-turbo	    $0.002 / 1K tokens
             total_tokens = response["usage"]["total_tokens"]
