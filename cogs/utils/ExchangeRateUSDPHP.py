@@ -16,7 +16,7 @@ class ExchangeRateUSDPHP:
                 "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd/php.json"
             ) as resp:
                 if resp.status == 200:
-                    self.exchange_rate = await resp.json()
+                    self.exchange_rate = (await resp.json())["php"]
         # self.date = response['date']
         # self.exchange_rate = response['php']
 
@@ -26,4 +26,4 @@ class ExchangeRateUSDPHP:
 
     async def latest_exchange_rate(self):
         await self.check_latest()
-        return self.exchange_rate["php"]
+        return self.exchange_rate
