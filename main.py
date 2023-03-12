@@ -423,9 +423,11 @@ async def on_message(message):
 # Command error message sender
 @bot.event
 async def on_command_error(ctx, error):
-    # if isinstance(error, commands.errors.CommandNotFound):
-    #     pass
-    # else:
+    if isinstance(error, commands.CommandOnCooldown):
+        # Owner bypass
+        if ctx.author.id in bot.owner_ids:
+            return await ctx.reinvoke()
+
     await ctx.send(error)
     # TODO: Flesh out more?
 
