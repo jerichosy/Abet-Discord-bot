@@ -56,7 +56,7 @@ class OpenAI(commands.Cog):
             answer = response["choices"][0]["message"]["content"]
             print("Length: ", len(answer))
 
-            # Calculate token cost
+            # Calculate token cost  (Note: Using floats here instead of decimal.Decimal acceptible enough for this use case)
             # gpt-3.5-turbo	    $0.002 / 1K tokens
             total_tokens = response["usage"]["total_tokens"]
             cost_in_USD = (total_tokens * 0.002) / 1000

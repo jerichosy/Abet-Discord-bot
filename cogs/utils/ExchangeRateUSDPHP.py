@@ -26,7 +26,4 @@ class ExchangeRateUSDPHP:
 
     async def latest_exchange_rate(self):
         await self.check_latest()
-
-        # TODO: As shown here, this value is a float. The problem is that we must parse the JSON string's real number as a decimal.Decimal. But aiohttp's JSON parser does not have an option for specifying how the real number should be converted (it defaults to float instead). I already tried working around this by instead using json.loads() but unlike aiohttp's which is async, this isn't. Now given that it's a small string, it probably shouldn't matter too much. But still, maybe there's a more optimal way. Or, do we just accept that float's impreciseness is acceptible given that this value is used to just generally guage how expensive a chatgpt cmd took, and nothing more.
-        print(type(self.exchange_rate))
         return self.exchange_rate
