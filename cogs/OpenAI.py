@@ -6,6 +6,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
+import cogs.utils.character_limits as character_limits
 from cogs.utils.ExchangeRateUSDPHP import ExchangeRateUSDPHP
 
 load_dotenv()
@@ -53,7 +54,7 @@ class OpenAI(commands.Cog):
                             )
 
             answer = response["choices"][0]["message"]["content"]
-            # print("Length: ", len(answer))
+            print("Length: ", len(answer))
 
             # Calculate token cost
             # gpt-3.5-turbo	    $0.002 / 1K tokens
@@ -68,13 +69,19 @@ class OpenAI(commands.Cog):
                 text=f"Tokens used: {total_tokens} | Cost: ₱{round(cost_in_PHP, 3)}"
             )
             # If answer is long, truncate it and inform in embed
-            if len(answer) > 2000:
-                answer = answer[:1996] + " ..."
-                embed.title = "Truncated due to 2000 character limit"
+            if len(answer) > character_limits.EMBED_DESC_LIMIT:
+                answer_ellipsis = f" ... (truncated due to {character_limits.EMBED_DESC_LIMIT} character limit)"
+                embed.description = (
+                    answer[: character_limits.EMBED_DESC_LIMIT - len(answer_ellipsis)]
+                    + answer_ellipsis
+                )
+                # embed.title = f"Truncated due to {character_limits.EMBED_DESC_LIMIT} character limit"
+            else:
+                embed.description = answer
 
             # print("Truncated length: ", len(answer))
 
-            await ctx.reply(answer, embed=embed)
+            await ctx.reply(embed=embed)
 
             # print(response)
 
