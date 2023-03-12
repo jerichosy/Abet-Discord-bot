@@ -438,9 +438,9 @@ async def on_presence_update(before, after):
         return
 
     if after.guild.id == bot.HOME_GUILD.id:
-        logger.info(f"{after} | {after.guild}")
-        logger.info(f"  BEFORE: {before.activity}")
-        logger.info(f"  AFTER:  {after.activity}")
+        # logger.info(f"{after} | {after.guild}")
+        # logger.info(f"  BEFORE: {before.activity}")
+        # logger.info(f"  AFTER:  {after.activity}")
         if after.activity is not None:
 
             def check_offending(member, offending):
