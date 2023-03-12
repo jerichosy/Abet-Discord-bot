@@ -64,10 +64,25 @@ class OpenAI(commands.Cog):
             print(cost_in_USD, cost_in_PHP)
 
             # Send response
-            embed = discord.Embed(color=0x2B2D31)
+            embed = discord.Embed(color=0x2B2D31)  # Keep this embed color
             embed.set_footer(
                 text=f"Tokens used: {total_tokens} | Cost: ₱{round(cost_in_PHP, 3)}"
             )
+            # If we decide that we want the author of the prompt and the prompt itself to be shown in the embed, uncomment the ff:
+            # embed.set_author(
+            #     name=ctx.author.display_name,
+            #     icon_url=ctx.author.display_avatar.url,
+            # )
+
+            # if len(prompt) > character_limits.EMBED_TITLE_LIMIT:
+            #     title_ellipsis = " ..."
+            #     embed.title = (
+            #         prompt[: character_limits.EMBED_TITLE_LIMIT - len(title_ellipsis)]
+            #         + title_ellipsis
+            #     )
+            # else:
+            #     embed.title = prompt
+
             # If answer is long, truncate it and inform in embed
             if len(answer) > character_limits.EMBED_DESC_LIMIT:
                 answer_ellipsis = f" ... (truncated due to {character_limits.EMBED_DESC_LIMIT} character limit)"
