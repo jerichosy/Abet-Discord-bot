@@ -24,7 +24,7 @@ class Tools(commands.Cog):
     def coin_flip():
         population = ["Heads", "Tails"]
         weight = [0.1, 0.9]
-        return str(choices(population, weight)).strip("[']")
+        return (choices(population, weight))[0]
 
     @commands.hybrid_command(aliases=["coin"])
     async def coinflip(self, ctx):
