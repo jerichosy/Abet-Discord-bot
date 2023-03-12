@@ -15,7 +15,7 @@ class Info(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def format_commit(commit: pygit2.Commit) -> str:
+    def format_commit(self, commit: pygit2.Commit) -> str:
         short, _, _ = commit.message.partition("\n")
         short_sha2 = commit.hex[0:6]
         commit_tz = datetime.timezone(
