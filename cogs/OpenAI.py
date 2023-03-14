@@ -50,7 +50,7 @@ class OpenAI(commands.Cog):
                             )
                         else:
                             return await ctx.reply(
-                                f"Uh oh, looks like <@298454523624554501> needs to take a look at this:\n> {response['error']['message']}"
+                                f"**Uh oh, looks like <@298454523624554501> needs to take a look at this:**\n\nHTTP status code: {resp.status}\n> {response['error']['message']}"
                             )
 
             answer = response["choices"][0]["message"]["content"]
