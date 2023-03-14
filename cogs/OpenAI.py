@@ -17,13 +17,13 @@ class OpenAI(commands.Cog):
         self.bot = bot
 
     # TODO: Make this a hybrid cmd without 10 sec await time limitation for traditional invokation
-    @commands.command(aliases=["ask", "ask-gpt", "chat"])
+    @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat"])
     @commands.cooldown(rate=1, per=10, type=commands.BucketType.member)
     async def chatgpt(self, ctx, *, prompt: str):
         """Ask ChatGPT! Powered by OpenAI's gpt-3.5-turbo model."""
 
         # print(prompt)
-        async with ctx.typing():
+        async with ctx.typing():  # Manipulated into ctx.interaction.response.defer() if ctx.interaction
             async with aiohttp.ClientSession() as session:
                 headers = {
                     "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
