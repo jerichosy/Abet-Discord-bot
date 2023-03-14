@@ -72,6 +72,7 @@ class AbetBot(commands.Bot):
         # print(f"Copied {len(synced)} global commands to guild {self.TEST_GUILD.id}.")
 
     async def on_ready(self):
+        # Do not make API calls here as this can be triggered multiple times
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print("Invite URL:", self.INVITE_LINK)
         print("------")
