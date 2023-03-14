@@ -293,57 +293,56 @@ class Tools(commands.Cog):
 
         url = ctx.message.attachments[0].url if ctx.message.attachments else url
 
-        if ctx.interaction is None:
-            if start != 1 or end:
-                return await ctx.send(
-                    "Please use the slash cmd version to use extra args"
-                )
-            await ctx.typing()  # FIXME: This will only last 10 sec which might be too short
-        else:
-            await ctx.interaction.response.defer()
+        if ctx.interaction is None and (start != 1 or end):
+            return await ctx.send("Please use the slash cmd version to use extra args")
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                if resp.headers.get("Content-Type") != "application/pdf":
-                    return await ctx.send(
-                        "ERROR: Given file / link or URL is not a PDF file"
-                    )
-
-                images = convert_from_bytes(await resp.read())
-
-                image_list = []
-                for image in images:
-                    image_bytes = io.BytesIO()
-                    image.save(image_bytes, "JPEG")
-                    image_bytes.seek(0)
-                    image_list.append(discord.File(image_bytes, f"{uuid.uuid4()}.jpg"))
-
-                image_list = image_list[start - 1 : end]
-
-                chunks = [image_list[x : x + 10] for x in range(0, len(image_list), 10)]
-
-                for idx, chunk in enumerate(chunks):
-                    page_increment = 10 * idx
-                    low = page_increment + 1
-                    high = (len(chunk) - 1) + low
-
-                    source_page_cnt = ""
-                    if start != 1 or end:
-                        low_source = page_increment + start
-                        high_source = (len(chunk) - 1) + low_source
-                        source_page_cnt = f"({low_source}-{high_source})"
-
-                    if idx == 0:
-                        await ctx.reply(
-                            f"Page {low}-{high}/{len(image_list)} {source_page_cnt}",
-                            files=chunk,
+        async with ctx.typing():
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as resp:
+                    if resp.headers.get("Content-Type") != "application/pdf":
+                        return await ctx.send(
+                            "ERROR: Given file / link or URL is not a PDF file"
                         )
-                    else:
-                        # ctx.channel needed for slash (hybrid) so it refers to the channel instead of the initial interaction response
-                        await ctx.channel.send(
-                            f"Page {low}-{high}/{len(image_list)} {source_page_cnt}",
-                            files=chunk,
+
+                    images = convert_from_bytes(await resp.read())
+
+                    image_list = []
+                    for image in images:
+                        image_bytes = io.BytesIO()
+                        image.save(image_bytes, "JPEG")
+                        image_bytes.seek(0)
+                        image_list.append(
+                            discord.File(image_bytes, f"{uuid.uuid4()}.jpg")
                         )
+
+                    image_list = image_list[start - 1 : end]
+
+                    chunks = [
+                        image_list[x : x + 10] for x in range(0, len(image_list), 10)
+                    ]
+
+                    for idx, chunk in enumerate(chunks):
+                        page_increment = 10 * idx
+                        low = page_increment + 1
+                        high = (len(chunk) - 1) + low
+
+                        source_page_cnt = ""
+                        if start != 1 or end:
+                            low_source = page_increment + start
+                            high_source = (len(chunk) - 1) + low_source
+                            source_page_cnt = f"({low_source}-{high_source})"
+
+                        if idx == 0:
+                            await ctx.reply(
+                                f"Page {low}-{high}/{len(image_list)} {source_page_cnt}",
+                                files=chunk,
+                            )
+                        else:
+                            # ctx.channel needed for slash (hybrid) so it refers to the channel instead of the initial interaction response
+                            await ctx.channel.send(
+                                f"Page {low}-{high}/{len(image_list)} {source_page_cnt}",
+                                files=chunk,
+                            )
 
     @commands.hybrid_command(aliases=["rembg"])
     async def removebg(
@@ -358,39 +357,35 @@ class Tools(commands.Cog):
         url = ctx.message.attachments[0].url if ctx.message.attachments else url
         # ? Should we add support for multiple images at once?
 
-        if ctx.interaction is None:
-            await ctx.typing()
-        else:
-            await ctx.interaction.response.defer()
+        async with ctx.typing():
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as resp:
+                    print(resp.status)
+                    print(resp.headers.get("Content-Type"))
+                    # I think PIL in rembg code should handle errors related to non-image urls
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                print(resp.status)
-                print(resp.headers.get("Content-Type"))
-                # I think PIL in rembg code should handle errors related to non-image urls
-
-                output = remove(await resp.read())
-                await ctx.send(
-                    file=discord.File(io.BytesIO(output), f"{uuid.uuid4()}.png")
-                )
+                    output = remove(await resp.read())
+                    await ctx.send(
+                        file=discord.File(io.BytesIO(output), f"{uuid.uuid4()}.png")
+                    )
 
     @commands.hybrid_command()
     @app_commands.describe(location="Check the weather at the specified location")
     async def weather(self, ctx, location: str = "Pasig City"):
         """Check the weather!"""
-        if ctx.interaction is None:
-            await ctx.typing()
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://wttr.in/{location}?0T") as resp:
-                if (
-                    await resp.text() == ""
-                    or await resp.text() == "Follow @igor_chubin for wttr.in updates"
-                ):
-                    return await ctx.send(
-                        "The weather service is having problems. Please try again later."
-                    )
-                await ctx.send(f"```{await resp.text()}```")
+        async with ctx.typing():
+            async with aiohttp.ClientSession() as session:
+                async with session.get(f"https://wttr.in/{location}?0T") as resp:
+                    if (
+                        await resp.text() == ""
+                        or await resp.text()
+                        == "Follow @igor_chubin for wttr.in updates"
+                    ):
+                        return await ctx.send(
+                            "The weather service is having problems. Please try again later."
+                        )
+                    await ctx.send(f"```{await resp.text()}```")
 
     @app_commands.command()
     @app_commands.describe(url="The direct link to the file")
