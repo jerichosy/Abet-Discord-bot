@@ -100,7 +100,7 @@ class OpenAI(commands.Cog):
 
             # print("Truncated length: ", len(answer))
 
-            await ctx.reply(embed=embed)
+            await ctx.reply(embed=embed, mention_author=False)
 
             # print(response)
 
