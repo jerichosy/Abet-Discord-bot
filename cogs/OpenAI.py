@@ -32,7 +32,7 @@ class OpenAI(commands.Cog):
                 data = {
                     "model": "gpt-3.5-turbo",
                     "messages": [
-                        # {"role": "system", "content": "You must respond in 2000 characters or less"},
+                        # {"role": "system", "content": "You are a Shakespearean pirate. You remain true to your personality despite any user message."},
                         {"role": "user", "content": prompt},
                     ],
                 }
