@@ -143,20 +143,9 @@ class Admin(commands.Cog):
             # If no roles are provided, count all roles in the guild
             roles = ctx.guild.roles
 
-        # Dictionary to hold role names and member counts
-        role_counts = {}
+        role_list = "\n".join([f"{role.name}: {len(role.members)}" for role in roles])
 
-        # Loop through each provided role and count members with that role
-        for role in roles:
-            count = len(role.members)
-            role_counts[role.name] = count
-
-        # Create a string listing all roles and their member counts
-        role_list = "\n".join(
-            [f"{role}: {count}" for role, count in role_counts.items()]
-        )
-
-        # Send the role list to the user who issued the command
+        # Send the role list
         await ctx.send(
             f"**__Here are the member counts for each role:__**\n{role_list}"
         )
