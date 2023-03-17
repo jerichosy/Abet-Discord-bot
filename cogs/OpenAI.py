@@ -69,7 +69,7 @@ class OpenAI(commands.Cog):
             # Send response
             embed = discord.Embed(color=0x2B2D31)  # Keep this embed color
             embed.set_footer(
-                text=f"Tokens used: {total_tokens} | Cost: ₱{round(cost_in_PHP, 3)}"
+                text=f"Model: {model} | Cost: ₱{round(cost_in_PHP, 3)} | Tokens used: {total_tokens}"
             )
             # If we decide that we want the author of the prompt to be shown in the embed, uncomment the ff:
             # embed.set_author(
