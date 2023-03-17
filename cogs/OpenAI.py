@@ -61,15 +61,25 @@ class OpenAI(commands.Cog):
 
             # Calculate token cost  (Note: Using floats here instead of decimal.Decimal acceptible enough for this use case)
             # gpt-3.5-turbo	    $0.002 / 1K tokens
-            total_tokens = response["usage"]["total_tokens"]
-            cost_in_USD = (total_tokens * 0.002) / 1000
+            print(response["usage"])
+            token_prompt = response["usage"]["prompt_tokens"]
+            token_completion = response["usage"]["completion_tokens"]
+            if model == "gpt-3.5-turbo":
+                pricing_prompt = 0.002
+                pricing_completion = 0.002
+            elif model == "gpt-4":
+                pricing_prompt = 0.03
+                pricing_completion = 0.06
+            cost_in_USD = ((token_prompt * pricing_prompt) / 1000) + (
+                (token_completion * pricing_completion) / 1000
+            )
             cost_in_PHP = cost_in_USD * await currency_USD_PHP.latest_exchange_rate()
             print(cost_in_USD, cost_in_PHP)
 
             # Send response
             embed = discord.Embed(color=0x2B2D31)  # Keep this embed color
             embed.set_footer(
-                text=f"Model: {model} | Cost: ₱{round(cost_in_PHP, 3)} | Tokens used: {total_tokens}"
+                text=f"Model: {model} | Cost: ₱{round(cost_in_PHP, 3)} | Prompt tokens: {token_prompt}, Completion tokens: {token_completion}"
             )
             # If we decide that we want the author of the prompt to be shown in the embed, uncomment the ff:
             # embed.set_author(
