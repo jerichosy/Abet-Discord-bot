@@ -25,7 +25,7 @@ class OpenAI(commands.Cog):
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
 
-        print(prompt, model)
+        print(f"Prompt: {prompt}\nModel: {model}")
         async with ctx.typing():  # Manipulated into ctx.interaction.response.defer() if ctx.interaction
             async with aiohttp.ClientSession() as session:
                 headers = {
