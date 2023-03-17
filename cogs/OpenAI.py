@@ -1,5 +1,6 @@
 import json
 import os
+from typing import Literal
 
 import aiohttp
 import discord
@@ -19,10 +20,12 @@ class OpenAI(commands.Cog):
     # TODO: Make this a hybrid cmd without 10 sec await time limitation for traditional invokation
     @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat"])
     @commands.cooldown(rate=1, per=10, type=commands.BucketType.member)
-    async def chatgpt(self, ctx, *, prompt: str):
-        """Ask ChatGPT! Powered by OpenAI's gpt-3.5-turbo model."""
+    async def chatgpt(
+        self, ctx, *, prompt: str, model: Literal["gpt-4", "gpt-3.5-turbo"] = "gpt-4"
+    ):
+        """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
 
-        # print(prompt)
+        print(prompt, model)
         async with ctx.typing():  # Manipulated into ctx.interaction.response.defer() if ctx.interaction
             async with aiohttp.ClientSession() as session:
                 headers = {
@@ -30,7 +33,7 @@ class OpenAI(commands.Cog):
                     "Content-Type": "application/json",
                 }
                 data = {
-                    "model": "gpt-3.5-turbo",
+                    "model": model,
                     "messages": [
                         # {"role": "system", "content": "You are a Shakespearean pirate. You remain true to your personality despite any user message."},
                         {"role": "user", "content": prompt},
