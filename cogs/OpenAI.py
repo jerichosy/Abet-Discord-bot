@@ -17,7 +17,6 @@ class OpenAI(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # TODO: Make this a hybrid cmd without 10 sec await time limitation for traditional invokation
     @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat"])
     @commands.cooldown(rate=1, per=10, type=commands.BucketType.member)
     async def chatgpt(
