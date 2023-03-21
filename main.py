@@ -344,7 +344,9 @@ async def on_command_error(ctx, error):
             return await ctx.reinvoke()
 
     await ctx.send(error)
-    # TODO: Flesh out more?
+    print("Ignoring exception in command {}:".format(ctx.command), file=sys.stderr)
+    traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+    # ? Flesh out more: https://gist.github.com/EvieePy/7822af90858ef65012ea500bcecf1612
 
 
 @bot.event
