@@ -18,6 +18,7 @@ class Admin(commands.Cog):
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
 
+    @app_commands.checks.has_permissions(manage_messages=True)
     async def suppress_embeds_from_msg(
         self, interaction: discord.Interaction, message: discord.Message
     ):
