@@ -16,6 +16,11 @@ from pdf2image import convert_from_bytes
 from rembg import remove
 
 
+class PDFFlags(commands.FlagConverter, prefix="--", delimiter=""):
+    url: Optional[str]
+    selection: Optional[str] = commands.flag(aliases=["sel"])
+
+
 class Tools(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -282,14 +287,15 @@ class Tools(commands.Cog):
     async def pdf(
         self,
         ctx,
-        url=None,
-        attachment: Optional[discord.Attachment] = None,
-        selection=None,
+        attachment: Optional[discord.Attachment],
+        *,
+        flags: PDFFlags,
     ):
-        if url is None and len(ctx.message.attachments) == 0:
+        if flags.url is None and len(ctx.message.attachments) == 0:
             return await ctx.send("Please attach a PDF / provide a link or URL")
 
-        url = ctx.message.attachments[0].url if ctx.message.attachments else url
+        url = ctx.message.attachments[0].url if ctx.message.attachments else flags.url
+        print(url)
 
         def parse_selected_pages(input_str):
             pages = []
@@ -327,9 +333,9 @@ class Tools(commands.Cog):
                             discord.File(image_bytes, f"{uuid.uuid4()}.jpg")
                         )
 
-                    if selection:
+                    if flags.selection:
                         try:
-                            selected_pages = parse_selected_pages(selection)
+                            selected_pages = parse_selected_pages(flags.selection)
                             print(selected_pages)
                         except ValueError:
                             return await ctx.reply("🛑 Error parsing selection range")
