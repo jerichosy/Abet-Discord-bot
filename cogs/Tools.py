@@ -305,7 +305,8 @@ class Tools(commands.Cog):
                 else:
                     pages.append(int(part))
 
-            return pages
+            # Remove duplicates in list and return
+            return list(dict.fromkeys(pages))
 
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
@@ -329,11 +330,13 @@ class Tools(commands.Cog):
                     if selection:
                         try:
                             selected_pages = parse_selected_pages(selection)
+                            print(selected_pages)
                         except ValueError:
                             return await ctx.reply("🛑 Error parsing selection range")
                         if len(selected_pages) == 0:
                             return await ctx.reply("🛑 Invalid selection range")
 
+                        # Get selected pages
                         image_list = [image_list[max(i, 1) - 1] for i in selected_pages]
 
                     chunks = [
