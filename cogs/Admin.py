@@ -9,6 +9,23 @@ from discord.ext.commands import Context, Greedy, has_permissions
 class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.ctx_menu = app_commands.ContextMenu(
+            name="Suppress Embeds",
+            callback=self.suppress_embeds_from_msg,
+        )
+        self.bot.tree.add_command(self.ctx_menu)
+
+    async def cog_unload(self) -> None:
+        self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
+
+    async def suppress_embeds_from_msg(
+        self, interaction: discord.Interaction, message: discord.Message
+    ):
+        await message.edit(suppress=True)
+        emby = discord.Embed(
+            description=f"Embeds from [message]({message.jump_url}) removed"
+        )
+        await interaction.response.send_message(embed=emby)
 
     # ? Will this end up deleting any msg sent during cleanup?
     @commands.command(aliases=["delete", "cleanup"])
