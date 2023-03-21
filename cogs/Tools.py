@@ -331,6 +331,8 @@ class Tools(commands.Cog):
                             selected_pages = parse_selected_pages(selection)
                         except ValueError:
                             return await ctx.reply("🛑 Error parsing selection range")
+                        if len(selected_pages) == 0:
+                            return await ctx.reply("🛑 Invalid selection range")
 
                         image_list = [image_list[i - 1] for i in selected_pages]
 
