@@ -334,7 +334,7 @@ class Tools(commands.Cog):
                         if len(selected_pages) == 0:
                             return await ctx.reply("🛑 Invalid selection range")
 
-                        image_list = [image_list[i - 1] for i in selected_pages]
+                        image_list = [image_list[max(i, 1) - 1] for i in selected_pages]
 
                     chunks = [
                         image_list[x : x + 10] for x in range(0, len(image_list), 10)
