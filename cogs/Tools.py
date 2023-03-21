@@ -305,8 +305,8 @@ class Tools(commands.Cog):
                 else:
                     pages.append(int(part))
 
-            # Remove duplicates in list and return
-            return list(dict.fromkeys(pages))
+            # Remove duplicates in list, sort, then return
+            return sorted(list(dict.fromkeys(pages)))
 
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
@@ -348,7 +348,7 @@ class Tools(commands.Cog):
                         low = page_increment + 1
                         high = (len(chunk) - 1) + low
 
-                        source_page_cnt = ""
+                        source_page_cnt = ""  # ! This is not currently used.
                         # if start != 1 or end:
                         #     low_source = page_increment + start
                         #     high_source = (len(chunk) - 1) + low_source
