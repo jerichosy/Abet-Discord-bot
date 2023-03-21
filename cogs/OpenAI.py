@@ -18,7 +18,7 @@ class OpenAI(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat"])
-    @commands.cooldown(rate=1, per=10, type=commands.BucketType.member)
+    @commands.cooldown(rate=1, per=8, type=commands.BucketType.member)
     async def chatgpt(
         self, ctx, *, prompt: str, model: Literal["gpt-4", "gpt-3.5-turbo"] = "gpt-4"
     ):
