@@ -297,7 +297,7 @@ class Tools(commands.Cog):
         url = ctx.message.attachments[0].url if ctx.message.attachments else flags.url
         print(url)
 
-        def parse_selected_pages(input_str):
+        def parse_selected_pages(input_str, last_page):
             pages = []
 
             for part in input_str.split(","):
@@ -311,8 +311,12 @@ class Tools(commands.Cog):
                 else:
                     pages.append(int(part))
 
-            # Remove duplicates in list, sort, then return
-            return sorted(list(dict.fromkeys(pages)))
+            # Remove duplicates in selection ranges
+            pages = list(dict.fromkeys(pages))
+            # Filter out less than 1 and beyond last page selection ranges
+            pages = [page for page in pages if (page > 0) and (page <= last_page)]
+            # Sort, then return
+            return sorted(pages)
 
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
@@ -335,7 +339,9 @@ class Tools(commands.Cog):
 
                     if flags.selection:
                         try:
-                            selected_pages = parse_selected_pages(flags.selection)
+                            selected_pages = parse_selected_pages(
+                                flags.selection, len(image_list)
+                            )
                             print(selected_pages)
                         except ValueError:
                             return await ctx.reply("🛑 Error parsing selection range")
@@ -344,7 +350,8 @@ class Tools(commands.Cog):
 
                         # Get selected pages
                         image_list = [
-                            image_list[min(max(i, 1) - 1, len(image_list) - 1)]
+                            # image_list[min(max(i, 1) - 1, len(image_list) - 1)]
+                            image_list[i - 1]
                             for i in selected_pages
                         ]
 
