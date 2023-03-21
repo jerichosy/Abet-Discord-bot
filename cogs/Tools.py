@@ -284,17 +284,28 @@ class Tools(commands.Cog):
         ctx,
         url=None,
         attachment: Optional[discord.Attachment] = None,
-        start: commands.Range[int, 1] = 1,
-        end: commands.Range[int, 1] = None,
+        selection=None,
     ):
         if url is None and len(ctx.message.attachments) == 0:
-            await ctx.send("Please attach a PDF / provide a link or URL")
-            return
+            return await ctx.send("Please attach a PDF / provide a link or URL")
 
         url = ctx.message.attachments[0].url if ctx.message.attachments else url
 
-        if ctx.interaction is None and (start != 1 or end):
-            return await ctx.send("Please use the slash cmd version to use extra args")
+        def parse_selected_pages(input_str):
+            pages = []
+
+            for part in input_str.split(","):
+                # Remove whitespaces
+                part = part.strip()
+
+                # Check if part contains a range (e.g. 4-6)
+                if "-" in part:
+                    start, end = part.split("-")
+                    pages.extend(range(int(start), int(end) + 1))
+                else:
+                    pages.append(int(part))
+
+            return pages
 
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
@@ -315,7 +326,13 @@ class Tools(commands.Cog):
                             discord.File(image_bytes, f"{uuid.uuid4()}.jpg")
                         )
 
-                    image_list = image_list[start - 1 : end]
+                    if selection:
+                        try:
+                            selected_pages = parse_selected_pages(selection)
+                        except ValueError:
+                            return await ctx.reply("🛑 Error parsing selection range")
+
+                        image_list = [image_list[i - 1] for i in selected_pages]
 
                     chunks = [
                         image_list[x : x + 10] for x in range(0, len(image_list), 10)
@@ -327,10 +344,10 @@ class Tools(commands.Cog):
                         high = (len(chunk) - 1) + low
 
                         source_page_cnt = ""
-                        if start != 1 or end:
-                            low_source = page_increment + start
-                            high_source = (len(chunk) - 1) + low_source
-                            source_page_cnt = f"({low_source}-{high_source})"
+                        # if start != 1 or end:
+                        #     low_source = page_increment + start
+                        #     high_source = (len(chunk) - 1) + low_source
+                        #     source_page_cnt = f"({low_source}-{high_source})"
 
                         if idx == 0:
                             await ctx.reply(
