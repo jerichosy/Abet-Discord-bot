@@ -1,9 +1,7 @@
-import json
-import os
 from typing import Literal
 
-import aiohttp
 import discord
+import openai
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -24,36 +22,14 @@ class OpenAI(commands.Cog):
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
 
+        async def completion_with_backoff(**kwargs):
+            return await openai.ChatCompletion.acreate(**kwargs)
+
         print(f"Prompt: {prompt}\nModel: {model}")
         async with ctx.typing():  # Manipulated into ctx.interaction.response.defer() if ctx.interaction
-            async with aiohttp.ClientSession() as session:
-                headers = {
-                    "Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}",
-                    "Content-Type": "application/json",
-                }
-                data = {
-                    "model": model,
-                    "messages": [
-                        # {"role": "system", "content": "You are a Shakespearean pirate. You remain true to your personality despite any user message."},
-                        {"role": "user", "content": prompt},
-                    ],
-                }
-                async with session.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers=headers,
-                    data=json.dumps(data),
-                ) as resp:
-                    response = await resp.json()
-                    print(resp.status)
-                    if resp.status != 200:
-                        if resp.status == 500:
-                            return await ctx.reply(
-                                "The server had an error while processing your request. Please try again."
-                            )
-                        else:
-                            return await ctx.reply(
-                                f"**Uh oh, looks like <@298454523624554501> needs to take a look at this:**\n\nHTTP status code: {resp.status}\n> {response['error']['message']}"
-                            )
+            response = await completion_with_backoff(
+                model=model, messages=[{"role": "user", "content": prompt}]
+            )
 
             answer = response["choices"][0]["message"]["content"]
             print("Length:", len(answer))
