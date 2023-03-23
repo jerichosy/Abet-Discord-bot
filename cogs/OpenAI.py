@@ -4,6 +4,13 @@ import discord
 import openai
 from discord.ext import commands
 from dotenv import load_dotenv
+from openai.error import RateLimitError
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_random_exponential,
+)
 
 import cogs.utils.character_limits as character_limits
 from cogs.utils.ExchangeRateUSDPHP import ExchangeRateUSDPHP
@@ -22,8 +29,21 @@ class OpenAI(commands.Cog):
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
 
+        # For now, do not catch the exception generated when the retry limit is hit
+        @retry(
+            retry=retry_if_exception_type(RateLimitError),
+            wait=wait_random_exponential(min=1, max=60),
+            stop=stop_after_attempt(6),
+        )
         async def completion_with_backoff(**kwargs):
-            return await openai.ChatCompletion.acreate(**kwargs)
+            try:
+                return await openai.ChatCompletion.acreate(**kwargs)
+                # raise RateLimitError
+            except RateLimitError as e:
+                await ctx.send(
+                    f"{ctx.author.mention} Your request errored. Retrying...\n<@298454523624554501>"
+                )
+                raise e
 
         print(f"Prompt: {prompt}\nModel: {model}")
         async with ctx.typing():  # Manipulated into ctx.interaction.response.defer() if ctx.interaction
