@@ -342,6 +342,8 @@ async def on_command_error(ctx, error):
         # Owner bypass
         if ctx.author.id in bot.owner_ids:
             return await ctx.reinvoke()
+        else:
+            return await ctx.send(error)
 
     await ctx.send(
         f"**Uh oh, looks like <@298454523624554501> needs to take a look at this:**\n> {error}"
