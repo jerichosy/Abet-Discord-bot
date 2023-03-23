@@ -343,7 +343,9 @@ async def on_command_error(ctx, error):
         if ctx.author.id in bot.owner_ids:
             return await ctx.reinvoke()
 
-    await ctx.send(error)
+    await ctx.send(
+        f"**Uh oh, looks like <@298454523624554501> needs to take a look at this:**\n> {error}"
+    )
     print("Ignoring exception in command {}:".format(ctx.command), file=sys.stderr)
     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
     # ? Flesh out more: https://gist.github.com/EvieePy/7822af90858ef65012ea500bcecf1612

@@ -168,6 +168,11 @@ class Admin(commands.Cog):
             f"**__Here are the member counts for each role:__**\n{role_list}"
         )
 
+    @commands.command(aliases=["error"])
+    @commands.is_owner()
+    async def test_error(self, ctx):
+        raise Exception("This is a test")
+
 
 async def setup(bot):
     await bot.add_cog(Admin(bot))
