@@ -338,13 +338,18 @@ async def on_message(message):
 # Command error message sender
 @bot.event
 async def on_command_error(ctx, error):
-    # Owner bypass cooldown
-    if isinstance(error, commands.CommandOnCooldown):
+    # Errors that bot owner should be able to bypass
+    if isinstance(error, (commands.CommandOnCooldown, commands.MaxConcurrencyReached)):
         if ctx.author.id in bot.owner_ids:
             return await ctx.reinvoke()
     # Errors that don't require my attention should be sent as is
     if isinstance(
-        error, (commands.CommandOnCooldown, commands.MissingRequiredArgument)
+        error,
+        (
+            commands.CommandOnCooldown,
+            commands.MissingRequiredArgument,
+            commands.MaxConcurrencyReached,
+        ),
     ):
         return await ctx.send(error)
 

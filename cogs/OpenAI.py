@@ -24,6 +24,7 @@ class OpenAI(commands.Cog):
 
     @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat"])
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.member)
+    @commands.max_concurrency(number=1, per=commands.BucketType.member, wait=False)
     async def chatgpt(
         self, ctx, *, prompt: str, model: Literal["gpt-4", "gpt-3.5-turbo"] = "gpt-4"
     ):
