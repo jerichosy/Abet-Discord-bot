@@ -345,8 +345,11 @@ async def on_command_error(ctx, error):
         else:
             return await ctx.send(error)
 
+    # convert error to str, prepend every line with "> "
+    error_string = "\n".join([f"> {line}" for line in str(error).splitlines()])
+    # send
     await ctx.send(
-        f"**Uh oh, looks like <@298454523624554501> needs to take a look at this:**\n> {error}"
+        f"**Uh oh, looks like <@298454523624554501> needs to take a look at this:**\n{error_string}"
     )
     print("Ignoring exception in command {}:".format(ctx.command), file=sys.stderr)
     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
