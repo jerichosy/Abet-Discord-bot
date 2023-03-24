@@ -338,13 +338,17 @@ async def on_message(message):
 # Command error message sender
 @bot.event
 async def on_command_error(ctx, error):
+    # Owner bypass cooldown
     if isinstance(error, commands.CommandOnCooldown):
-        # Owner bypass
         if ctx.author.id in bot.owner_ids:
             return await ctx.reinvoke()
-        else:
-            return await ctx.send(error)
+    # Errors that don't require my attention should be sent as is
+    if isinstance(
+        error, (commands.CommandOnCooldown, commands.MissingRequiredArgument)
+    ):
+        return await ctx.send(error)
 
+    # Errors that reached here require my attention
     # convert error to str, prepend every line with "> "
     error_string = "\n".join([f"> {line}" for line in str(error).splitlines()])
     # send
