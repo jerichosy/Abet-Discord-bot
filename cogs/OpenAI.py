@@ -40,11 +40,11 @@ class OpenAI(commands.Cog):
             try:
                 return await openai.ChatCompletion.acreate(**kwargs)
                 # raise RateLimitError
-            except RateLimitError as e:
+            except RateLimitError:
                 await ctx.send(
                     f"{ctx.author.mention} Your request errored. Retrying...\n<@298454523624554501>"
                 )
-                raise e
+                raise
 
         print(f"Prompt: {prompt}\nModel: {model}")
         async with ctx.typing():  # Manipulated into ctx.interaction.response.defer() if ctx.interaction
