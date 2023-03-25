@@ -1,3 +1,4 @@
+from io import BytesIO
 from typing import Literal, Optional
 
 import discord
@@ -168,10 +169,22 @@ class Admin(commands.Cog):
             f"**__Here are the member counts for each role:__**\n{role_list}"
         )
 
-    @commands.command(aliases=["error"])
+    @commands.command(aliases=["error", "send_eror"])
     @commands.is_owner()
     async def test_error(self, ctx):
         raise Exception("This is a test")
+
+    @commands.command(aliases=["string", "send_string", "test_string"])
+    @commands.is_owner()
+    async def test_string_as_file(self, ctx):
+        # Replace this with your own string
+        content = "your-string" * 5000
+
+        # Create a discord.File instance using the string
+        file = discord.File(BytesIO(content.encode()), "string.txt")
+
+        # Send the file as a message
+        await ctx.send(file=file)
 
 
 async def setup(bot):
