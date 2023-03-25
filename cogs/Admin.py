@@ -23,6 +23,12 @@ class Admin(commands.Cog):
     async def suppress_embeds_from_msg(
         self, interaction: discord.Interaction, message: discord.Message
     ):
+        if not message.embeds:
+            emby = discord.Embed(
+                description=f"There are no embeds in that [message]({message.jump_url})"
+            )
+            return await interaction.response.send_message(embed=emby)
+
         await message.edit(suppress=True)
         emby = discord.Embed(
             description=f"Embeds from [message]({message.jump_url}) removed"
