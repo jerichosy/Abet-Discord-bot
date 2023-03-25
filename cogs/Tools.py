@@ -36,8 +36,19 @@ class Tools(commands.Cog):
     async def get_raw_string(
         self, interaction: discord.Interaction, message: discord.Message
     ):
+        if not message.content:
+            emby = discord.Embed(
+                description=f"That [message]({message.jump_url}) has no content"
+            )
+            return await interaction.response.send_message(embed=emby, ephemeral=True)
+
+        emby = discord.Embed(
+            description=f"Retrieved content of length {len(message.content)} from [message]({message.jump_url})"
+        )
         await interaction.response.send_message(
-            file=discord.File(io.BytesIO(message.content.encode()), "output.txt")
+            embed=emby,
+            file=discord.File(io.BytesIO(message.content.encode()), "output.txt"),
+            ephemeral=True,
         )
 
     @staticmethod
