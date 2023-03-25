@@ -38,7 +38,7 @@ class Tools(commands.Cog):
     ):
         if not message.content:
             emby = discord.Embed(
-                description=f"That [message]({message.jump_url}) has no content"
+                description=f"🛑 That [message]({message.jump_url}) has no content"
             )
             return await interaction.response.send_message(embed=emby, ephemeral=True)
 

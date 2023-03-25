@@ -25,7 +25,7 @@ class Admin(commands.Cog):
     ):
         if not message.embeds:
             emby = discord.Embed(
-                description=f"There are no embeds in that [message]({message.jump_url})"
+                description=f"🛑 There are no embeds in that [message]({message.jump_url})"
             )
             return await interaction.response.send_message(embed=emby)
 
