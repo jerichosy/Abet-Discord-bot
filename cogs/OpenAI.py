@@ -14,9 +14,10 @@ load_dotenv()
 
 
 class ConfirmPrompt(discord.ui.View):
-    def __init__(self):
+    def __init__(self, user):
         super().__init__()
         self.value = None
+        self.user = user
 
     async def on_timeout(self) -> None:
         for item in self.children:
@@ -30,6 +31,10 @@ class ConfirmPrompt(discord.ui.View):
     async def confirm(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
+        if interaction.user.id != self.user.id:
+            return await interaction.response.send_message(
+                "🛑 This is not your button to press", ephemeral=True
+            )
         await interaction.message.delete()
         self.value = True
         self.stop()
@@ -37,6 +42,10 @@ class ConfirmPrompt(discord.ui.View):
     # This one is similar to the confirmation button except sets the inner value to `False`
     @discord.ui.button(label="Cancel", style=discord.ButtonStyle.grey)
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if interaction.user.id != self.user.id:
+            return await interaction.response.send_message(
+                "🛑 This is not your button to press", ephemeral=True
+            )
         await interaction.message.delete()
         self.value = False
         self.stop()
@@ -61,7 +70,7 @@ class OpenAI(commands.Cog):
                 [word in prompt.lower() for word in trigger_words_translate]
             )
             if trigger_words_translate_match:
-                view = ConfirmPrompt()
+                view = ConfirmPrompt(ctx.author)
                 view.message = await ctx.send(
                     'If you\'re asking for a simple translation, please first use Google Translate, Papago (good for CJK languages), Yandex Translate, etc.\n\nShould you still wish to proceed with asking ChatGPT, hit "Confirm" below.',
                     view=view,
