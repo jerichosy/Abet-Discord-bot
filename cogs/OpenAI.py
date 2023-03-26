@@ -75,7 +75,6 @@ class OpenAI(commands.Cog):
                     await ctx.message.delete()
                     return print("Cancelled...")
 
-        # For now, do not catch the exception generated when the retry limit is hit
         async def completion_with_backoff(**kwargs):
             max_retries = 5
             min_delay = 5
