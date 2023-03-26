@@ -18,6 +18,35 @@ from cogs.utils.ExchangeRateUSDPHP import ExchangeRateUSDPHP
 load_dotenv()
 
 
+class ConfirmPrompt(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+        self.value = None
+
+    async def on_timeout(self) -> None:
+        for item in self.children:
+            item.disabled = True
+
+        await self.message.edit(view=self)
+
+    # When the confirm button is pressed, set the inner value to `True` and
+    # stop the View from listening to more input.
+    @discord.ui.button(label="Confirm", style=discord.ButtonStyle.green)
+    async def confirm(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await interaction.message.delete()
+        self.value = True
+        self.stop()
+
+    # This one is similar to the confirmation button except sets the inner value to `False`
+    @discord.ui.button(label="Cancel", style=discord.ButtonStyle.grey)
+    async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.message.delete()
+        self.value = False
+        self.stop()
+
+
 class OpenAI(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -29,6 +58,27 @@ class OpenAI(commands.Cog):
         self, ctx, *, prompt: str, model: Literal["gpt-4", "gpt-3.5-turbo"] = "gpt-4"
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
+
+        # FIXME: This logic is borked when this cmd is invoked thru slash
+        if not ctx.interaction:
+            trigger_words_translate = ["translate", "translation"]
+            trigger_words_translate_match = any(
+                [word in prompt.lower() for word in trigger_words_translate]
+            )
+            if trigger_words_translate_match:
+                view = ConfirmPrompt()
+                view.message = await ctx.send(
+                    'If you\'re asking for a simple translation, please first use Google Translate, Papago (good for CJK languages), Yandex Translate, etc.\n\nShould you still wish to proceed with asking ChatGPT, hit "Confirm" below.',
+                    view=view,
+                )
+                await view.wait()
+                if view.value is None:
+                    return print("Timed out...")
+                elif view.value:
+                    print("Confirmed...")
+                else:
+                    await ctx.message.delete()
+                    return print("Cancelled...")
 
         # For now, do not catch the exception generated when the retry limit is hit
         @retry(
