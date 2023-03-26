@@ -1,3 +1,4 @@
+import asyncio
 from typing import Literal
 
 import discord
@@ -5,12 +6,6 @@ import openai
 from discord.ext import commands
 from dotenv import load_dotenv
 from openai.error import RateLimitError
-from tenacity import (
-    retry,
-    retry_if_exception_type,
-    stop_after_attempt,
-    wait_random_exponential,
-)
 
 import cogs.utils.character_limits as character_limits
 from cogs.utils.ExchangeRateUSDPHP import ExchangeRateUSDPHP
@@ -81,20 +76,36 @@ class OpenAI(commands.Cog):
                     return print("Cancelled...")
 
         # For now, do not catch the exception generated when the retry limit is hit
-        @retry(
-            retry=retry_if_exception_type(RateLimitError),
-            wait=wait_random_exponential(min=1, max=60),
-            stop=stop_after_attempt(6),
-        )
         async def completion_with_backoff(**kwargs):
-            try:
-                return await openai.ChatCompletion.acreate(**kwargs)
-                # raise RateLimitError
-            except RateLimitError:
-                await ctx.send(
-                    f"{ctx.author.mention} Your request errored. Retrying...\n<@298454523624554501>"
-                )
-                raise
+            max_retries = 5
+            min_delay = 5
+            max_delay = (
+                60  # actually max_retries = 5 will make the max_delay practically 40
+            )
+            sent = None
+
+            for retry_attempt in range(1, max_retries + 1):
+                try:
+                    # if retry_attempt < 5:
+                    #     raise RateLimitError
+                    # else:
+                    response = await openai.ChatCompletion.acreate(**kwargs)
+
+                    if sent:
+                        await sent.delete()
+
+                    return response
+                except RateLimitError as e:
+                    if retry_attempt == max_retries:
+                        raise e  # Re-raise the error if we've reached the max number of retries
+
+                    delay = min(max_delay, min_delay * (2 ** (retry_attempt - 1)))
+                    inform_delay = f"{ctx.author.mention} Your request errored. Retrying in {delay:.1f} seconds..."
+                    if sent:
+                        await sent.edit(content=inform_delay)
+                    else:
+                        sent = await ctx.channel.send(inform_delay)
+                    await asyncio.sleep(delay)
 
         print(f"Prompt: {prompt}\nModel: {model}")
         async with ctx.typing():  # Manipulated into ctx.interaction.response.defer() if ctx.interaction
