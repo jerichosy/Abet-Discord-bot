@@ -33,7 +33,7 @@ class ConfirmPrompt(discord.ui.View):
     ):
         if interaction.user.id != self.user.id:
             return await interaction.response.send_message(
-                "🛑 This is not your button to press", ephemeral=True
+                "🛑 This is not your button to press", ephemeral=True, delete_after=10
             )
         await interaction.message.delete()
         self.value = True
@@ -44,7 +44,7 @@ class ConfirmPrompt(discord.ui.View):
     async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.user.id:
             return await interaction.response.send_message(
-                "🛑 This is not your button to press", ephemeral=True
+                "🛑 This is not your button to press", ephemeral=True, delete_after=10
             )
         await interaction.message.delete()
         self.value = False
