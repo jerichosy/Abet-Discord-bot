@@ -349,6 +349,10 @@ async def on_command_error(ctx, error):
             commands.CommandOnCooldown,
             commands.MissingRequiredArgument,
             commands.MaxConcurrencyReached,
+            commands.CommandNotFound,
+            commands.BadArgument,
+            commands.NotOwner,
+            commands.MissingPermissions,
         ),
     ):
         return await ctx.send(error)
