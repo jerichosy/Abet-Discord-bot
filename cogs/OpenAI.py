@@ -94,7 +94,11 @@ class OpenAI(commands.Cog):
 
             for retry_attempt in range(1, max_retries + 1):
                 try:
+                    # print("TRY", retry_attempt)
                     # if retry_attempt < 5:
+                    # if prompt == "billing":
+                    #     raise RateLimitError("billing")
+                    # else:
                     #     raise RateLimitError
                     # else:
                     response = await openai.ChatCompletion.acreate(**kwargs)
@@ -104,8 +108,8 @@ class OpenAI(commands.Cog):
 
                     return response
                 except RateLimitError as e:
-                    if retry_attempt == max_retries:
-                        raise e  # Re-raise the error if we've reached the max number of retries
+                    if retry_attempt == max_retries or "billing" in str(e):
+                        raise e
 
                     delay = min(max_delay, min_delay * (2 ** (retry_attempt - 1)))
                     inform_delay = f"{ctx.author.mention} Your request errored. Retrying in {delay:.1f} seconds..."
