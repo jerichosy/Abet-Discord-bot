@@ -7,7 +7,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from openai.error import RateLimitError
 
-import cogs.utils.character_limits as character_limits
+from cogs.utils import character_limits
 from cogs.utils.ExchangeRateUSDPHP import ExchangeRateUSDPHP
 
 load_dotenv()
