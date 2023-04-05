@@ -221,8 +221,9 @@ async def on_message(message):
                         await message.channel.send(random.choice(mhy_response))
                     break
 
-    # --- REPOSTERS ---
+    # --- REPOSTERS START ---
     # TODO: Either try to make it consistent across or think of a better/flexible/DRY solution
+    # TODO: Solution is probably to make it a class
     # FIXME: checking is only arbitrarily implemented
 
     IG_REEL_REGEX = r"(?P<url>https?:\/\/(?:www\.)?instagram\.com(?:\/[^\/]+)?\/(?:reel)\/(?P<id>[^\/?#&]+))"
@@ -330,6 +331,7 @@ async def on_message(message):
                                 print("Did not return 200 status code")
                     else:
                         print("Did not return 200 status code")
+    # --- REPOSTERS END ---
 
     await bot.process_commands(message)
 
