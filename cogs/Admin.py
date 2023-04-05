@@ -124,8 +124,9 @@ class Admin(commands.Cog):
             else:
                 synced = await ctx.bot.tree.sync()
 
+            appcmds = "\n".join(sorted([f"- {appcmd.name}" for appcmd in synced]))
             await ctx.send(
-                f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}"
+                f"Synced {len(synced)} commands {'globally' if spec is None else 'to the current guild.'}\n{appcmds}"
             )
             return
 
