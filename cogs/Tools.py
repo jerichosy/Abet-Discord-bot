@@ -15,6 +15,8 @@ from discord.ext import commands
 from pdf2image import convert_from_bytes
 from rembg import remove
 
+from cogs.utils import abet_responses
+
 
 class PDFFlags(commands.FlagConverter, prefix="--", delimiter=""):
     url: Optional[str]
@@ -81,51 +83,21 @@ class Tools(commands.Cog):
     async def abet(self, ctx, has_question=None):
         """customized Magic 8-Ball"""
 
-        ABET_RESPONSE_GLOBAL = [
-            "Absolutely!",
-            "Without a doubt!",
-            "Hell Yeah!",
-            "Fuck no",
-            "What the fuck are these questions? *Sighs* But yes you will get what you want for some reason",
-            "Dude, that's sick. It's a no though.",
-            "Maybe, Fine. Yes.",
-            "Sinasabi ng aking mahiwagang kristal it's a paking YES putangina.",
-            "If you haven't taken a bath in the past 3 days it's a yes",
-            "Bruh.",
-            "Hell no.",
-            "My magic balls says fuck yeah!",
-            "If you believe hard enough!",
-            "Do I look like I care? Just kidding it's a yes I love you bro.",
-            "Dude it already happened.",
-            "All you have to do is try what's stopping you?",
-            "I'll bet you a hundred dollars that is not going to happen",
-            "...",
-        ]
-        ABET_RESPONSE_HOME = [
-            "You're chances are as high as the amount of Qiqi constellations you have",
-            "I heard buying KofiTreb's Coffee increases your odds",
-        ]
-        ABET_RESPONSE_OTHER = [
-            "Ask Jericho",
-            "Ask Carl",
-            "Bakit ako tinatanong niyo? May Carl kayo diba?",
-        ]
-
         if has_question is None:  # PEP 8
             await ctx.send("What?")
         elif ctx.guild.id == self.bot.HOME_GUILD.id:
             print("Home guild")
             await ctx.send(
                 random.choice(
-                    ABET_RESPONSE_GLOBAL + ABET_RESPONSE_OTHER + ABET_RESPONSE_HOME
+                    abet_responses.GLOBAL + abet_responses.OTHER + abet_responses.HOME
                 )
             )
         elif ctx.guild.id == self.bot.OTHER_GUILD.id:
             print("Other guild")
-            await ctx.send(random.choice(ABET_RESPONSE_GLOBAL + ABET_RESPONSE_OTHER))
+            await ctx.send(random.choice(abet_responses.GLOBAL + abet_responses.OTHER))
         else:
             print("Global guild")
-            await ctx.send(random.choice(ABET_RESPONSE_GLOBAL))
+            await ctx.send(random.choice(abet_responses.GLOBAL))
 
     @commands.command()
     async def choose(self, ctx, *, choices):
