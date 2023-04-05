@@ -20,6 +20,8 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
+from cogs.utils.random_responses import *
+
 initial_extensions = [
     "cogs.Fun",
     "cogs.Waifu",
@@ -111,93 +113,7 @@ async def on_message(message):
         ):
             msg = message.content.lower()
 
-            # This whole section cost 0ms, so it's kind of okay to be here
-            sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
-            yay_words = ["yay", "freee"]
-            wish_words = [
-                "should i pull",
-                "pulling",
-                "p\*ll",
-                "rolls",
-                "constellation",
-                "constellations",
-                "primo",
-                "primos",
-                "primogem",
-                "primogems",
-                "c6",
-                "c5",
-                "c4",
-                "c3",
-                "c2",
-                "c1",
-                "c0",
-            ]
-            mhy_words = ["mihoyo", "hoyoverse"]
-
-            sad_response = [
-                "Cheer up!",
-                "Hang in there!",
-                "You are a great person!",
-                "Stay strong.",
-                "Come on! You can do it!.",
-                "It's okay",
-                "It's okay I believe in you",
-                "Maybe we'll get them next time",
-                "Keep your head high",
-                "It's okay don't listen to them",
-                "You are the best!",
-                "We'll get you Ice cream, you like that?",
-                "Is there anything I can do to make you feel better?",
-            ]
-            yay_response = [
-                "I'm so proud of you!",
-                "Good job!",
-                "Keep it up!",
-                "Keep up the good work!",
-                "There you go!",
-                "Hell yeah!",
-                "Fuck, lets gooooooooo!",
-                "Omg Yay!!!!!!!",
-                "Let's gooooo!",
-                "I can't believe it! You are amazing!",
-                "WTF? Really?",
-                "What the heck? Let's goooooooooo!",
-                "I knew you could do it!",
-                "<:letsgo:914430483176255488>",
-                "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>",
-                "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>",
-                "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>",
-                "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>",
-                "https://cdn.discordapp.com/attachments/877238195966865498/943248232807538738/988697_558224364239923_644168573_n.png",
-            ]
-            wish_response = [
-                "Looks like someone's pulling today!",
-                "I swear a 10 pull seems great right now",
-                "What's the worse that could happen? You getting Qiqi?",
-                "Don't save your gems you'll get qiqi anyways",
-                # "wait don't tell me you're not going to pull?",  # Unhealthy
-                "I hear that standing in the corner of mondstadt gives you a higher chance to pull a 5 star",
-                "the adventurer's guild is calling. They want to watch you pull.",
-                "make sure you stream if you pull.",
-                # "It's just a game. Pulling won't be the end of the world.",  # Unhealthy
-                "New content?",
-                "The Kyoya Intelligence Agency (KIA) will be monitoring your pulls.",
-            ]
-            mhy_response = [
-                "Did I hear Mihoyo? That bitch.",
-                # "Mihoyo loves you",
-                # "Awe, we're trying our best here at Mihoyo",
-                # "I promise to give you more primos in future patches - Mihoyo",
-                # "Did you just BS Mihoyo? UID Saved, sending to Mihoyo servers...",
-                "Hey people at Mihoyo are just trying to do their jobs",
-                # "Please rate our game with a 5 star in the Play Store!",
-                # "Please don't leave we need you['re money]",
-                "We give all the money we make at Mihoyo to Mona",
-                "All funds from Mihoyo are sent straight to Zhongli's pockets",
-                "We aren't ripping you off. We're just compensating Timmie which is why we couldn't get you better rewards!",
-            ]
-
+            # These stay here because it's easier to side-by-side compare these to their corresponding trigger words and responses
             def findWholeWord(w):
                 return re.compile(r"\b({0})\b".format(w), flags=re.IGNORECASE).search
 
