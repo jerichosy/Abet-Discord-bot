@@ -79,13 +79,11 @@ class Tools(commands.Cog):
 
         await ctx.send(f"`Heads`: {heads_count}\n`Tails`: {tails_count}")
 
-    @commands.command()
-    async def abet(self, ctx, has_question=None):
+    @commands.hybrid_command()
+    async def abet(self, ctx, *, question):
         """customized Magic 8-Ball"""
 
-        if has_question is None:  # PEP 8
-            await ctx.send("What?")
-        elif ctx.guild.id == self.bot.HOME_GUILD.id:
+        if ctx.guild.id == self.bot.HOME_GUILD.id:
             print("Home guild")
             await ctx.send(
                 random.choice(
