@@ -1,6 +1,7 @@
 import aiohttp
 
 
+# This is used by both Roleplay and Waifu cogs, so leave it here
 async def get_waifu(type, category):
     url_string = f"https://api.waifu.pics/{type}/{category}"
     async with aiohttp.ClientSession() as session:
