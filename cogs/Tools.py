@@ -1,5 +1,4 @@
 import io
-import mimetypes
 import os
 import random
 import uuid
@@ -7,6 +6,7 @@ from collections import Counter
 from datetime import timedelta
 from random import choices
 from typing import Optional
+from urllib.parse import urlparse
 
 import aiohttp
 import discord
@@ -435,15 +435,15 @@ class Tools(commands.Cog):
                 print(resp.status)
                 if resp.status == 200:
                     file_bytes = io.BytesIO(await resp.read())
-                    file_format = mimetypes.guess_extension(
-                        resp.headers.get("Content-Type")
-                    )
-                    print(file_format)
+                    # file_format = mimetypes.guess_extension(
+                    #     resp.headers.get("Content-Type")
+                    # )
+                    filename = os.path.basename(urlparse(url).path)
                     try:
                         await interaction.followup.send(
                             file=discord.File(
                                 file_bytes,
-                                f"{uuid.uuid4()}{file_format}",
+                                f"{filename}",
                             ),
                         )
                     except discord.HTTPException:
