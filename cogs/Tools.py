@@ -26,14 +26,24 @@ class PDFFlags(commands.FlagConverter, prefix="--", delimiter=""):
 class Tools(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.ctx_menu = app_commands.ContextMenu(
+        self.raw_string_menu = app_commands.ContextMenu(
             name="Get Raw String",
             callback=self.get_raw_string,
         )
-        self.bot.tree.add_command(self.ctx_menu)
+        self.raw_embed_desc_menu = app_commands.ContextMenu(
+            name="Get Raw Embed Description",
+            callback=self.get_raw_embed_desc_menu,
+        )
+        self.bot.tree.add_command(self.raw_string_menu)
+        self.bot.tree.add_command(self.raw_embed_desc_menu)
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
+        self.bot.tree.remove_command(
+            self.raw_string_menu.name, type=self.raw_string_menu.type
+        )
+        self.bot.tree.remove_command(
+            self.raw_embed_desc_menu.name, type=self.raw_embed_desc_menu.type
+        )
 
     async def get_raw_string(
         self, interaction: discord.Interaction, message: discord.Message
@@ -50,6 +60,26 @@ class Tools(commands.Cog):
         await interaction.response.send_message(
             embed=emby,
             file=discord.File(io.BytesIO(message.content.encode()), "output.txt"),
+            ephemeral=True,
+        )
+
+    async def get_raw_embed_desc_menu(
+        self, interaction: discord.Interaction, message: discord.Message
+    ):
+        if not message.embeds:
+            emby = discord.Embed(
+                description=f"🛑 That [message]({message.jump_url}) has no embeds"
+            )
+            return await interaction.response.send_message(embed=emby, ephemeral=True)
+
+        emby = discord.Embed(
+            description=f"Retrieved content of length {len(message.embeds[0].description)} from [message]({message.jump_url})"
+        )
+        await interaction.response.send_message(
+            embed=emby,
+            file=discord.File(
+                io.BytesIO(message.embeds[0].description.encode()), "output.txt"
+            ),
             ephemeral=True,
         )
 
