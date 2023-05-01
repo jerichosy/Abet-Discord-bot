@@ -1,4 +1,4 @@
-# Check: ~~dependencies~~, comments
+# Check: comments
 # Additions: Add cogs and cmd desc.
 # Will not fix: Error of converting int when user accidentally types argument(s) containing characters, non-ints, etc.
 
