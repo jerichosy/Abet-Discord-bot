@@ -10,14 +10,22 @@ from discord.ext.commands import Context, Greedy, has_permissions
 class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.ctx_menu = app_commands.ContextMenu(
-            name="Suppress Embeds",
-            callback=self.suppress_embeds_from_msg,
+        self.supress_embeds_menu = app_commands.ContextMenu(
+            name="Suppress Embeds", callback=self.suppress_embeds_from_msg
         )
-        self.bot.tree.add_command(self.ctx_menu)
+        self.invoke_on_msg_menu = app_commands.ContextMenu(
+            name="Invoke on_message()", callback=self.invoke_on_msg
+        )
+        self.bot.tree.add_command(self.supress_embeds_menu)
+        self.bot.tree.add_command(self.invoke_on_msg_menu)
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(self.ctx_menu.name, type=self.ctx_menu.type)
+        self.bot.tree.remove_command(
+            self.supress_embeds_menu.name, type=self.supress_embeds_menu.type
+        )
+        self.bot.tree.remove_command(
+            self.invoke_on_msg_menu.name, type=self.invoke_on_msg_menu.type
+        )
 
     @app_commands.checks.has_permissions(manage_messages=True)
     async def suppress_embeds_from_msg(
@@ -34,6 +42,18 @@ class Admin(commands.Cog):
             description=f"Embeds from [message]({message.jump_url}) removed"
         )
         await interaction.response.send_message(embed=emby)
+
+    @app_commands.checks.has_permissions(manage_messages=True)
+    async def invoke_on_msg(
+        self, interaction: discord.Interaction, message: discord.Message
+    ):
+        # First respond because awaiting on_message might exceed timeout
+        emby = discord.Embed(
+            description=f"✅ `on_message()` called for [message]({message.jump_url})"
+        )
+        await interaction.response.send_message(embed=emby, ephemeral=True)
+        # Then actually process the msg
+        await self.bot.on_message(message)
 
     # ? Will this end up deleting any msg sent during cleanup?
     @commands.command(aliases=["delete", "cleanup"])
