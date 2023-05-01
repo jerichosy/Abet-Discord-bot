@@ -286,7 +286,8 @@ async def on_command_error(ctx, error):
 
     # Errors that reached here require my attention
     # convert error to str, prepend every line with "> "
-    error_string = "\n".join([f"> {line}" for line in str(error).splitlines()])
+    # error_string = "\n".join([f"> {line}" for line in str(error).splitlines()])
+    error_string = f">>> {error}"  # alternatively, ">>> " takes care of equivalently prepending every line with "> "
     # send
     await ctx.send(
         f"**Uh oh, looks like <@298454523624554501> needs to take a look at this:**\n{error_string}"

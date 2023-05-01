@@ -199,7 +199,7 @@ class Admin(commands.Cog):
     @commands.command(aliases=["error", "send_eror"])
     @commands.is_owner()
     async def test_error(self, ctx):
-        raise Exception("This is a test")
+        raise Exception("This is a test\nThis is another line")
 
     @commands.command(aliases=["string", "send_string", "test_string"])
     @commands.is_owner()
