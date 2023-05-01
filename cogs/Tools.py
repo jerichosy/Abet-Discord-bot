@@ -156,8 +156,10 @@ class Tools(commands.Cog):
 
         await ctx.send("\n".join(response))
 
-    @commands.command(aliases=["wait", "anime"])
-    async def whatanime(self, ctx, url=None):
+    @commands.hybrid_command(aliases=["wait", "anime"])
+    async def whatanime(
+        self, ctx, url=None, attachment: Optional[discord.Attachment] = None
+    ):
         """What Anime Is This"""
 
         if url is None and len(ctx.message.attachments) == 0:
@@ -229,11 +231,13 @@ class Tools(commands.Cog):
                     else None,
                 )
 
-    @commands.command(
+    @commands.hybrid_command(
         aliases=["sauce", "source", "getsource", "artsource", "getartsource"]
     )
-    async def saucenao(self, ctx, url=None):
-        """SauceNao"""
+    async def saucenao(
+        self, ctx, url=None, attachment: Optional[discord.Attachment] = None
+    ):
+        """SauceNAO Reverse Image Search (fanarts, anime, etc.)"""
 
         if url is None and len(ctx.message.attachments) == 0:
             return await ctx.send("Please attach an image / provide a link or URL")
