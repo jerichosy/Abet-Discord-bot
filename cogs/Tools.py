@@ -237,8 +237,7 @@ class Tools(commands.Cog):
         """SauceNao"""
 
         if url is None and len(ctx.message.attachments) == 0:
-            await ctx.send("Please attach an image / provide a link or URL")
-            return
+            return await ctx.send("Please attach an image / provide a link or URL")
 
         if url is None:
             url = ctx.message.attachments[0].url
@@ -250,6 +249,8 @@ class Tools(commands.Cog):
                 ) as r:
                     json_data = await r.json()
                     # print(json_data)
+
+                    # SauceNAO API documentation: https://saucenao.com/user.php?page=search-api
 
                     # error checking
                     if r.status != 200 or json_data["header"]["status"] != 0:
@@ -281,35 +282,30 @@ class Tools(commands.Cog):
 
                         return field
 
-                    # source = f"**Sauce:** {json_data['results'][0]['data']['source']}\n"
                     source = get_json_field("**Sauce:** ", "source")
                     if source == "":
                         source = f"**Sauce:** {json_data['results'][0]['data']['ext_urls'][0]}\n"
-                    # to handle stuff like
+                    # to handle Pixiv urls like
                     # https://i.pximg.net/img-original/img/2021/07/28/07/50/29/91550773 with https://cdn.discordapp.com/attachments/870095545992101958/947297823945293834/lASQNdS.jpg or
                     # http://i2.pixiv.net/img-original/img/2016/01/16/01/19/56/54734137 with https://cdn.discordapp.com/attachments/870095545992101958/947296081354588211/54734137_p0_master1200.png
                     elif "/img-original/img/" in source:
                         source = f"**Sauce:** https://pixiv.net/en/artworks/{source[len(source) - 9 : len(source)]}"
                     part = get_json_field("**Part:** ", "part")
                     characters = get_json_field("**Character(s):** ", "characters")
-                    # characters = "" if json_data['results'][0]['data']['characters'] is None else f"**Character(s):** {json_data['results'][0]['data']['characters']}\n"
                     similarity = f"**Similarity:** {float(json_data['results'][0]['header']['similarity'])}%"
 
-                    # danbooru = "" if json_data['results'][0]['data']['danbooru_id'] is None else f"Danbooru ID: {json_data['results'][0]['data']['danbooru_id']}\n"
                     danbooru = get_json_field("Danbooru ID: ", "danbooru_id")
-                    # yandere = "" if json_data['results'][0]['data']['yandere_id'] is None else f"Yandere ID: {json_data['results'][0]['data']['yandere_id']}\n"
                     yandere = get_json_field("Yandere ID: ", "yandere_id")
-                    # gelbooru = "" if json_data['results'][0]['data']['gelbooru_id'] is None else f"Gelbooru ID: {json_data['results'][0]['data']['gelbooru_id']}\n"
                     gelbooru = get_json_field("Gelbooru ID: ", "gelbooru_id")
 
                     separator = (
                         ""
                         if danbooru == "" and yandere == "" and gelbooru == ""
-                        else "\n--------------------------\n"
+                        else "\n------------------------\n"
                     )
 
-                    await ctx.send(
-                        f"<@{ctx.author.id}> Note: For anime, use &whatanime\n\n{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}"
+                    await ctx.reply(
+                        f"{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}"
                     )
 
     # FIXME: This is blocking
