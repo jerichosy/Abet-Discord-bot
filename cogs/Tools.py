@@ -400,17 +400,12 @@ class Tools(commands.Cog):
                         #     high_source = (len(chunk) - 1) + low_source
                         #     source_page_cnt = f"({low_source}-{high_source})"
 
-                        if idx == 0:
-                            await ctx.reply(
-                                f"Page {low}-{high}/{len(image_list)} {source_page_cnt}",
-                                files=chunk,
-                            )
-                        else:
-                            # ctx.channel needed for slash (hybrid) so it refers to the channel instead of the initial interaction response
-                            await ctx.channel.send(
-                                f"Page {low}-{high}/{len(image_list)} {source_page_cnt}",
-                                files=chunk,
-                            )
+                        sender = ctx.reply if idx == 0 else ctx.channel.send
+
+                        await sender(
+                            f"Page {low}-{high}/{len(image_list)} {source_page_cnt}",
+                            files=chunk,
+                        )
 
     @commands.hybrid_command(aliases=["rembg", "rmbg", "bgremove"])
     async def removebg(
