@@ -102,12 +102,16 @@ bot = AbetBot(
 
 @bot.event
 async def on_message(message):
-    start_time = time.time()
+    start_time = time.time()  # Begin elapsed counter
 
+    # If author == bot, ignore message
     if message.author.bot:
         return
 
-    if message.guild:
+    # Otherwise, continue processing message
+    print("Processing message:", message.content)
+
+    if message.guild:  # Check if home guild (and if not #rant channel) then react
         if (message.guild.id == bot.HOME_GUILD.id) and (
             "rant" not in message.channel.name
         ):
@@ -259,9 +263,7 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-    end_time = time.time()
-    print(f"on_message execution time: {round((end_time - start_time) * 1000)}ms")
-    print("The message was:", message.content)
+    print(f"on_message() execution time: {round((time.time() - start_time) * 1000)}ms")
 
 
 # Command error message sender
