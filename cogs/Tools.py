@@ -410,7 +410,7 @@ class Tools(commands.Cog):
                                 files=chunk,
                             )
 
-    @commands.hybrid_command(aliases=["rembg"])
+    @commands.hybrid_command(aliases=["rembg", "rmbg", "bgremove"])
     async def removebg(
         self, ctx, url=None, attachment: Optional[discord.Attachment] = None
     ):
