@@ -163,8 +163,7 @@ class Tools(commands.Cog):
         if url is None and len(ctx.message.attachments) == 0:
             return await ctx.send("Please attach an image / provide a link or URL")
 
-        if url is None:
-            url = ctx.message.attachments[0].url
+        url = ctx.message.attachments[0].url if ctx.message.attachments else url
 
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
@@ -239,8 +238,7 @@ class Tools(commands.Cog):
         if url is None and len(ctx.message.attachments) == 0:
             return await ctx.send("Please attach an image / provide a link or URL")
 
-        if url is None:
-            url = ctx.message.attachments[0].url
+        url = ctx.message.attachments[0].url if ctx.message.attachments else url
 
         async with ctx.typing():
             async with aiohttp.ClientSession() as session:
@@ -417,8 +415,7 @@ class Tools(commands.Cog):
         """Remove background from an image"""
 
         if url is None and len(ctx.message.attachments) == 0:
-            await ctx.send("Please attach an image / provide a link or URL")
-            return
+            return await ctx.send("Please attach an image / provide a link or URL")
 
         url = ctx.message.attachments[0].url if ctx.message.attachments else url
         # ? Should we add support for multiple images at once?
