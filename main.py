@@ -55,9 +55,10 @@ class AbetBot(commands.Bot):
         self.OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
         self.TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
 
-        self.INVITE_LINK = discord.utils.oauth_url(
-            client_id=self.application_id, permissions=discord.Permissions.advanced()
-        )
+        # self.INVITE_LINK = discord.utils.oauth_url(
+        #     client_id=self.application_id, permissions=discord.Permissions.advanced()
+        # )
+        self.INVITE_LINK = "https://discord.com/api/oauth2/authorize?client_id=954284775210893344&permissions=70368744177650&scope=bot%20applications.commands"
 
     async def setup_hook(self) -> None:
         # Load cogs
