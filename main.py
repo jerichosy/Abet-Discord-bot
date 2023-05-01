@@ -144,13 +144,14 @@ async def on_message(message):
                     break
 
     # --- REPOSTERS START ---
+    # ACTUALLY, CURRENT IMPLEMENTATION IS OKAY but we can still opt to resolve the non-issues
     # TODO: Either try to make it consistent across or think of a better/flexible/DRY solution
     # TODO: Solution is probably to make it a class
     # FIXME: checking is only arbitrarily implemented
 
     IG_REEL_REGEX = r"(?P<url>https?:\/\/(?:www\.)?instagram\.com(?:\/[^\/]+)?\/(?:reel)\/(?P<id>[^\/?#&]+))"
     ig_reel_url = re.findall(IG_REEL_REGEX, message.content)
-    print(ig_reel_url)
+    print("IG Reel match:", ig_reel_url)
     if ig_reel_url:
         async with message.channel.typing():
             async with aiohttp.ClientSession() as session:
@@ -216,7 +217,7 @@ async def on_message(message):
 
     FB_REEL_REGEX = r"(https?:\/\/(?:[\w-]+\.)?facebook\.com\/reel\/(?P<id>\d+))"
     fb_reel_url = re.findall(FB_REEL_REGEX, message.content)
-    print(fb_reel_url)
+    print("FB Reel match:", fb_reel_url)
     if fb_reel_url:
         async with message.channel.typing():
             async with aiohttp.ClientSession() as session:
@@ -253,6 +254,7 @@ async def on_message(message):
                                 print("Did not return 200 status code")
                     else:
                         print("Did not return 200 status code")
+
     # --- REPOSTERS END ---
 
     await bot.process_commands(message)
