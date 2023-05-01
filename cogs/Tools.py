@@ -161,32 +161,22 @@ class Tools(commands.Cog):
         """What Anime Is This"""
 
         if url is None and len(ctx.message.attachments) == 0:
-            await ctx.send("Please attach an image / provide a link or URL")
-            return
+            return await ctx.send("Please attach an image / provide a link or URL")
 
         if url is None:
             url = ctx.message.attachments[0].url
 
-        async with aiohttp.ClientSession() as session:
-            async with ctx.typing():
+        async with ctx.typing():
+            async with aiohttp.ClientSession() as session:
                 async with session.get(
                     f"https://api.trace.moe/search?cutBorders&anilistInfo&url={url}"
                 ) as resp:
                     json_data = await resp.json()
 
-                reason = ""
-                if json_data["error"]:
-                    reason = json_data["error"]
-                else:
-                    file_name = json_data["result"][0]["filename"]
-                    timestamp = ""
-                    if json_data["result"][0]["episode"] is not None:
-                        timestamp = f"Episode {json_data['result'][0]['episode']} | "
-                    timestamp += str(
-                        timedelta(seconds=int(json_data["result"][0]["from"]))
-                    )
-                    similarity = json_data["result"][0]["similarity"]
-                    video_url = json_data["result"][0]["video"]
+                    if json_data["error"]:
+                        return await ctx.send(json_data["error"])
+
+                    # Get titles, filename, episode & timestamp, and similarity percentage
 
                     native = (
                         ""
@@ -204,24 +194,40 @@ class Tools(commands.Cog):
                         else f"**{json_data['result'][0]['anilist']['title']['english']}**\n"
                     )
 
-            if reason:
-                await ctx.send(reason, suppress_embeds=True)
-            else:
-                if json_data["result"][0]["anilist"]["isAdult"]:
-                    preview_file_name = "SPOILER_preview.mp4"
-                    warning = "[NSFW]"
-                else:
-                    preview_file_name = "preview.mp4"
-                    warning = ""
+                    file_name = json_data["result"][0]["filename"]
+
+                    # Get episode number if present
+                    timestamp = ""
+                    if json_data["result"][0]["episode"] is not None:
+                        timestamp = f"Episode {json_data['result'][0]['episode']} | "
+                    # Then concat timestamp regardless if there was an episode no. or not
+                    timestamp += str(
+                        timedelta(seconds=int(json_data["result"][0]["from"]))
+                    )
+
+                    similarity = json_data["result"][0]["similarity"]
+
+                    # Preview related stuff
+                    video_url = json_data["result"][0]["video"]
+                    if json_data["result"][0]["anilist"]["isAdult"]:
+                        spoiler = True
+                        warning = "[NSFW]"
+                    else:
+                        spoiler = False
+                        warning = ""
 
                 async with session.get(video_url) as resp:
-                    if resp.status != 200:
+                    data = None
+                    if resp.status == 200:
+                        data = io.BytesIO(await resp.read())
+                    else:
                         warning = "Could not download preview..."
-                    data = io.BytesIO(await resp.read())
 
                 await ctx.reply(
                     f"{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity\n\n{warning}",
-                    file=discord.File(data, preview_file_name),
+                    file=discord.File(fp=data, filename="preview.mp4", spoiler=spoiler)
+                    if data
+                    else None,
                 )
 
     @commands.command(
