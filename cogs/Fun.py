@@ -67,7 +67,9 @@ class Fun(commands.Cog):
     @commands.hybrid_command(aliases=["meow"])
     async def cat(self, ctx):
         """random cat pics"""
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(
+            timeout=aiohttp.ClientTimeout(total=5)
+        ) as session:
             async with session.get("http://aws.random.cat/meow") as r:
                 if r.status == 200:
                     js = await r.json()
