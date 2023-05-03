@@ -8,3 +8,4 @@ openai
 pygit2
 rembg
 yt-dlp
+black
