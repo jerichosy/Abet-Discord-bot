@@ -1,4 +1,5 @@
-discord.py
+aiohttp[speedups]
+discord.py[speed,voice]
 python-dotenv
 jishaku
 psutil
@@ -6,3 +7,4 @@ pdf2image
 openai
 pygit2
 rembg
+yt-dlp
