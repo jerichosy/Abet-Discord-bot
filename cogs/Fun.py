@@ -69,9 +69,8 @@ class Fun(commands.Cog):
             timeout=aiohttp.ClientTimeout(total=5)
         ) as session:
             async with session.get("http://aws.random.cat/meow") as r:
-                if r.status == 200:
-                    js = await r.json()
-                    await ctx.send(js["file"])
+                js = await r.json()
+                await ctx.send(js["file"])
 
     # Lifted from https://github.com/Rapptz/discord.py/blob/master/examples/guessing_game.py
     @commands.command(aliases=["game"])
