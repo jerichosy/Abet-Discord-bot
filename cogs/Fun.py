@@ -39,7 +39,7 @@ class Fun(commands.Cog):
     async def kanye(self, ctx):
         """random Kanye West quotes (Kanye as a Service)"""
         json_data = await self.get_json_quote("https://api.kanye.rest/")
-        quote = json_data["quote"] + " - Kanye West"
+        quote = json_data["quote"] + " -Kanye West"
         await ctx.send(quote)
 
     @app_commands.command()
@@ -54,14 +54,14 @@ class Fun(commands.Cog):
             json_data = await self.get_json_quote(
                 "https://api.tronalddump.io/random/quote"
             )
-            quote = json_data["value"] + " - Donald Trump"
+            quote = json_data["value"] + " -Donald Trump"
             await interaction.response.send_message(quote, suppress_embeds=True)
         else:
             async with aiohttp.ClientSession() as session:
                 async with session.get("https://api.tronalddump.io/random/meme") as r:
                     data = io.BytesIO(await r.read())
                     await interaction.response.send_message(
-                        file=discord.File(data, "tronalddump.jpg")
+                        file=discord.File(data, "tronalddump.jpeg")
                     )
 
     @commands.hybrid_command(aliases=["meow"])
