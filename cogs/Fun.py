@@ -42,10 +42,10 @@ class Fun(commands.Cog):
         quote = json_data["quote"] + " -Kanye West"
         await ctx.send(quote)
 
-    @app_commands.command()
+    @commands.hybrid_command()
     async def trump(
         self,
-        interaction: discord.Interaction,
+        ctx,
         in_image_form: Literal["No", "Yes"] = "No",
     ):
         """random dumbest things Donald Trump has ever said"""
@@ -55,14 +55,12 @@ class Fun(commands.Cog):
                 "https://api.tronalddump.io/random/quote"
             )
             quote = json_data["value"] + " -Donald Trump"
-            await interaction.response.send_message(quote, suppress_embeds=True)
+            await ctx.send(quote, suppress_embeds=True)
         else:
             async with aiohttp.ClientSession() as session:
                 async with session.get("https://api.tronalddump.io/random/meme") as r:
                     data = io.BytesIO(await r.read())
-                    await interaction.response.send_message(
-                        file=discord.File(data, "tronalddump.jpeg")
-                    )
+                    await ctx.send(file=discord.File(data, "tronalddump.jpeg"))
 
     @commands.hybrid_command(aliases=["meow"])
     async def cat(self, ctx):
