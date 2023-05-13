@@ -71,7 +71,7 @@ class OpenAI(commands.Cog):
             )
             if trigger_words_translate_match:
                 view = ConfirmPrompt(ctx.author)
-                view.message = await ctx.send(
+                view.message = await ctx.reply(
                     'If you\'re asking for a simple translation, please first use Google Translate, Papago (good for CJK languages), Yandex Translate, etc.\n\nShould you still wish to proceed with asking ChatGPT, hit "Confirm" below.',
                     view=view,
                 )
@@ -116,7 +116,7 @@ class OpenAI(commands.Cog):
                     if sent:
                         await sent.edit(content=inform_delay)
                     else:
-                        sent = await ctx.channel.send(inform_delay)
+                        sent = await ctx.reply(inform_delay)
                     await asyncio.sleep(delay)
 
         print(f"Prompt: {prompt}\nModel: {model}")
