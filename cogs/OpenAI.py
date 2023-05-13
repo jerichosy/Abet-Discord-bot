@@ -3,6 +3,7 @@ from typing import Literal
 
 import discord
 import openai
+from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
 from openai.error import RateLimitError
@@ -58,6 +59,11 @@ class OpenAI(commands.Cog):
     @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat"])
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.member)
     @commands.max_concurrency(number=1, per=commands.BucketType.member, wait=False)
+    @app_commands.describe(prompt="Your question to ChatGPT")
+    @app_commands.describe(text="Pass in your prompt as a text file if it's too long")
+    @app_commands.describe(
+        model="Specify whether to use GPT-3.5 (ChatGPT) or GPT-4 (ChatGPT Plus)"
+    )
     async def chatgpt(
         self,
         ctx,
