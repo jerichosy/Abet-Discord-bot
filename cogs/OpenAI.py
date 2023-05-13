@@ -129,7 +129,9 @@ class OpenAI(commands.Cog):
                         raise e
 
                     delay = min(max_delay, min_delay * (2 ** (retry_attempt - 1)))
-                    inform_delay = f"{ctx.author.mention} Your request errored. Retrying in {delay:.1f} seconds..."
+                    inform_delay = (
+                        f"Your request errored. Retrying in {delay:.1f} seconds..."
+                    )
                     if sent:
                         await sent.edit(content=inform_delay)
                     else:
