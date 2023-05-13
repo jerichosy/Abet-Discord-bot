@@ -59,9 +59,20 @@ class OpenAI(commands.Cog):
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.member)
     @commands.max_concurrency(number=1, per=commands.BucketType.member, wait=False)
     async def chatgpt(
-        self, ctx, *, prompt: str, model: Literal["gpt-4", "gpt-3.5-turbo"] = "gpt-4"
+        self,
+        ctx,
+        *,
+        prompt: str = None,
+        text: discord.Attachment = None,
+        model: Literal["gpt-4", "gpt-3.5-turbo"] = "gpt-4",
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
+
+        if not prompt and not text:
+            return await ctx.reply("Please input your prompt")
+
+        if text:
+            prompt = (await text.read()).decode()
 
         # FIXME: This logic is borked when this cmd is invoked thru slash
         if not ctx.interaction:
