@@ -62,7 +62,7 @@ class OpenAI(commands.Cog):
     @app_commands.describe(prompt="Your question to ChatGPT")
     @app_commands.describe(text="Pass in your prompt as a text file if it's too long")
     @app_commands.describe(
-        model="Specify whether to use GPT-3.5 (ChatGPT) or GPT-4 (ChatGPT Plus)"
+        model="Defaults to GPT-4 (ChatGPT Plus) but can be specified to use GPT-3.5 (ChatGPT)"
     )
     async def chatgpt(
         self,
