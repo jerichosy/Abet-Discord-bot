@@ -27,11 +27,11 @@ class Tools(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.raw_string_menu = app_commands.ContextMenu(
-            name="Get Raw String",
+            name="Get Message Content",
             callback=self.get_raw_string,
         )
         self.raw_embed_desc_menu = app_commands.ContextMenu(
-            name="Get Raw Embed Description",
+            name="Get Embed Desc.",
             callback=self.get_raw_embed_desc_menu,
         )
         self.bot.tree.add_command(self.raw_string_menu)
