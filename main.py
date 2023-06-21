@@ -82,9 +82,9 @@ class AbetBot(commands.Bot):
 
     # Can't make local to a class (being used by class Fun)
     async def get_waifu_im_embed(self, type, category):
-        type = "False" if type == "sfw" else "True"
+        type = "false" if type == "sfw" else "true"
         url_string = (
-            f"https://api.waifu.im/random/?selected_tags={category}&is_nsfw={type}"
+            f"https://api.waifu.im/search/?included_tags={category}&is_nsfw={type}"
         )
 
         async with aiohttp.ClientSession() as session:

@@ -1,7 +1,7 @@
 import asyncio
 import io
 import random
-from typing import Literal
+from typing import List, Literal
 
 import aiohttp
 import discord
@@ -152,7 +152,7 @@ class Fun(commands.Cog):
 async def setup(bot):
     # Populate the waifu_im_tags list (for waifu slash cmd)
     async with aiohttp.ClientSession() as cs:
-        async with cs.get("https://api.waifu.im/endpoints") as r:
+        async with cs.get("https://api.waifu.im/tags") as r:
             print(f"Waifu.im endpoint: {r.status}")
             if r.status == 200:
                 global waifu_im_tags
