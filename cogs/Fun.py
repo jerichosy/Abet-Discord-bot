@@ -101,6 +101,61 @@ class Fun(commands.Cog):
         else:
             await ctx.send(f"Oops. It is actually {answer}.")
 
+    @app_commands.command()
+    @app_commands.describe(
+        is_ephemeral='If "Yes", the image will only be visible to you'
+    )
+    # @app_commands.choices(tag=[waifu_im_tags])
+    async def waifu(
+        self,
+        interaction: discord.Interaction,
+        tag: str,
+        type: Literal["sfw", "nsfw"] = "sfw",
+        is_ephemeral: Literal["No", "Yes"] = "No",
+    ) -> None:
+        """random Waifu images"""
+        if (
+            type == "nsfw"
+            and not interaction.channel.is_nsfw()
+            and is_ephemeral == "No"
+        ):
+            return await interaction.response.send_message(
+                "You requested a visible NSFW image in a non-NSFW channel! Please use in the appropriate channel(s).",
+                ephemeral=True,
+            )
+        if tag in waifu_im_tags["nsfw"]:
+            return await interaction.response.send_message(
+                "NSFW tags are not supported in this slash cmd. Please use the traditional equivalent.",
+                ephemeral=True,
+            )
+
+        # print(waifu_im_tags)
+
+        text, embed = await self.bot.get_waifu_im_embed(type, tag)
+        await interaction.response.send_message(
+            content=text,
+            embed=embed,
+            ephemeral=True if is_ephemeral == "Yes" else False,
+        )
+
+    @waifu.autocomplete("tag")
+    async def waifu_autocomplete(
+        self, interaction: discord.Interaction, current: str
+    ) -> List[app_commands.Choice[str]]:
+        return [
+            app_commands.Choice(name=waifu_im_tag, value=waifu_im_tag)
+            for waifu_im_tag in waifu_im_tags["versatile"]
+            if current.lower() in waifu_im_tag.lower()
+        ]
+
 
 async def setup(bot):
+    # Populate the waifu_im_tags list (for waifu slash cmd)
+    async with aiohttp.ClientSession() as cs:
+        async with cs.get("https://api.waifu.im/endpoints") as r:
+            print(f"Waifu.im endpoint: {r.status}")
+            if r.status == 200:
+                global waifu_im_tags
+                waifu_im_tags = await r.json()
+
     await bot.add_cog(Fun(bot))
