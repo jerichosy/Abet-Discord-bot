@@ -6,6 +6,7 @@ from typing import List, Literal
 import aiohttp
 import discord
 from discord import app_commands
+from discord.app_commands import Group
 from discord.ext import commands
 
 
@@ -101,50 +102,78 @@ class Fun(commands.Cog):
         else:
             await ctx.send(f"Oops. It is actually {answer}.")
 
-    @app_commands.command()
+    waifu_group = Group(name="waifu", description="Waifu.im slash commands")
+
+    @waifu_group.command()
     @app_commands.describe(
         is_ephemeral='If "Yes", the image will only be visible to you'
     )
-    # @app_commands.choices(tag=[waifu_im_tags])
-    async def waifu(
+    async def sfw(
         self,
         interaction: discord.Interaction,
         tag: str,
-        type: Literal["sfw", "nsfw"] = "sfw",
         is_ephemeral: Literal["No", "Yes"] = "No",
     ) -> None:
-        """random Waifu images"""
-        if (
-            type == "nsfw"
-            and not interaction.channel.is_nsfw()
-            and is_ephemeral == "No"
-        ):
-            return await interaction.response.send_message(
-                "You requested a visible NSFW image in a non-NSFW channel! Please use in the appropriate channel(s).",
-                ephemeral=True,
-            )
+        """random sfw Waifu images"""
         if tag in waifu_im_tags["nsfw"]:
             return await interaction.response.send_message(
-                "NSFW tags are not supported in this slash cmd. Please use the traditional equivalent.",
+                "You are requesting NSFW tags in an SFW command. Please use /waifu nsfw",
                 ephemeral=True,
             )
 
-        # print(waifu_im_tags)
-
-        text, embed = await self.bot.get_waifu_im_embed(type, tag)
+        text, embed = await self.bot.get_waifu_im_embed("sfw", tag)
         await interaction.response.send_message(
             content=text,
             embed=embed,
             ephemeral=True if is_ephemeral == "Yes" else False,
         )
 
-    @waifu.autocomplete("tag")
-    async def waifu_autocomplete(
+    @waifu_group.command()
+    @app_commands.describe(
+        is_ephemeral='If "Yes", the image will only be visible to you'
+    )
+    async def nsfw(
+        self,
+        interaction: discord.Interaction,
+        tag: str,
+        is_ephemeral: Literal["No", "Yes"] = "No",
+    ) -> None:
+        """random nsfw Waifu images"""
+        if tag in waifu_im_tags["versatile"]:
+            return await interaction.response.send_message(
+                "You are requesting SFW tags in an NSFW command. Please use /waifu sfw",
+                ephemeral=True,
+            )
+        if not interaction.channel.is_nsfw() and is_ephemeral == "No":
+            return await interaction.response.send_message(
+                "You requested a visible NSFW image in a non-NSFW channel! Please use in the appropriate channel(s).",
+                ephemeral=True,
+            )
+
+        text, embed = await self.bot.get_waifu_im_embed("nsfw", tag)
+        await interaction.response.send_message(
+            content=text,
+            embed=embed,
+            ephemeral=True if is_ephemeral == "Yes" else False,
+        )
+
+    @sfw.autocomplete("tag")
+    async def sfw_autocomplete(
         self, interaction: discord.Interaction, current: str
     ) -> List[app_commands.Choice[str]]:
         return [
             app_commands.Choice(name=waifu_im_tag, value=waifu_im_tag)
             for waifu_im_tag in waifu_im_tags["versatile"]
+            if current.lower() in waifu_im_tag.lower()
+        ]
+
+    @nsfw.autocomplete("tag")
+    async def nsfw_autocomplete(
+        self, interaction: discord.Interaction, current: str
+    ) -> List[app_commands.Choice[str]]:
+        return [
+            app_commands.Choice(name=waifu_im_tag, value=waifu_im_tag)
+            for waifu_im_tag in waifu_im_tags["nsfw"]
             if current.lower() in waifu_im_tag.lower()
         ]
 
