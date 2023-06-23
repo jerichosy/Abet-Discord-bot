@@ -80,37 +80,6 @@ class AbetBot(commands.Bot):
         print("Invite URL:", self.INVITE_LINK)
         print("------")
 
-    # Can't make local to a class (being used by class Fun)
-    async def get_waifu_im_embed(self, type, category):
-        type = "false" if type == "sfw" else "true"
-        url_string = (
-            f"https://api.waifu.im/search/?included_tags={category}&is_nsfw={type}"
-        )
-
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url_string) as resp:
-                logger.info(f"Waifu.im: {resp.status}")
-                json_data = await resp.json()
-                if resp.status in {200, 201}:
-                    # embed = discord.Embed(color=0xffc0cb)
-                    embed = discord.Embed(
-                        color=int(
-                            f"0x{json_data['images'][0]['dominant_color'].lstrip('#')}",
-                            0,
-                        )
-                    )
-                    embed.set_image(url=json_data["images"][0]["url"])
-
-                    source = json_data["images"][0]["source"]
-
-                    # print(json_data)
-
-                else:
-                    # Print error
-                    print(json_data["message"])
-
-        return source, embed
-
 
 class AbetHelp(commands.MinimalHelpCommand):
     async def send_pages(self):
