@@ -11,8 +11,9 @@ from discord.ext import commands
 
 
 class Fun(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot, waifu_im_tags):
         self.bot = bot
+        self.waifu_im_tags = waifu_im_tags
 
     # Don't make this into an embed
     @commands.hybrid_command(aliases=["fuckcarl"])
@@ -146,7 +147,7 @@ class Fun(commands.Cog):
         is_ephemeral: Literal["No", "Yes"] = "No",
     ) -> None:
         """random sfw Waifu images"""
-        if tag in waifu_im_tags["nsfw"]:
+        if tag in self.waifu_im_tags["nsfw"]:
             return await interaction.response.send_message(
                 "You are requesting NSFW tags in an SFW command. Please use /waifu nsfw",
                 ephemeral=True,
@@ -170,7 +171,7 @@ class Fun(commands.Cog):
         is_ephemeral: Literal["No", "Yes"] = "No",
     ) -> None:
         """random nsfw Waifu images"""
-        if tag in waifu_im_tags["versatile"]:
+        if tag in self.waifu_im_tags["versatile"]:
             return await interaction.response.send_message(
                 "You are requesting SFW tags in an NSFW command. Please use /waifu sfw",
                 ephemeral=True,
@@ -194,7 +195,7 @@ class Fun(commands.Cog):
     ) -> List[app_commands.Choice[str]]:
         return [
             app_commands.Choice(name=waifu_im_tag, value=waifu_im_tag)
-            for waifu_im_tag in waifu_im_tags["versatile"]
+            for waifu_im_tag in self.waifu_im_tags["versatile"]
             if current.lower() in waifu_im_tag.lower()
         ]
 
@@ -204,7 +205,7 @@ class Fun(commands.Cog):
     ) -> List[app_commands.Choice[str]]:
         return [
             app_commands.Choice(name=waifu_im_tag, value=waifu_im_tag)
-            for waifu_im_tag in waifu_im_tags["nsfw"]
+            for waifu_im_tag in self.waifu_im_tags["nsfw"]
             if current.lower() in waifu_im_tag.lower()
         ]
 
@@ -215,7 +216,6 @@ async def setup(bot):
         async with cs.get("https://api.waifu.im/tags") as r:
             print(f"Waifu.im endpoint: {r.status}")
             if r.status == 200:
-                global waifu_im_tags
                 waifu_im_tags = await r.json()
 
-    await bot.add_cog(Fun(bot))
+    await bot.add_cog(Fun(bot, waifu_im_tags))
