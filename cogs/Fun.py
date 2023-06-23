@@ -214,7 +214,6 @@ async def setup(bot):
     # Populate the waifu_im_tags list (for waifu slash cmd)
     async with aiohttp.ClientSession() as cs:
         async with cs.get("https://api.waifu.im/tags") as r:
-            print(f"Waifu.im endpoint: {r.status}")
             if r.status == 200:
                 waifu_im_tags = await r.json()
 
