@@ -113,7 +113,7 @@ class Fun(commands.Cog):
 
         async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(url_string) as resp:
-                # logger.info(f"Waifu.im: {resp.status}")
+                print(f"Waifu.im: {resp.status}")
                 json_data = await resp.json()
                 if resp.status in {200, 201}:
                     # embed = discord.Embed(color=0xffc0cb)
@@ -216,6 +216,7 @@ async def setup(bot):
     headers = {"Accept-Version": "v5"}
     async with aiohttp.ClientSession(headers=headers) as cs:
         async with cs.get("https://api.waifu.im/tags") as r:
+            print(f"Waifu.im tags query status code: {r.status}")
             if r.status == 200:
                 waifu_im_tags = await r.json()
 
