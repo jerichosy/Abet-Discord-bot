@@ -109,8 +109,9 @@ class Fun(commands.Cog):
         url_string = (
             f"https://api.waifu.im/search/?included_tags={category}&is_nsfw={type}"
         )
+        headers = {"Accept-Version": "v5"}
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(url_string) as resp:
                 # logger.info(f"Waifu.im: {resp.status}")
                 json_data = await resp.json()
@@ -212,7 +213,8 @@ class Fun(commands.Cog):
 
 async def setup(bot):
     # Populate the waifu_im_tags list (for waifu slash cmd)
-    async with aiohttp.ClientSession() as cs:
+    headers = {"Accept-Version": "v5"}
+    async with aiohttp.ClientSession(headers=headers) as cs:
         async with cs.get("https://api.waifu.im/tags") as r:
             if r.status == 200:
                 waifu_im_tags = await r.json()
