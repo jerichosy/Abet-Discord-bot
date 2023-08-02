@@ -13,7 +13,7 @@ class Genshin(commands.Cog):
         self.bot = bot
 
     # Note to self: Don't send msg in a coding block to retain markdown support
-    # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. Also, the bot is in NYC. I'll work on it when it seems needed.
+    # TODO: Strictly speaking, the shop resets at 4 AM so this can mislead someone. I'm not sure also with regards to host location's timezones. I'll work on it when it seems needed.
     # TODO: Convert to embed?
     @commands.hybrid_command(aliases=["paimonbargains", "paimon'sbargains", "viewshop"])
     async def paimonsbargains(self, ctx):
@@ -91,7 +91,7 @@ class Genshin(commands.Cog):
         totalSmallNeeded = math.floor(currentExpNeeded / 1000)
 
         response = f"""__To ascend from level {current_level} to {target_level} with current EXP of {current_experience}, you'll need:__
-            
+
     `{totalLargeNeeded:>3}` × <:HerosWit:984919059780993134> **Hero's Wit**
     `{totalMediumNeeded:>3}` × <:AdventurersExperience:984919553366708256> **Adventurer's Experience**
     `{totalSmallNeeded:>3}` × <:WanderersAdvice:984919638792085505> **Wanderer's Advice**"""
