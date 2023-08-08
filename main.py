@@ -289,9 +289,9 @@ async def on_command_error(ctx, error):
     ):
         if isinstance(error, commands.NotOwner):
             return await ctx.send(
-                f"```Sorry, this command is restricted only to the bot's owner.```"
+                f"Sorry, this command is restricted only to the bot's owner."
             )
-        return await ctx.send(f"```{error}```")
+        return await ctx.send(f"{error}")
 
     # Errors that reached here require my attention
     # convert error to str, prepend every line with "> "
