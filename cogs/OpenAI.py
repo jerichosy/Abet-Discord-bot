@@ -64,6 +64,7 @@ class OpenAI(commands.Cog):
     @app_commands.describe(
         model="Defaults to GPT-4 (ChatGPT Plus) but can be specified to use GPT-3.5 (ChatGPT)"
     )
+    # @commands.is_owner()
     async def chatgpt(
         self,
         ctx,
@@ -73,6 +74,11 @@ class OpenAI(commands.Cog):
         model: Literal["gpt-4", "gpt-3.5-turbo"] = "gpt-4",
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
+
+        if ctx.author.id not in self.bot.owner_ids:
+            return await ctx.send(
+                "ChatGPT, a mind so vast, \nCosts ascended, now amassed. \nService sleeps, its free days passed."
+            )
 
         if not prompt and not text:
             return await ctx.reply("Please input your prompt")
