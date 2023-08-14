@@ -91,7 +91,7 @@ class Tools(commands.Cog):
 
     @commands.hybrid_command(aliases=["coin"])
     async def coinflip(self, ctx):
-        """Flip a sussy coin"""
+        """Flip a sussy coin!"""
         await ctx.send(self.coin_flip())
 
     @commands.hybrid_command(aliases=["cointally"])
@@ -111,7 +111,7 @@ class Tools(commands.Cog):
 
     @commands.hybrid_command()
     async def abet(self, ctx, *, question):
-        """customized Magic 8-Ball"""
+        """Magic 8 Ball: Abet Edition"""
 
         if ctx.guild.id == self.bot.HOME_GUILD.id:
             print("Home guild")
@@ -237,7 +237,7 @@ class Tools(commands.Cog):
     async def saucenao(
         self, ctx, url=None, attachment: Optional[discord.Attachment] = None
     ):
-        """SauceNAO Reverse Image Search (fanarts, anime, etc.)"""
+        """SauceNAO Reverse Image Search (manga, doujinshi, fanart, anime, etc.)"""
 
         if url is None and len(ctx.message.attachments) == 0:
             return await ctx.send("Please attach an image / provide a link or URL")
@@ -321,6 +321,8 @@ class Tools(commands.Cog):
         *,
         flags: PDFFlags,
     ):
+        """Post the uploaded PDF as a series of images"""
+
         if flags.url is None and len(ctx.message.attachments) == 0:
             return await ctx.send("Please attach a PDF / provide a link or URL")
 
@@ -452,7 +454,7 @@ class Tools(commands.Cog):
     @app_commands.command()
     @app_commands.describe(url="The direct link to the file")
     async def repost(self, interaction: discord.Interaction, url: str):
-        """Reposts the file located at the given URL (subject to 8MB non-boosted server limitation)"""
+        """Reposts the file located at the given URL (subject to 25MB non-boosted server limitation)"""
 
         await interaction.response.defer()
 
