@@ -198,6 +198,11 @@ class Admin(commands.Cog):
             f"**__Here are the member counts for each role:__**\n{role_list}"
         )
 
+    @commands.command(aliases=["error", "send_error"])
+    @commands.is_owner()
+    async def test_error(self, ctx):
+        raise Exception("This is a test\nThis is another line")
+
     @commands.command(aliases=["embed", "send_embed"])
     @commands.is_owner()
     async def test_embed(self, ctx, length: int = 5000):
@@ -206,11 +211,6 @@ class Admin(commands.Cog):
         await ctx.send(
             embed=discord.Embed(description=truncate(content, EmbedLimit.DESCRIPTION))
         )
-
-    @commands.command(aliases=["error", "send_error"])
-    @commands.is_owner()
-    async def test_error(self, ctx):
-        raise Exception("This is a test\nThis is another line")
 
     @commands.command(aliases=["string", "send_string", "test_string"])
     @commands.is_owner()
