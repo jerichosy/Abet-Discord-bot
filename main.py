@@ -185,13 +185,7 @@ async def on_message(message):
                                 video_bytes = io.BytesIO(await resp.read())
                                 print("format:", file_format)
                                 embed = discord.Embed(
-                                    title=(
-                                        (desc[:253] + "...")
-                                        if len(desc) > 253
-                                        else desc
-                                    )
-                                    if desc
-                                    else None,
+                                    description=f"[{desc}]({ig_reel_url[0][0]})",  # No truncation but IG captions are limited to 2200 char and so unlikely to reach 4096 embed desc limit.
                                     timestamp=datetime.fromtimestamp(timestamp),
                                     url=ig_reel_url[0][0],
                                     color=0xCE0071,
