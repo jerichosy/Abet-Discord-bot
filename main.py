@@ -176,7 +176,7 @@ async def on_message(message):
                         comments = resp_json["comment_count"]
                         author = resp_json["channel"]
                         author_display_name = resp_json["uploader"]
-                        author_url = f"https://instagram.com/{author}"
+                        author_url = f"https://www.instagram.com/{author}/"
                         print(dl_link)
 
                         async with session.get(dl_link) as resp:
