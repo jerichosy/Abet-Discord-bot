@@ -196,7 +196,7 @@ class Admin(commands.Cog):
             f"**__Here are the member counts for each role:__**\n{role_list}"
         )
 
-    @commands.command(aliases=["error", "send_eror"])
+    @commands.command(aliases=["error", "send_error"])
     @commands.is_owner()
     async def test_error(self, ctx):
         raise Exception("This is a test\nThis is another line")
