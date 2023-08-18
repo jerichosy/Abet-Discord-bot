@@ -212,6 +212,17 @@ class Admin(commands.Cog):
             embed=discord.Embed(description=truncate(content, EmbedLimit.DESCRIPTION))
         )
 
+    @commands.command(aliases=["hyperlink", "send_hyperlink", "test_hyperlink"])
+    @commands.is_owner()
+    async def test_embed_hyperlink(self, ctx, length: int = 4096):
+        content = "a" * length
+        content = "[" + content[: length - 2] + "]"
+        print(len(content))
+        await ctx.send(embed=discord.Embed(description=content))
+        await ctx.send(
+            embed=discord.Embed(description=f"[{content}](http://example.com/)")
+        )
+
     @commands.command(aliases=["string", "send_string", "test_string"])
     @commands.is_owner()
     async def test_string_as_file(self, ctx):
