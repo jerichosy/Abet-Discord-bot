@@ -175,6 +175,7 @@ async def on_message(message):
                         likes = resp_json["like_count"]
                         comments = resp_json["comment_count"]
                         author = resp_json["channel"]
+                        author_display_name = resp_json["uploader"]
                         author_url = f"https://instagram.com/{author}"
                         print(dl_link)
 
@@ -195,7 +196,10 @@ async def on_message(message):
                                     url=ig_reel_url[0][0],
                                     color=0xBC2A8D,
                                 )
-                                embed.set_author(name=author, url=author_url)
+                                embed.set_author(
+                                    name=f"{author_display_name} (@{author})",
+                                    url=author_url,
+                                )
                                 embed.set_footer(
                                     text="Instagram Reels",
                                     icon_url="https://cdn.discordapp.com/attachments/998571531934376006/1010817764203712572/68d99ba29cc8.png",
