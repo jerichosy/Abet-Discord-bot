@@ -6,6 +6,8 @@ from discord import app_commands
 from discord.ext import commands
 from discord.ext.commands import Context, Greedy, has_permissions
 
+from cogs.utils.character_limits import EmbedLimit, truncate
+
 
 class Admin(commands.Cog):
     def __init__(self, bot):
@@ -194,6 +196,15 @@ class Admin(commands.Cog):
         # Send the role list
         await ctx.send(
             f"**__Here are the member counts for each role:__**\n{role_list}"
+        )
+
+    @commands.command(aliases=["embed", "send_embed"])
+    @commands.is_owner()
+    async def test_embed(self, ctx, length: int = 5000):
+        content = "a" * length
+        await ctx.send(embed=discord.Embed(title=truncate(content, EmbedLimit.TITLE)))
+        await ctx.send(
+            embed=discord.Embed(description=truncate(content, EmbedLimit.DESCRIPTION))
         )
 
     @commands.command(aliases=["error", "send_error"])
