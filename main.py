@@ -194,7 +194,7 @@ async def on_message(message):
                                     else None,
                                     timestamp=datetime.fromtimestamp(timestamp),
                                     url=ig_reel_url[0][0],
-                                    color=0xBC2A8D,
+                                    color=0xCE0071,
                                 )
                                 embed.set_author(
                                     name=f"{author_display_name} (@{author})",
