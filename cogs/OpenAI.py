@@ -159,7 +159,7 @@ class OpenAI(commands.Cog):
             token_prompt = response["usage"]["prompt_tokens"]
             token_completion = response["usage"]["completion_tokens"]
             if model == "gpt-3.5-turbo":
-                pricing_prompt = 0.002
+                pricing_prompt = 0.0015
                 pricing_completion = 0.002
             elif model == "gpt-4":
                 pricing_prompt = 0.03
