@@ -8,7 +8,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from openai.error import RateLimitError
 
-from cogs.utils import character_limits
+from cogs.utils.character_limits import EmbedLimit, truncate
 from cogs.utils.ExchangeRateUSDPHP import ExchangeRateUSDPHP
 
 load_dotenv()
@@ -183,27 +183,14 @@ class OpenAI(commands.Cog):
 
             # Add prompt as title in embed if ctx.interaction. Without it, it seems no-context.
             if ctx.interaction:
-                if len(prompt) > character_limits.EMBED_TITLE_LIMIT:
-                    title_ellipsis = " ..."
-                    embed.title = (
-                        prompt[
-                            : character_limits.EMBED_TITLE_LIMIT - len(title_ellipsis)
-                        ]
-                        + title_ellipsis
-                    )
-                else:
-                    embed.title = prompt
+                title_ellipsis = " ..."
+                embed.title = truncate(prompt, EmbedLimit.TITLE, title_ellipsis)
 
             # If answer is long, truncate it and inform in embed
-            if len(answer) > character_limits.EMBED_DESC_LIMIT:
-                answer_ellipsis = f" ... (truncated due to {character_limits.EMBED_DESC_LIMIT} character limit)"
-                embed.description = (
-                    answer[: character_limits.EMBED_DESC_LIMIT - len(answer_ellipsis)]
-                    + answer_ellipsis
-                )
-                # embed.title = f"Truncated due to {character_limits.EMBED_DESC_LIMIT} character limit"
-            else:
-                embed.description = answer
+            answer_ellipsis = f" ... (truncated due to {EmbedLimit.DESCRIPTION.value} character limit)"
+            embed.description = truncate(
+                answer, EmbedLimit.DESCRIPTION, answer_ellipsis
+            )
 
             # print("Truncated length: ", len(answer))
 
