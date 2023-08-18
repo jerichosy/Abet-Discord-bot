@@ -20,7 +20,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
-from cogs.utils import random_responses
+from cogs.utils import responses_random
 
 initial_extensions = [
     "cogs.Fun",
@@ -122,29 +122,29 @@ async def on_message(message):
             def findWholeWord(w):
                 return re.compile(r"\b({0})\b".format(w), flags=re.IGNORECASE).search
 
-            for x in random_responses.sad_words:
+            for x in responses_random.sad_words:
                 if findWholeWord(x)(msg):
                     await message.channel.send(
-                        random.choice(random_responses.sad_response)
+                        random.choice(responses_random.sad_response)
                     )
                     break
 
-            if any(word in msg for word in random_responses.yay_words):
-                await message.channel.send(random.choice(random_responses.yay_response))
+            if any(word in msg for word in responses_random.yay_words):
+                await message.channel.send(random.choice(responses_random.yay_response))
 
-            for x in random_responses.wish_words:
+            for x in responses_random.wish_words:
                 if findWholeWord(x)(msg):
                     if random.random() < 0.1:
                         await message.channel.send(
-                            random.choice(random_responses.wish_response)
+                            random.choice(responses_random.wish_response)
                         )
                     break
 
-            for x in random_responses.mhy_words:
+            for x in responses_random.mhy_words:
                 if findWholeWord(x)(msg):
                     if random.random() < 0.1:
                         await message.channel.send(
-                            random.choice(random_responses.mhy_response)
+                            random.choice(responses_random.mhy_response)
                         )
                     break
 

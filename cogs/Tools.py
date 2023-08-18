@@ -15,7 +15,7 @@ from discord.ext import commands
 from pdf2image import convert_from_bytes
 from rembg import remove
 
-from cogs.utils import abet_responses
+from cogs.utils import responses_abet
 
 
 class PDFFlags(commands.FlagConverter, prefix="--", delimiter=""):
@@ -117,15 +117,15 @@ class Tools(commands.Cog):
             print("Home guild")
             await ctx.send(
                 random.choice(
-                    abet_responses.GLOBAL + abet_responses.OTHER + abet_responses.HOME
+                    responses_abet.GLOBAL + responses_abet.OTHER + responses_abet.HOME
                 )
             )
         elif ctx.guild.id == self.bot.OTHER_GUILD.id:
             print("Other guild")
-            await ctx.send(random.choice(abet_responses.GLOBAL + abet_responses.OTHER))
+            await ctx.send(random.choice(responses_abet.GLOBAL + responses_abet.OTHER))
         else:
             print("Global guild")
-            await ctx.send(random.choice(abet_responses.GLOBAL))
+            await ctx.send(random.choice(responses_abet.GLOBAL))
 
     @commands.command()
     async def choose(self, ctx, *, choices):
