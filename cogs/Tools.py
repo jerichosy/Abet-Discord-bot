@@ -435,7 +435,7 @@ class Tools(commands.Cog):
 
     @commands.hybrid_command()
     @app_commands.describe(location="Check the weather at the specified location")
-    async def weather(self, ctx, location: str = "Pasig City"):
+    async def weather(self, ctx, location: str = "Pasig"):
         """Check the weather!"""
 
         async with ctx.typing():
@@ -449,6 +449,7 @@ class Tools(commands.Cog):
                         return await ctx.send(
                             "The weather service is having problems. Please try again later."
                         )
+                    # print(await resp.text())
                     await ctx.send(f"```{await resp.text()}```")
 
     @app_commands.command()
