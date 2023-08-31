@@ -463,7 +463,9 @@ class Tools(commands.Cog):
             async with session.get(
                 url
             ) as resp:  # TODO: Currently does not validate URLs
-                print(resp.status)
+                print(
+                    f"Reposter HTTP status: {resp.status}, Content length: {resp.content_length}"
+                )
                 if resp.status == 200:
                     file_bytes = io.BytesIO(await resp.read())
                     # file_format = mimetypes.guess_extension(
