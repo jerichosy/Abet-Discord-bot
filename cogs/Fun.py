@@ -216,7 +216,7 @@ async def setup(bot):
     headers = {"Accept-Version": "v5"}
     async with aiohttp.ClientSession(headers=headers) as cs:
         async with cs.get("https://api.waifu.im/tags") as r:
-            print(f"Waifu.im tags query status code: {r.status}")
+            print(f"Waifu.im tags query status code: {r.status}\n")
             if r.status == 200:
                 waifu_im_tags = await r.json()
 

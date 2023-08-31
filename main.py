@@ -110,7 +110,7 @@ async def on_message(message):
         return
 
     # Otherwise, continue processing message
-    print("Processing message:", message.content)
+    print("\nProcessing message:", message.content)
 
     if message.guild:  # Check if home guild (and if not #rant channel) then react
         if (message.guild.id == bot.HOME_GUILD.id) and (
