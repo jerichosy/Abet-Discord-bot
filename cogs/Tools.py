@@ -469,9 +469,6 @@ class Tools(commands.Cog):
                 )
                 if resp.status == 200:
                     file_bytes = io.BytesIO(await resp.read())
-                    # file_format = mimetypes.guess_extension(
-                    #     resp.headers.get("Content-Type")
-                    # )
                     filename = os.path.basename(urlparse(url).path)
                     print("Reposter filename:", filename)
                     if not filename:
