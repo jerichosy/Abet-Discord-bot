@@ -75,7 +75,11 @@ class OpenAI(commands.Cog):
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
 
-        if ctx.author.id not in self.bot.owner_ids:
+        allowed_users = [199017953922908160]  # hemeduhh
+        if (
+            ctx.author.id not in self.bot.owner_ids
+            and ctx.author.id not in allowed_users
+        ):
             return await ctx.send(
                 "ChatGPT, a mind so vast, \nCosts ascended, now amassed. \nService sleeps, its free days passed."
             )
