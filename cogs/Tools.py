@@ -479,9 +479,9 @@ class Tools(commands.Cog):
                                 f"{filename}",
                             ),
                         )
-                    except discord.HTTPException:
+                    except discord.HTTPException as e:
                         await interaction.followup.send(
-                            content="Repost cmd error: Likely too big", ephemeral=True
+                            content=f"HTTPException: {e}", ephemeral=True
                         )
                 else:
                     await interaction.followup.send(
