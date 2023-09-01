@@ -1,4 +1,5 @@
 import io
+import mimetypes
 import os
 import random
 import uuid
@@ -472,6 +473,12 @@ class Tools(commands.Cog):
                     #     resp.headers.get("Content-Type")
                     # )
                     filename = os.path.basename(urlparse(url).path)
+                    print("Reposter filename:", filename)
+                    if not filename:
+                        # if no filename, the upload will fail raising discord.HTTPException
+                        # fall back to using uuid and mimetypes
+                        filename = f"{uuid.uuid4()}{mimetypes.guess_extension(resp.headers.get('Content-Type'))}"
+                        print("Adjusted filename:", filename)
                     try:
                         await interaction.followup.send(
                             file=discord.File(
