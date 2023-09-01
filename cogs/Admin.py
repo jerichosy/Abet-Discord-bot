@@ -187,15 +187,20 @@ class Admin(commands.Cog):
     @commands.command(aliases=["count_role", "role_count"])
     @commands.is_owner()
     async def count_roles(self, ctx, *roles: discord.Role):
+        reverse = False
         if not roles:
             # If no roles are provided, count all roles in the guild
             roles = ctx.guild.roles
+            reverse = True
 
-        role_list = "\n".join([f"{role.name}: {len(role.members)}" for role in roles])
+        role_list = [f"{role.name}: {len(role.members)}" for role in roles]
+        if reverse:
+            role_list.reverse()
 
         # Send the role list
+        role_list_str = "\n".join(role_list)
         await ctx.send(
-            f"**__Here are the member counts for each role:__**\n{role_list}"
+            f"**__Here are the member counts for each role:__**\n{role_list_str}"
         )
 
     @commands.command(aliases=["error", "send_error"])
