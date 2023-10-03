@@ -4,6 +4,7 @@ from enum import Enum
 # Given values are inclusive
 class EmbedLimit(Enum):
     # https://www.pythondiscord.com/pages/guides/python-guides/discord-embed-limits/
+    # https://discord.com/developers/docs/resources/channel#embed-object-embed-limits
     TITLE = 256
     DESCRIPTION = 4096
 
