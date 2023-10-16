@@ -208,6 +208,14 @@ class Admin(commands.Cog):
     async def test_error(self, ctx):
         raise Exception("This is a test\nThis is another line")
 
+    @commands.command(
+        aliases=["message", "send_message", "test_msg", "msg", "send_msg"]
+    )
+    @commands.is_owner()
+    async def test_message(self, ctx, length: int = 5000):
+        content = "a" * length
+        await ctx.send(content=content)
+
     @commands.command(aliases=["embed", "send_embed"])
     @commands.is_owner()
     async def test_embed(self, ctx, length: int = 5000):
