@@ -8,7 +8,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 from openai.error import RateLimitError
 
-from cogs.utils.character_limits import EmbedLimit, truncate
+from cogs.utils.character_limits import EmbedLimit, MessageLimit, truncate
 from cogs.utils.ExchangeRateUSDPHP import ExchangeRateUSDPHP
 
 load_dotenv()
@@ -64,6 +64,9 @@ class OpenAI(commands.Cog):
     @app_commands.describe(
         model="Defaults to GPT-4 (ChatGPT Plus) but can be specified to use GPT-3.5 (ChatGPT)"
     )
+    @app_commands.describe(
+        response='Defaults to "Embed" but can be changed to "Message" for easy copying on mobile'
+    )
     # @commands.is_owner()
     async def chatgpt(
         self,
@@ -72,6 +75,7 @@ class OpenAI(commands.Cog):
         prompt: str = None,
         text: discord.Attachment = None,
         model: Literal["gpt-4", "gpt-3.5-turbo"] = "gpt-4",
+        response: Literal["Embed", "Message"] = "Embed",
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
 
@@ -132,12 +136,12 @@ class OpenAI(commands.Cog):
                     # else:
                     #     raise RateLimitError
                     # else:
-                    response = await openai.ChatCompletion.acreate(**kwargs)
+                    completion = await openai.ChatCompletion.acreate(**kwargs)
 
                     if sent:
                         await sent.delete()
 
-                    return response
+                    return completion
                 except RateLimitError as e:
                     if retry_attempt == max_retries or "billing" in str(e):
                         raise e
@@ -154,18 +158,18 @@ class OpenAI(commands.Cog):
 
         print(f"Prompt: {prompt}\nModel: {model}")
         async with ctx.typing():  # Manipulated into ctx.interaction.response.defer() if ctx.interaction
-            response = await completion_with_backoff(
+            completion = await completion_with_backoff(
                 model=model, messages=[{"role": "user", "content": prompt}]
             )
 
-            answer = response["choices"][0]["message"]["content"]
+            answer = completion["choices"][0]["message"]["content"]
             print("Length:", len(answer))
 
             # Calculate token cost  (Note: Using floats here instead of decimal.Decimal acceptible enough for this use case)
             # gpt-3.5-turbo	    $0.002 / 1K tokens
-            print(response["usage"])
-            token_prompt = response["usage"]["prompt_tokens"]
-            token_completion = response["usage"]["completion_tokens"]
+            print(completion["usage"])
+            token_prompt = completion["usage"]["prompt_tokens"]
+            token_completion = completion["usage"]["completion_tokens"]
             if model == "gpt-3.5-turbo":
                 pricing_prompt = 0.0015
                 pricing_completion = 0.002
@@ -194,17 +198,22 @@ class OpenAI(commands.Cog):
                 title_ellipsis = " ..."
                 embed.title = truncate(prompt, EmbedLimit.TITLE, title_ellipsis)
 
-            # If answer is long, truncate it and inform in embed
-            answer_ellipsis = f" ... (truncated due to {EmbedLimit.DESCRIPTION.value} character limit)"
-            embed.description = truncate(
-                answer, EmbedLimit.DESCRIPTION, answer_ellipsis
-            )
+            content = None
+            if response == "Embed":
+                # If answer is long, truncate it and inform in embed
+                answer_ellipsis = f" ... (truncated due to {EmbedLimit.DESCRIPTION.value} character limit)"
+                embed.description = truncate(
+                    answer, EmbedLimit.DESCRIPTION, answer_ellipsis
+                )
+            else:
+                answer_ellipsis = f" ... (truncated due to {MessageLimit.CONTENT.value} character limit)"
+                content = truncate(answer, MessageLimit.CONTENT, answer_ellipsis)
 
             # print("Truncated length: ", len(answer))
 
-            await ctx.reply(embed=embed, mention_author=False)
+            await ctx.reply(content=content, embed=embed, mention_author=False)
 
-            # print(response)
+            # print(completion)
 
 
 async def setup(bot):

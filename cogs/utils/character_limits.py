@@ -9,6 +9,10 @@ class EmbedLimit(Enum):
     DESCRIPTION = 4096
 
 
+class MessageLimit(Enum):
+    CONTENT = 2000
+
+
 def truncate(text: str, limit: Enum, ellipsis: str = "...") -> str:
     # If at or below the limit, this will not do truncation (and add trailing). It will just return the same text it was given.
     return (
