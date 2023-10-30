@@ -80,9 +80,9 @@ class OpenAI(commands.Cog):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
 
         allowed_users = [
-            199017953922908160,  # hemeduhh
-            449850732011716608,  # loldevera
-            1083789502897733693,  # minic_ooper
+            # 199017953922908160,  # hemeduhh
+            # 449850732011716608,  # loldevera
+            # 1083789502897733693,  # minic_ooper
         ]
         if (
             ctx.author.id not in self.bot.owner_ids
