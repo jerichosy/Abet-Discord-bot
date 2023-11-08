@@ -76,23 +76,25 @@ class AI(commands.Cog):
         *,
         prompt: str = None,
         text: discord.Attachment = None,
-        model: Literal["gpt-4-1106-preview", "gpt-4", "gpt-3.5-turbo"] = "gpt-4-1106-preview",
+        model: Literal[
+            "gpt-4-1106-preview", "gpt-4", "gpt-3.5-turbo"
+        ] = "gpt-4-1106-preview",
         response: Literal["Embed", "Message"] = "Embed",
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
 
-        allowed_users = [
-            199017953922908160,  # hemeduhh
-            449850732011716608,  # loldevera
-            1083789502897733693,  # minic_ooper
-        ]
-        if (
-            ctx.author.id not in self.bot.owner_ids
-            and ctx.author.id not in allowed_users
-        ):
-            return await ctx.send(
-                "ChatGPT, a mind so vast, \nCosts ascended, now amassed. \nService sleeps, its free days passed."
-            )
+        # allowed_users = [
+        #     199017953922908160,  # hemeduhh
+        #     449850732011716608,  # loldevera
+        #     1083789502897733693,  # minic_ooper
+        # ]
+        # if (
+        #     ctx.author.id not in self.bot.owner_ids
+        #     and ctx.author.id not in allowed_users
+        # ):
+        #     return await ctx.send(
+        #         "ChatGPT, a mind so vast, \nCosts ascended, now amassed. \nService sleeps, its free days passed."
+        #     )
 
         if not prompt and not text and not ctx.message.attachments:
             return await ctx.reply("Please input your prompt")
