@@ -228,9 +228,12 @@ class AI(commands.Cog):
 
             # Send response
             embed = discord.Embed(color=0x2B2D31)  # Keep this embed color
-            embed.set_footer(
-                text=f"Model: {model} | Cost: ₱{round(cost_in_PHP, 3)} | Prompt tokens: {token_prompt}, Completion tokens: {token_completion}"
-            )
+            if not image:
+                embed.set_footer(
+                    text=f"Model: {model} | Cost: ₱{round(cost_in_PHP, 3)} | Prompt tokens: {token_prompt}, Completion tokens: {token_completion}"
+                )
+            else:
+                embed.set_footer(text=f"Model: {model}")
             # If we decide that we want the author of the prompt to be shown in the embed, uncomment the ff:
             # embed.set_author(
             #     name=ctx.author.display_name,
