@@ -80,6 +80,7 @@ class AI(commands.Cog):
             "gpt-4-1106-preview", "gpt-4", "gpt-3.5-turbo"
         ] = "gpt-4-1106-preview",
         response: Literal["Embed", "Message"] = "Embed",
+        image: discord.Attachment = None,
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
 
@@ -99,7 +100,7 @@ class AI(commands.Cog):
         if not prompt and not text and not ctx.message.attachments:
             return await ctx.reply("Please input your prompt")
 
-        if text or ctx.message.attachments:
+        if (text or ctx.message.attachments) and not image:
             if text:
                 # when prompt is in an attached text file via slash
                 prompt_text = (await text.read()).decode()
@@ -108,6 +109,9 @@ class AI(commands.Cog):
                 prompt_text = (await ctx.message.attachments[0].read()).decode()
 
             prompt = prompt_text if not prompt else f"{prompt}\n\n{prompt_text}"
+
+        if image:
+            model = "gpt-4-vision-preview"
 
         # FIXME: This logic is borked when this cmd is invoked thru slash
         if not ctx.interaction:
@@ -169,9 +173,26 @@ class AI(commands.Cog):
 
         print(f"Prompt: {prompt}\nModel: {model}")
         async with ctx.typing():  # Manipulated into ctx.interaction.response.defer() if ctx.interaction
-            completion = await completion_with_backoff(
-                model=model, messages=[{"role": "user", "content": prompt}]
-            )
+            if not image:
+                completion = await completion_with_backoff(
+                    model=model, messages=[{"role": "user", "content": prompt}]
+                )
+            else:
+                completion = await completion_with_backoff(
+                    model=model,
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt},
+                                {
+                                    "type": "image_url",
+                                    "image_url": image.url,
+                                },
+                            ],
+                        }
+                    ],
+                )
 
             # print(completion)
             answer = completion.choices[0].message.content
@@ -179,7 +200,7 @@ class AI(commands.Cog):
 
             # Calculate token cost  (Note: Using floats here instead of decimal.Decimal acceptible enough for this use case)
             # gpt-3.5-turbo	    $0.002 / 1K tokens
-            # print(completion["usage"])
+            print(completion.usage)
             token_prompt = completion.usage.prompt_tokens
             token_completion = completion.usage.completion_tokens
             if model == "gpt-3.5-turbo":
@@ -189,6 +210,9 @@ class AI(commands.Cog):
                 pricing_prompt = 0.03
                 pricing_completion = 0.06
             elif model == "gpt-4-1106-preview":
+                pricing_prompt = 0.01
+                pricing_completion = 0.03
+            elif model == "gpt-4-vision-preview":
                 pricing_prompt = 0.01
                 pricing_completion = 0.03
             cost_in_USD = ((token_prompt * pricing_prompt) / 1000) + (
@@ -207,6 +231,8 @@ class AI(commands.Cog):
             #     name=ctx.author.display_name,
             #     icon_url=ctx.author.display_avatar.url,
             # )
+            if image:
+                embed.set_image(url=image.url)
 
             # Add prompt as title in embed if ctx.interaction. Without it, it seems no-context.
             if ctx.interaction or ctx.message.attachments:
