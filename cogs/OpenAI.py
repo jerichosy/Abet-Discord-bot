@@ -96,7 +96,8 @@ class OpenAI(commands.Cog):
             return await ctx.reply("Please input your prompt")
 
         if text:
-            prompt = (await text.read()).decode()
+            prompt_text = (await text.read()).decode()
+            prompt = prompt_text if not prompt else f"{prompt}\n\n{prompt_text}"
 
         # FIXME: This logic is borked when this cmd is invoked thru slash
         if not ctx.interaction:
