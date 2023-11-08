@@ -6,12 +6,14 @@ import openai
 from discord import app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
-from openai.error import RateLimitError
+from openai import AsyncOpenAI
 
 from cogs.utils.character_limits import EmbedLimit, MessageLimit, truncate
 from cogs.utils.ExchangeRateUSDPHP import ExchangeRateUSDPHP
 
 load_dotenv()
+
+client = AsyncOpenAI()
 
 
 class ConfirmPrompt(discord.ui.View):
@@ -52,7 +54,7 @@ class ConfirmPrompt(discord.ui.View):
         self.stop()
 
 
-class OpenAI(commands.Cog):
+class AI(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -74,7 +76,7 @@ class OpenAI(commands.Cog):
         *,
         prompt: str = None,
         text: discord.Attachment = None,
-        model: Literal["gpt-4", "gpt-3.5-turbo"] = "gpt-4",
+        model: Literal["gpt-4-1106-preview", "gpt-4", "gpt-3.5-turbo"] = "gpt-4-1106-preview",
         response: Literal["Embed", "Message"] = "Embed",
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
@@ -143,13 +145,13 @@ class OpenAI(commands.Cog):
                     # else:
                     #     raise RateLimitError
                     # else:
-                    completion = await openai.ChatCompletion.acreate(**kwargs)
+                    completion = await client.chat.completions.create(**kwargs)
 
                     if sent:
                         await sent.delete()
 
                     return completion
-                except RateLimitError as e:
+                except openai.RateLimitError as e:
                     if retry_attempt == max_retries or "billing" in str(e):
                         raise e
 
@@ -169,20 +171,24 @@ class OpenAI(commands.Cog):
                 model=model, messages=[{"role": "user", "content": prompt}]
             )
 
-            answer = completion["choices"][0]["message"]["content"]
+            # print(completion)
+            answer = completion.choices[0].message.content
             print("Length:", len(answer))
 
             # Calculate token cost  (Note: Using floats here instead of decimal.Decimal acceptible enough for this use case)
             # gpt-3.5-turbo	    $0.002 / 1K tokens
-            print(completion["usage"])
-            token_prompt = completion["usage"]["prompt_tokens"]
-            token_completion = completion["usage"]["completion_tokens"]
+            # print(completion["usage"])
+            token_prompt = completion.usage.prompt_tokens
+            token_completion = completion.usage.completion_tokens
             if model == "gpt-3.5-turbo":
                 pricing_prompt = 0.0015
                 pricing_completion = 0.002
             elif model == "gpt-4":
                 pricing_prompt = 0.03
                 pricing_completion = 0.06
+            elif model == "gpt-4-1106-preview":
+                pricing_prompt = 0.01
+                pricing_completion = 0.03
             cost_in_USD = ((token_prompt * pricing_prompt) / 1000) + (
                 (token_completion * pricing_completion) / 1000
             )
@@ -228,4 +234,4 @@ async def setup(bot):
     global currency_USD_PHP
     currency_USD_PHP = ExchangeRateUSDPHP()
 
-    await bot.add_cog(OpenAI(bot))
+    await bot.add_cog(AI(bot))
