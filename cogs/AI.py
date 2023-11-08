@@ -192,6 +192,11 @@ class AI(commands.Cog):
                             ],
                         }
                     ],
+                    # To get around issue of very low `max_tokens` value by default when using GPT-4V
+                    # https://community.openai.com/t/gpt-4-vision-preview-finish-details/475911/7
+                    # Set to 4096 as that is the current official limit
+                    # https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo#:~:text=4%20Turbo%20capabilties.-,Returns%20a%20maximum%20of%204%2C096%20output%20tokens.,-This%20is%20a
+                    max_tokens=4096,
                 )
 
             # print(completion)
