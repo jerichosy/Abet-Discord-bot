@@ -14,6 +14,7 @@ import sys
 import time
 import traceback
 from datetime import datetime
+from typing import Union
 
 import aiohttp
 import discord
@@ -21,6 +22,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 from cogs.utils import responses_random
+from cogs.utils.context import Context
 
 initial_extensions = (
     "cogs.Fun",
@@ -81,6 +83,8 @@ class AbetBot(commands.Bot):
         self.INVITE_LINK = "https://discord.com/api/oauth2/authorize?client_id=954284775210893344&permissions=70368744177650&scope=bot%20applications.commands"
 
     async def setup_hook(self) -> None:
+        self.session = aiohttp.ClientSession()
+
         # Load cogs
         for extension in initial_extensions:
             try:
@@ -99,6 +103,11 @@ class AbetBot(commands.Bot):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print("Invite URL:", self.INVITE_LINK)
         print("------")
+
+    async def get_context(
+        self, origin: Union[discord.Interaction, discord.Message], /, *, cls=Context
+    ) -> Context:
+        return await super().get_context(origin, cls=cls)
 
 
 bot = AbetBot()

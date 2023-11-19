@@ -9,6 +9,8 @@ from discord import app_commands
 from discord.app_commands import Group
 from discord.ext import commands
 
+from .utils.context import Context
+
 
 class Fun(commands.Cog):
     def __init__(self, bot, waifu_im_tags):
@@ -73,6 +75,34 @@ class Fun(commands.Cog):
             async with session.get("http://aws.random.cat/meow") as r:
                 js = await r.json()
                 await ctx.send(js["file"])
+
+    @commands.command()
+    async def dog(self, ctx: Context):
+        """Gives you a random dog."""
+        async with ctx.session.get("https://random.dog/woof") as resp:
+            if resp.status != 200:
+                return await ctx.send("No dog found :(")
+
+            filename = await resp.text()
+            url = f"https://random.dog/{filename}"
+            filesize = ctx.guild.filesize_limit if ctx.guild else 8388608
+            if filename.endswith((".mp4", ".webm")):
+                async with ctx.typing():
+                    async with ctx.session.get(url) as other:
+                        if other.status != 200:
+                            return await ctx.send("Could not download dog video :(")
+
+                        if int(other.headers["Content-Length"]) >= filesize:
+                            return await ctx.send(
+                                f"Video was too big to upload... See it here: {url} instead."
+                            )
+
+                        fp = io.BytesIO(await other.read())
+                        await ctx.send(file=discord.File(fp, filename=filename))
+            else:
+                await ctx.send(
+                    embed=discord.Embed(title="Random Dog").set_image(url=url)
+                )
 
     @commands.hybrid_command()
     async def uselessfact(self, ctx):
