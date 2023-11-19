@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 
 from cogs.utils import responses_random
 
-initial_extensions = [
+initial_extensions = (
     "cogs.Fun",
     "cogs.Waifu",
     "cogs.Roleplay",
@@ -31,8 +31,12 @@ initial_extensions = [
     "cogs.Tools",
     "cogs.Genshin",
     "cogs.AI",
-]
+)
 
+# Load environment variables
+load_dotenv()
+
+# Set up logger
 logger = logging.getLogger("discord")
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
@@ -41,15 +45,31 @@ handler.setFormatter(
 )
 logger.addHandler(handler)
 
-load_dotenv()
+
+class AbetHelp(commands.MinimalHelpCommand):
+    async def send_pages(self):
+        destination = self.get_destination()
+        for page in self.paginator.pages:
+            emby = discord.Embed(description=page, color=0xEE615B)
+            await destination.send(embed=emby)
 
 
 class AbetBot(commands.Bot):
     # Technically, other event listeners can go in here.
     # However, prefer current approach with only those ones related to startup inside, like so:
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self):
+        # Other fields/attrs of bot: https://discordpy.readthedocs.io/en/stable/ext/commands/api.html?highlight=bot#bot
+        intents = discord.Intents.all()
+        super().__init__(
+            case_insensitive=True,
+            command_prefix=commands.when_mentioned_or("&"),
+            activity=None,
+            intents=intents,
+            owner_ids=set([298454523624554501, 784478723448635444]),
+            application_id=954284775210893344,
+            help_command=AbetHelp(command_attrs={"hidden": True}),
+        )  # , description=
 
         self.HOME_GUILD = discord.Object(id=867811644322611200)  # Inocencio server
         self.OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
@@ -81,24 +101,7 @@ class AbetBot(commands.Bot):
         print("------")
 
 
-class AbetHelp(commands.MinimalHelpCommand):
-    async def send_pages(self):
-        destination = self.get_destination()
-        for page in self.paginator.pages:
-            emby = discord.Embed(description=page, color=0xEE615B)
-            await destination.send(embed=emby)
-
-
-# Other fields/attrs of bot: https://discordpy.readthedocs.io/en/stable/ext/commands/api.html?highlight=bot#bot
-bot = AbetBot(
-    case_insensitive=True,
-    command_prefix=commands.when_mentioned_or("&"),
-    activity=None,
-    intents=discord.Intents.all(),
-    owner_ids=set([298454523624554501, 784478723448635444]),
-    application_id=954284775210893344,
-    help_command=AbetHelp(command_attrs={"hidden": True}),
-)  # , description=
+bot = AbetBot()
 
 
 @bot.event
@@ -336,6 +339,7 @@ async def on_presence_update(before, after):
                 await send_alert(after, "VALORANT")
 
 
+# https://docs.python.org/3/library/asyncio-task.html
 async def main():
     await bot.load_extension("jishaku")
 
