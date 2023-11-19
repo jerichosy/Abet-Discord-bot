@@ -76,7 +76,7 @@ class Fun(commands.Cog):
                 js = await r.json()
                 await ctx.send(js["file"])
 
-    @commands.command()
+    @commands.hybrid_command()
     async def dog(self, ctx: Context):
         """Gives you a random dog."""
         async with ctx.session.get("https://random.dog/woof") as resp:
