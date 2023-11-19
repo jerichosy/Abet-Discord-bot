@@ -115,7 +115,7 @@ bot = AbetBot()
 
 @bot.event
 async def on_message(message):
-    start_time = time.time()  # Begin elapsed counter
+    start = time.perf_counter()  # Begin performance counter
 
     # If author == bot, ignore message
     if message.author.bot:
@@ -274,7 +274,8 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
-    print(f"on_message() execution time: {round((time.time() - start_time) * 1000)}ms")
+    end = time.perf_counter()  # End performance counter
+    print(f"on_message() finished in {end - start:.3f}s.")
 
 
 # Command error message sender
