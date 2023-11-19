@@ -67,14 +67,17 @@ class Fun(commands.Cog):
                     await ctx.send(file=discord.File(data, "tronalddump.jpeg"))
 
     @commands.hybrid_command(aliases=["meow"])
-    async def cat(self, ctx):
-        """random cat pics"""
-        async with aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(total=5)
-        ) as session:
-            async with session.get("http://aws.random.cat/meow") as r:
-                js = await r.json()
-                await ctx.send(js["file"])
+    async def cat(self, ctx: Context):
+        """Gives you a random cat."""
+        async with ctx.session.get(
+            "https://api.thecatapi.com/v1/images/search"
+        ) as resp:
+            if resp.status != 200:
+                return await ctx.send("No cat found :(")
+            js = await resp.json()
+            await ctx.send(
+                embed=discord.Embed(title="Random Cat").set_image(url=js[0]["url"])
+            )
 
     @commands.hybrid_command()
     async def dog(self, ctx: Context):
