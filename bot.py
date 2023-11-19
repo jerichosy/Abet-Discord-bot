@@ -171,104 +171,102 @@ async def on_message(message):
     print("IG Reel match:", ig_reel_url)
     if ig_reel_url:
         async with message.channel.typing():
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"{os.getenv('YT_DLP_MICROSERVICE')}{ig_reel_url[0][0]}"
-                ) as resp:
-                    print(resp.status)
-                    if resp.status == 200:
-                        resp_json = await resp.json()
-                        # This can also be sent instead and it will embed although it is very long
-                        # Not sure but this specifically may be simplified to ["url"]
-                        dl_link = resp_json["formats"][0]["url"]
-                        file_format = resp_json["formats"][0]["ext"]
-                        desc = resp_json["description"]
-                        timestamp = resp_json["timestamp"]
-                        likes = resp_json["like_count"]
-                        comments = resp_json["comment_count"]
-                        author = resp_json["channel"]
-                        author_display_name = resp_json["uploader"]
-                        author_url = f"https://www.instagram.com/{author}/"
-                        print(dl_link)
+            async with bot.session.get(
+                f"{os.getenv('YT_DLP_MICROSERVICE')}{ig_reel_url[0][0]}"
+            ) as resp:
+                print(resp.status)
+                if resp.status == 200:
+                    resp_json = await resp.json()
+                    # This can also be sent instead and it will embed although it is very long
+                    # Not sure but this specifically may be simplified to ["url"]
+                    dl_link = resp_json["formats"][0]["url"]
+                    file_format = resp_json["formats"][0]["ext"]
+                    desc = resp_json["description"]
+                    timestamp = resp_json["timestamp"]
+                    likes = resp_json["like_count"]
+                    comments = resp_json["comment_count"]
+                    author = resp_json["channel"]
+                    author_display_name = resp_json["uploader"]
+                    author_url = f"https://www.instagram.com/{author}/"
+                    print(dl_link)
 
-                        async with session.get(dl_link) as resp:
-                            print(resp.status)
-                            if resp.status == 200:
-                                video_bytes = io.BytesIO(await resp.read())
-                                print("format:", file_format)
-                                embed = discord.Embed(
-                                    description=f"[{desc}]({ig_reel_url[0][0]})",  # No truncation but IG captions are limited to 2200 char and so unlikely to reach 4096 embed desc limit.
-                                    timestamp=datetime.fromtimestamp(timestamp),
-                                    url=ig_reel_url[0][0],
-                                    color=0xCE0071,
+                    async with bot.session.get(dl_link) as resp:
+                        print(resp.status)
+                        if resp.status == 200:
+                            video_bytes = io.BytesIO(await resp.read())
+                            print("format:", file_format)
+                            embed = discord.Embed(
+                                description=f"[{desc}]({ig_reel_url[0][0]})",  # No truncation but IG captions are limited to 2200 char and so unlikely to reach 4096 embed desc limit.
+                                timestamp=datetime.fromtimestamp(timestamp),
+                                url=ig_reel_url[0][0],
+                                color=0xCE0071,
+                            )
+                            embed.set_author(
+                                name=f"{author_display_name} (@{author})",
+                                url=author_url,
+                            )
+                            embed.set_footer(
+                                text="Instagram Reels",
+                                icon_url="https://cdn.discordapp.com/attachments/998571531934376006/1010817764203712572/68d99ba29cc8.png",
+                            )
+                            embed.add_field(name="Likes", value=likes)
+                            embed.add_field(name="Comments", value=comments)
+                            try:
+                                await message.reply(
+                                    embed=embed,
+                                    mention_author=False,
+                                    file=discord.File(
+                                        video_bytes,
+                                        f"{author}-{ig_reel_url[0][1]}.{file_format}",
+                                    ),
                                 )
-                                embed.set_author(
-                                    name=f"{author_display_name} (@{author})",
-                                    url=author_url,
-                                )
-                                embed.set_footer(
-                                    text="Instagram Reels",
-                                    icon_url="https://cdn.discordapp.com/attachments/998571531934376006/1010817764203712572/68d99ba29cc8.png",
-                                )
-                                embed.add_field(name="Likes", value=likes)
-                                embed.add_field(name="Comments", value=comments)
-                                try:
-                                    await message.reply(
-                                        embed=embed,
-                                        mention_author=False,
-                                        file=discord.File(
-                                            video_bytes,
-                                            f"{author}-{ig_reel_url[0][1]}.{file_format}",
-                                        ),
-                                    )
-                                except discord.HTTPException:
-                                    print("IG Reel Reposter send error: Likely too big")
-                                else:
-                                    await message.edit(suppress=True)
+                            except discord.HTTPException:
+                                print("IG Reel Reposter send error: Likely too big")
                             else:
-                                print("Did not return 200 status code")
-                    else:
-                        print("Did not return 200 status code")
+                                await message.edit(suppress=True)
+                        else:
+                            print("Did not return 200 status code")
+                else:
+                    print("Did not return 200 status code")
 
     FB_REEL_REGEX = r"(https?:\/\/(?:[\w-]+\.)?facebook\.com\/reel\/(?P<id>\d+))"
     fb_reel_url = re.findall(FB_REEL_REGEX, message.content)
     print("FB Reel match:", fb_reel_url)
     if fb_reel_url:
         async with message.channel.typing():
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    f"{os.getenv('YT_DLP_MICROSERVICE')}{fb_reel_url[0][0]}"
-                ) as resp:
-                    print(resp.status)
-                    if resp.status == 200:
-                        resp_json = await resp.json()
-                        # This can also be sent instead and it will embed although it is very long
-                        dl_link = resp_json["formats"][3]["url"]
-                        file_format = resp_json["formats"][3]["ext"]
-                        desc = resp_json["description"]
-                        print(dl_link)
+            async with bot.session.get(
+                f"{os.getenv('YT_DLP_MICROSERVICE')}{fb_reel_url[0][0]}"
+            ) as resp:
+                print(resp.status)
+                if resp.status == 200:
+                    resp_json = await resp.json()
+                    # This can also be sent instead and it will embed although it is very long
+                    dl_link = resp_json["formats"][3]["url"]
+                    file_format = resp_json["formats"][3]["ext"]
+                    desc = resp_json["description"]
+                    print(dl_link)
 
-                        async with session.get(dl_link) as resp:
-                            print(resp.status)
-                            if resp.status == 200:
-                                video_bytes = io.BytesIO(await resp.read())
-                                print("format:", file_format)
-                                try:
-                                    await message.reply(
-                                        mention_author=False,
-                                        file=discord.File(
-                                            video_bytes,
-                                            f"{fb_reel_url[0][1]}.{file_format}",
-                                        ),
-                                    )
-                                except discord.HTTPException:
-                                    print("FB Reel Reposter send error: Likely too big")
-                                else:
-                                    await message.edit(suppress=True)
+                    async with bot.session.get(dl_link) as resp:
+                        print(resp.status)
+                        if resp.status == 200:
+                            video_bytes = io.BytesIO(await resp.read())
+                            print("format:", file_format)
+                            try:
+                                await message.reply(
+                                    mention_author=False,
+                                    file=discord.File(
+                                        video_bytes,
+                                        f"{fb_reel_url[0][1]}.{file_format}",
+                                    ),
+                                )
+                            except discord.HTTPException:
+                                print("FB Reel Reposter send error: Likely too big")
                             else:
-                                print("Did not return 200 status code")
-                    else:
-                        print("Did not return 200 status code")
+                                await message.edit(suppress=True)
+                        else:
+                            print("Did not return 200 status code")
+                else:
+                    print("Did not return 200 status code")
 
     # --- REPOSTERS END ---
 
