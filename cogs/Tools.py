@@ -450,37 +450,36 @@ class Tools(commands.Cog):
 
         await interaction.response.defer()
 
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                url
-            ) as resp:  # TODO: Currently does not validate URLs
-                print(
-                    f"Reposter HTTP status: {resp.status}, Content length: {resp.content_length}"
-                )
-                if resp.status == 200:
-                    file_bytes = io.BytesIO(await resp.read())
-                    filename = os.path.basename(urlparse(url).path)
-                    print("Reposter filename:", filename)
-                    if not filename:
-                        # if no filename, the upload will fail raising discord.HTTPException
-                        # fall back to using uuid and mimetypes
-                        filename = f"{uuid.uuid4()}{mimetypes.guess_extension(resp.headers.get('Content-Type'))}"
-                        print("Adjusted filename:", filename)
-                    try:
-                        await interaction.followup.send(
-                            file=discord.File(
-                                file_bytes,
-                                f"{filename}",
-                            ),
-                        )
-                    except discord.HTTPException as e:
-                        await interaction.followup.send(
-                            content=f"HTTPException: {e}", ephemeral=True
-                        )
-                else:
+        async with interaction.session.get(
+            url
+        ) as resp:  # TODO: Currently does not validate URLs
+            print(
+                f"Reposter HTTP status: {resp.status}, Content length: {resp.content_length}"
+            )
+            if resp.status == 200:
+                file_bytes = io.BytesIO(await resp.read())
+                filename = os.path.basename(urlparse(url).path)
+                print("Reposter filename:", filename)
+                if not filename:
+                    # if no filename, the upload will fail raising discord.HTTPException
+                    # fall back to using uuid and mimetypes
+                    filename = f"{uuid.uuid4()}{mimetypes.guess_extension(resp.headers.get('Content-Type'))}"
+                    print("Adjusted filename:", filename)
+                try:
                     await interaction.followup.send(
-                        content="Did not return 200 status code", ephemeral=True
+                        file=discord.File(
+                            file_bytes,
+                            f"{filename}",
+                        ),
                     )
+                except discord.HTTPException as e:
+                    await interaction.followup.send(
+                        content=f"HTTPException: {e}", ephemeral=True
+                    )
+            else:
+                await interaction.followup.send(
+                    content="Did not return 200 status code", ephemeral=True
+                )
 
 
 async def setup(bot):
