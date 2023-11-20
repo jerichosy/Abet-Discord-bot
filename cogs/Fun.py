@@ -61,10 +61,9 @@ class Fun(commands.Cog):
             quote = json_data["value"] + " -Donald Trump"
             await ctx.send(quote, suppress_embeds=True)
         else:
-            async with aiohttp.ClientSession() as session:
-                async with session.get("https://api.tronalddump.io/random/meme") as r:
-                    data = io.BytesIO(await r.read())
-                    await ctx.send(file=discord.File(data, "tronalddump.jpeg"))
+            async with ctx.session.get("https://api.tronalddump.io/random/meme") as r:
+                data = io.BytesIO(await r.read())
+                await ctx.send(file=discord.File(data, "tronalddump.jpeg"))
 
     @commands.hybrid_command(aliases=["meow"])
     async def cat(self, ctx: Context):
@@ -110,11 +109,10 @@ class Fun(commands.Cog):
     @commands.hybrid_command()
     async def uselessfact(self, ctx):
         """Not sure why I added a totally useless feature"""
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://uselessfacts.jsph.pl/api/v2/facts/random?language=en"
-            ) as r:
-                await ctx.send((await r.json())["text"])
+        async with ctx.session.get(
+            "https://uselessfacts.jsph.pl/api/v2/facts/random?language=en"
+        ) as r:
+            await ctx.send((await r.json())["text"])
 
     # Lifted from https://github.com/Rapptz/discord.py/blob/master/examples/guessing_game.py
     @commands.command(aliases=["game"])
