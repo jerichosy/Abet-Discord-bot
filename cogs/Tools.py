@@ -433,15 +433,13 @@ class Tools(commands.Cog):
 
         async with ctx.typing():
             async with ctx.session.get(f"https://wttr.in/{location}?0T") as resp:
-                if (
-                    await resp.text() == ""
-                    or await resp.text() == "Follow @igor_chubin for wttr.in updates"
-                ):
+                text = await resp.text()
+                if text == "" or text == "Follow @igor_chubin for wttr.in updates":
                     return await ctx.send(
                         "The weather service is having problems. Please try again later."
                     )
-                # print(await resp.text())
-                await ctx.send(f"```{await resp.text()}```")
+                # print(text)
+                await ctx.send(f"```{text}```")
 
     @app_commands.command()
     @app_commands.describe(url="The direct link to the file")
