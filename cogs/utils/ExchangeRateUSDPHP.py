@@ -3,6 +3,8 @@ import time
 
 import aiohttp
 
+UPDATE_INTERVAL = 86400  # 24 hours
+
 
 class ExchangeRateUSDPHP:
     def __init__(self):
@@ -19,7 +21,7 @@ class ExchangeRateUSDPHP:
                     self._exchange_rate = (await resp.json())["php"]
 
     async def _check_latest(self):
-        if time.time() - self._last_updated >= 86400:
+        if time.time() - self._last_updated >= UPDATE_INTERVAL:
             await self._update()
 
     async def latest_exchange_rate(self):
