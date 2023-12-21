@@ -174,13 +174,14 @@ class AI(commands.Cog):
         print(f"Prompt: {prompt}\nModel: {model}")
         async with ctx.typing():  # Manipulated into ctx.interaction.response.defer() if ctx.interaction
             if not image:
-                completion = await completion_with_backoff(
-                    model=model, messages=[{"role": "user", "content": prompt}]
-                )
+                params = {
+                    "model": model,
+                    "messages": [{"role": "user", "content": prompt}],
+                }
             else:
-                completion = await completion_with_backoff(
-                    model=model,
-                    messages=[
+                params = {
+                    "model": model,
+                    "messages": [
                         {
                             "role": "user",
                             "content": [
@@ -196,8 +197,10 @@ class AI(commands.Cog):
                     # https://community.openai.com/t/gpt-4-vision-preview-finish-details/475911/7
                     # Set to 4096 as that is the current official limit
                     # https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo#:~:text=4%20Turbo%20capabilties.-,Returns%20a%20maximum%20of%204%2C096%20output%20tokens.,-This%20is%20a
-                    max_tokens=4096,
-                )
+                    "max_tokens": 4096,
+                }
+
+            completion = await completion_with_backoff(**params)
 
             # print(completion)
             answer = completion.choices[0].message.content
