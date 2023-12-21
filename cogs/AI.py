@@ -134,7 +134,8 @@ class AI(commands.Cog):
                     await ctx.message.delete()
                     return print("Cancelled...")
 
-        async def completion_with_backoff(**kwargs):
+        async def chat_completion_with_backoff(**kwargs):
+            """This creates an OpenAI Chat Completion with a manual exponential backoff strategy in case of no responses."""
             max_retries = 5
             min_delay = 5
             max_delay = (
@@ -200,7 +201,7 @@ class AI(commands.Cog):
                     "max_tokens": 4096,
                 }
 
-            completion = await completion_with_backoff(**params)
+            completion = await chat_completion_with_backoff(**params)
 
             # print(completion)
             answer = completion.choices[0].message.content
