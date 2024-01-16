@@ -1,7 +1,10 @@
 import asyncio
+import pathlib
+import textwrap
 from typing import Literal
 
 import discord
+import google.generativeai as genai
 import openai
 from discord import app_commands
 from discord.ext import commands
@@ -58,7 +61,7 @@ class AI(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat"])
+    @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat", "gpt"])
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.member)
     @commands.max_concurrency(number=1, per=commands.BucketType.member, wait=False)
     @app_commands.describe(prompt="Your question to ChatGPT")
@@ -231,10 +234,13 @@ class AI(commands.Cog):
             print(cost_in_USD, cost_in_PHP)
 
             # Send response
-            embed = discord.Embed(color=0x2B2D31)  # Keep this embed color
+            embed = discord.Embed(
+                color=0x74AA9C
+            )  # Previously #2B2D31 or same as default Discord embed bg
             if not image:
                 embed.set_footer(
-                    text=f"Model: {model} | Cost: ₱{round(cost_in_PHP, 3)} | Prompt tokens: {token_prompt}, Completion tokens: {token_completion}"
+                    text=f"Model: {model} | Cost: ₱{round(cost_in_PHP, 3)} | Prompt tokens: {token_prompt}, Completion tokens: {token_completion}",
+                    icon_url="https://cdn.oaistatic.com/_next/static/media/favicon-32x32.be48395e.png",
                 )
             else:
                 embed.set_footer(text=f"Model: {model}")
@@ -267,6 +273,25 @@ class AI(commands.Cog):
             await ctx.reply(content=content, embed=embed, mention_author=False)
 
             # print(completion)
+
+    @commands.hybrid_command(aliases=["gemini"])
+    async def bard(
+        self,
+        ctx,
+        *,
+        prompt: str,
+    ):
+        model = genai.GenerativeModel("gemini-pro")
+        async with ctx.typing():
+            response = await model.generate_content_async(prompt)
+            # print(response)
+            # print(response.text)
+            embed = discord.Embed(description=response.text, color=0x4285F4)
+            embed.set_footer(
+                text="Google Bard (powered by Gemini Pro) | Cost: Free (60 queries per minute)",
+                icon_url="https://www.gstatic.com/lamda/images/favicon_v1_70c80ffdf27202fd2e84f.png",
+            )
+            await ctx.send(embed=embed)
 
 
 async def setup(bot):
