@@ -1,6 +1,4 @@
 import asyncio
-import pathlib
-import textwrap
 from typing import Literal
 
 import discord
@@ -281,6 +279,8 @@ class AI(commands.Cog):
         *,
         prompt: str,
     ):
+        """Ask Bard! Powered by Google's Gemini Pro model."""
+
         model = genai.GenerativeModel("gemini-pro")
         async with ctx.typing():
             response = await model.generate_content_async(prompt)
@@ -291,7 +291,12 @@ class AI(commands.Cog):
                 text="Google Bard (powered by Gemini Pro) | Cost: Free (60 queries per minute)",
                 icon_url="https://www.gstatic.com/lamda/images/favicon_v1_70c80ffdf27202fd2e84f.png",
             )
-            await ctx.send(embed=embed)
+
+            if ctx.interaction:
+                title_ellipsis = " ..."
+                embed.title = truncate(prompt, EmbedLimit.TITLE, title_ellipsis)
+
+            await ctx.reply(embed=embed, mention_author=False)
 
 
 async def setup(bot):
