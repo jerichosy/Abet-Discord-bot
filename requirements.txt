@@ -1,11 +1,14 @@
-aiohttp[speedups]
+# This requirements.txt base file shall remain like this (pulling latest versions), not with fixed/locked versions.
+# If a fixed/locked requirements.txt file is desired, just generate it on as-needed basis.
+
 discord.py[speed,voice]
+yt-dlp
 python-dotenv
 jishaku
 psutil
 pdf2image
-openai
+google-generativeai
 pygit2
 rembg
-yt-dlp
+openai
 black
