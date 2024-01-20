@@ -33,6 +33,7 @@ initial_extensions = (
     "cogs.Tools",
     "cogs.Genshin",
     "cogs.AI",
+    "cogs.Math",
 )
 
 # Load environment variables
