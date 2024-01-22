@@ -123,7 +123,7 @@ class AI(commands.Cog):
             if trigger_words_translate_match:
                 view = ConfirmPrompt(ctx.author)
                 view.message = await ctx.reply(
-                    'If you\'re asking for a simple translation, please first use Google Translate, Papago (good for CJK languages), Yandex Translate, etc.\n\nShould you still wish to proceed with asking ChatGPT, hit "Confirm" below.',
+                    'If you\'re asking for a simple translation, please first try Google Translate, Naver Papago (good for CJK languages), Yandex Translate, etc.\n\nShould you still wish to proceed with asking ChatGPT, please "Confirm" below.',
                     view=view,
                 )
                 await view.wait()
