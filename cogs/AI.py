@@ -286,17 +286,25 @@ class AI(commands.Cog):
             response = await model.generate_content_async(prompt)
             # print(response)
             # print(response.text)
-            embed = discord.Embed(description=response.text, color=0x4285F4)
-            embed.set_footer(
-                text="Google Bard (powered by Gemini Pro) | Cost: Free (60 queries per minute)",
-                icon_url="https://www.gstatic.com/lamda/images/favicon_v1_70c80ffdf27202fd2e84f.png",
-            )
+            # print(response.__dict__)
+            # print(response.prompt_feedback)
+            try:
+                embed = discord.Embed(description=response.text, color=0x4285F4)
+                embed.set_footer(
+                    text="Google Bard (powered by Gemini Pro) | Cost: Free (60 queries per minute)",
+                    icon_url="https://www.gstatic.com/lamda/images/favicon_v1_70c80ffdf27202fd2e84f.png",
+                )
 
-            if ctx.interaction:
-                title_ellipsis = " ..."
-                embed.title = truncate(prompt, EmbedLimit.TITLE, title_ellipsis)
+                if ctx.interaction:
+                    title_ellipsis = " ..."
+                    embed.title = truncate(prompt, EmbedLimit.TITLE, title_ellipsis)
 
-            await ctx.reply(embed=embed, mention_author=False)
+                await ctx.reply(embed=embed, mention_author=False)
+            except ValueError:
+                await ctx.reply(
+                    f"No response due to the following:\n```{response.prompt_feedback}```",
+                    # mention_author=False,  # Current convention in AI.py is to mention if error
+                )
 
 
 async def setup(bot):
