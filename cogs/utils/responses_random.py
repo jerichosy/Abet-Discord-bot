@@ -1,6 +1,6 @@
-sad_words = ["sad", "depressed", "hirap"]  # Removed: "bitch"
-yay_words = ["yay", "freee"]
-wish_words = [
+SAD_WORDS = ["sad", "depressed", "hirap"]  # Removed: "bitch"
+YAY_WORDS = ["yay", "freee"]
+WISH_WORDS = [
     "should i pull",
     "pulling",
     "p\*ll",
@@ -19,9 +19,9 @@ wish_words = [
     "c1",
     "c0",
 ]
-mhy_words = ["mihoyo", "hoyoverse"]
+MHY_WORDS = ["mihoyo", "hoyoverse"]
 
-sad_response = [
+SAD_RESPONSE = [
     "Cheer up!",
     "Hang in there!",
     "You are a great person!",
@@ -36,7 +36,7 @@ sad_response = [
     "We'll get you Ice cream, you like that?",
     "Is there anything I can do to make you feel better?",
 ]
-yay_response = [
+YAY_RESPONSE = [
     "I'm so proud of you!",
     "Good job!",
     "Keep it up!",
@@ -57,7 +57,7 @@ yay_response = [
     "<:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488><:letsgo:914430483176255488>",
     "https://cdn.discordapp.com/attachments/877238195966865498/943248232807538738/988697_558224364239923_644168573_n.png",
 ]
-wish_response = [
+WISH_RESPONSE = [
     "Looks like someone's pulling today!",
     "I swear a 10 pull seems great right now",
     "What's the worse that could happen? You getting Qiqi?",
@@ -70,7 +70,7 @@ wish_response = [
     "New content?",
     "The Kyoya Intelligence Agency (KIA) will be monitoring your pulls.",
 ]
-mhy_response = [
+MHY_RESPONSE = [
     "Did I hear Mihoyo? That bitch.",
     # "Mihoyo loves you",
     # "Awe, we're trying our best here at Mihoyo",

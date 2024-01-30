@@ -135,29 +135,29 @@ async def on_message(message):
             def findWholeWord(w):
                 return re.compile(r"\b({0})\b".format(w), flags=re.IGNORECASE).search
 
-            for x in responses_random.sad_words:
+            for x in responses_random.SAD_WORDS:
                 if findWholeWord(x)(msg):
                     await message.channel.send(
-                        random.choice(responses_random.sad_response)
+                        random.choice(responses_random.SAD_RESPONSE)
                     )
                     break
 
-            if any(word in msg for word in responses_random.yay_words):
-                await message.channel.send(random.choice(responses_random.yay_response))
+            if any(word in msg for word in responses_random.YAY_WORDS):
+                await message.channel.send(random.choice(responses_random.YAY_RESPONSE))
 
-            for x in responses_random.wish_words:
+            for x in responses_random.WISH_WORDS:
                 if findWholeWord(x)(msg):
                     if random.random() < 0.1:
                         await message.channel.send(
-                            random.choice(responses_random.wish_response)
+                            random.choice(responses_random.WISH_RESPONSE)
                         )
                     break
 
-            for x in responses_random.mhy_words:
+            for x in responses_random.MHY_WORDS:
                 if findWholeWord(x)(msg):
                     if random.random() < 0.1:
                         await message.channel.send(
-                            random.choice(responses_random.mhy_response)
+                            random.choice(responses_random.MHY_RESPONSE)
                         )
                     break
 
