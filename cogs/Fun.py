@@ -9,6 +9,8 @@ from discord import app_commands
 from discord.app_commands import Group
 from discord.ext import commands
 
+from cogs.utils import responses_waikei
+
 from .utils.context import Context
 
 
@@ -45,6 +47,11 @@ class Fun(commands.Cog):
         json_data = await self.get_json_quote("https://api.kanye.rest/")
         quote = json_data["quote"] + " -Kanye West"
         await ctx.send(quote)
+
+    @commands.hybrid_command(aliases=["wai", "waikeili"])
+    async def waikei(self, ctx):
+        """random Waikei Li quotes (Waikei as a Service)"""
+        await ctx.send(f"{random.choice(responses_waikei.QUOTES)} -Waikei Li")
 
     @commands.hybrid_command()
     async def trump(
