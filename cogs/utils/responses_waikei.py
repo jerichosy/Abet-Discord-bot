@@ -11,4 +11,5 @@ QUOTES = [
     "Bang car",
     "Is the Halal place even Halal?",
     "Alam mo bakit 3 hours lang tulog ko? Kasi may post-nut stress ako.",
+    '"Yung anak ko nasa San Agustin." "Ano ginagawa niya dun?"',
 ]
