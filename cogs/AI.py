@@ -334,6 +334,8 @@ class AI(commands.Cog):
         audio_filename_split = os.path.splitext(os.path.basename(audio_file.filename))
 
         # Save the attached file to a temporary location with its original name
+        # FIXME: Saving the temp audio file may not as intended if the temp folder doesn't exist
+        # FIXME: Find a way to create this if it doesn't exist already
         temp_filename = f"./temp/{uuid.uuid4()}{audio_filename_split[-1]}"  # Make sure the './temp/' directory exists or choose a suitable temp directory
         await audio_file.save(temp_filename)
 
