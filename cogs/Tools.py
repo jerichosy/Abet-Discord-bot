@@ -1,10 +1,10 @@
-import io
 import mimetypes
 import os
 import random
 import uuid
 from collections import Counter
 from datetime import timedelta
+from io import BytesIO
 from random import choices
 from typing import Optional
 from urllib.parse import urlparse
@@ -60,7 +60,7 @@ class Tools(commands.Cog):
         )
         await interaction.response.send_message(
             embed=emby,
-            file=discord.File(io.BytesIO(message.content.encode()), "output.txt"),
+            file=discord.File(BytesIO(message.content.encode()), "output.txt"),
             ephemeral=True,
         )
 
@@ -79,7 +79,7 @@ class Tools(commands.Cog):
         await interaction.response.send_message(
             embed=emby,
             file=discord.File(
-                io.BytesIO(message.embeds[0].description.encode()), "output.txt"
+                BytesIO(message.embeds[0].description.encode()), "output.txt"
             ),
             ephemeral=True,
         )
@@ -218,15 +218,17 @@ class Tools(commands.Cog):
             async with ctx.session.get(video_url) as resp:
                 data = None
                 if resp.status == 200:
-                    data = io.BytesIO(await resp.read())
+                    data = BytesIO(await resp.read())
                 else:
                     warning = "Could not download preview..."
 
             await ctx.reply(
                 f"{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity\n\n{warning}",
-                file=discord.File(fp=data, filename="preview.mp4", spoiler=spoiler)
-                if data
-                else None,
+                file=(
+                    discord.File(fp=data, filename="preview.mp4", spoiler=spoiler)
+                    if data
+                    else None
+                ),
             )
 
     @commands.hybrid_command(
@@ -360,7 +362,7 @@ class Tools(commands.Cog):
 
                 image_list = []
                 for image in images:
-                    image_bytes = io.BytesIO()
+                    image_bytes = BytesIO()
                     image.save(image_bytes, "JPEG")
                     image_bytes.seek(0)
                     image_list.append(discord.File(image_bytes, f"{uuid.uuid4()}.jpg"))
@@ -423,7 +425,7 @@ class Tools(commands.Cog):
 
                 output = remove(await resp.read())
                 await ctx.send(
-                    file=discord.File(io.BytesIO(output), f"{uuid.uuid4()}.png")
+                    file=discord.File(BytesIO(output), f"{uuid.uuid4()}.png")
                 )
 
     @commands.hybrid_command()
@@ -455,7 +457,7 @@ class Tools(commands.Cog):
                 f"Reposter HTTP status: {resp.status}, Content length: {resp.content_length}"
             )
             if resp.status == 200:
-                file_bytes = io.BytesIO(await resp.read())
+                file_bytes = BytesIO(await resp.read())
                 filename = os.path.basename(urlparse(url).path)
                 print("Reposter filename:", filename)
                 if not filename:

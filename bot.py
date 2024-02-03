@@ -5,7 +5,6 @@
 # Notes: Don't set your own tree with `tree = app_commands.CommandTree(bot)` as Bot handles it. Don't globally and locally restrict cmds to guild-only.
 
 import asyncio
-import io
 import logging
 import os
 import random
@@ -14,6 +13,7 @@ import sys
 import time
 import traceback
 from datetime import datetime
+from io import BytesIO
 from typing import Union
 
 import aiohttp
@@ -194,7 +194,7 @@ async def on_message(message):
                     async with bot.session.get(dl_link) as resp:
                         print(resp.status)
                         if resp.status == 200:
-                            video_bytes = io.BytesIO(await resp.read())
+                            video_bytes = BytesIO(await resp.read())
                             print("format:", file_format)
                             embed = discord.Embed(
                                 description=f"[{desc if desc else '*Link*'}]({ig_reel_url[0][0]})",  # No truncation but IG captions are limited to 2200 char and so unlikely to reach 4096 embed desc limit.
@@ -250,7 +250,7 @@ async def on_message(message):
                     async with bot.session.get(dl_link) as resp:
                         print(resp.status)
                         if resp.status == 200:
-                            video_bytes = io.BytesIO(await resp.read())
+                            video_bytes = BytesIO(await resp.read())
                             print("format:", file_format)
                             try:
                                 await message.reply(

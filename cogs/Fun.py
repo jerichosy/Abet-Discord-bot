@@ -1,6 +1,6 @@
 import asyncio
-import io
 import random
+from io import BytesIO
 from typing import List, Literal
 
 import aiohttp
@@ -69,7 +69,7 @@ class Fun(commands.Cog):
             await ctx.send(quote, suppress_embeds=True)
         else:
             async with ctx.session.get("https://api.tronalddump.io/random/meme") as r:
-                data = io.BytesIO(await r.read())
+                data = BytesIO(await r.read())
                 await ctx.send(file=discord.File(data, "tronalddump.jpeg"))
 
     @commands.hybrid_command(aliases=["meow"])
@@ -106,7 +106,7 @@ class Fun(commands.Cog):
                                 f"Video was too big to upload... See it here: {url} instead."
                             )
 
-                        fp = io.BytesIO(await other.read())
+                        fp = BytesIO(await other.read())
                         await ctx.send(file=discord.File(fp, filename=filename))
             else:
                 await ctx.send(
