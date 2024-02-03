@@ -1,4 +1,7 @@
 import asyncio
+import os
+import uuid
+from io import BytesIO
 from typing import Literal
 
 import discord
@@ -305,6 +308,53 @@ class AI(commands.Cog):
                     f"No response due to the following:\n```{response.prompt_feedback}```",
                     # mention_author=False,  # Current convention in AI.py is to mention if error
                 )
+
+    @app_commands.command()
+    @app_commands.describe(
+        audio_file="Supports MP3, MP4, MPEG, MPGA, M4A, WAV, and WEBM. Limited to 25 MB."
+    )
+    async def speechtotext(
+        self, interaction: discord.Interaction, audio_file: discord.Attachment
+    ):
+        """Uses OpenAI's Whisper model to transcribe audio (speech) to text"""
+
+        # Check if over 25 MB
+        FILESIZE_LIMITATION = 26214400  # 25 MiB to bytes
+        if audio_file.size > FILESIZE_LIMITATION:
+            return await interaction.response.send_message(
+                "🛑 Your attachment is over the 25 MB filesize limit."
+            )
+
+        # TODO: Check if accepted format
+        print(audio_file.content_type)
+
+        # Defer before transcribing as it could take a while
+        await interaction.response.defer()
+
+        audio_filename_split = os.path.splitext(os.path.basename(audio_file.filename))
+
+        # Save the attached file to a temporary location with its original name
+        temp_filename = f"./temp/{uuid.uuid4()}{audio_filename_split[-1]}"  # Make sure the './temp/' directory exists or choose a suitable temp directory
+        await audio_file.save(temp_filename)
+
+        try:
+            # Transcribe
+            with open(temp_filename, "rb") as f:  # Open the file in binary read mode
+                transcript = await client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=f,  # Pass the file object directly
+                )
+            print("Transcript done")
+
+            # Send transcript
+            FILENAME = audio_filename_split[0] + "_transcript.txt"
+            await interaction.followup.send(
+                file=discord.File(BytesIO(transcript.text.encode()), FILENAME)
+            )
+
+        finally:
+            # Clean up the temporary file
+            os.remove(temp_filename)
 
 
 async def setup(bot):
