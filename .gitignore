@@ -3,3 +3,4 @@ venv*/
 discord.log
 nohup.out
 .env
+temp/
