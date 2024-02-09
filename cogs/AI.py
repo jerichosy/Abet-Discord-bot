@@ -275,14 +275,14 @@ class AI(commands.Cog):
 
             # print(completion)
 
-    @commands.hybrid_command(aliases=["gemini"])
-    async def bard(
+    @commands.hybrid_command(aliases=["bard"])
+    async def gemini(
         self,
         ctx,
         *,
         prompt: str,
     ):
-        """Ask Bard! Powered by Google's Gemini Pro model."""
+        """Ask Gemini (formely Bard)! Now powered by Google's Gemini Pro model."""
 
         model = genai.GenerativeModel("gemini-pro")
         async with ctx.typing():
@@ -294,7 +294,7 @@ class AI(commands.Cog):
             try:
                 embed = discord.Embed(description=response.text, color=0x4285F4)
                 embed.set_footer(
-                    text="Google Bard (powered by Gemini Pro) | Cost: Free (60 queries per minute)",
+                    text="Model: Gemini Pro | Cost: Free (60 queries per minute)",
                     icon_url="https://www.gstatic.com/lamda/images/favicon_v1_70c80ffdf27202fd2e84f.png",
                 )
 
