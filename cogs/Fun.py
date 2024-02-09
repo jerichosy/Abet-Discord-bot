@@ -9,8 +9,7 @@ from discord import app_commands
 from discord.app_commands import Group
 from discord.ext import commands
 
-from cogs.utils import responses_waikei
-
+from .utils import responses_waikei
 from .utils.context import Context
 
 
