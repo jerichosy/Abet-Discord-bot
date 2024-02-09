@@ -251,9 +251,7 @@ class AI(commands.Cog):
             print(cost_in_USD, cost_in_PHP)
 
             # Send response
-            embed = discord.Embed(
-                color=0x74AA9C
-            )  # Previously #2B2D31 or same as default Discord embed bg
+            embed = discord.Embed(color=0x74AA9C)
             embed.set_footer(
                 text=f"Model: {model} | Cost: ₱{round(cost_in_PHP, 3)} | Prompt tokens: {token_prompt}, Completion tokens: {token_completion}",
                 icon_url="https://cdn.oaistatic.com/_next/static/media/favicon-32x32.be48395e.png",
