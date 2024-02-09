@@ -291,6 +291,7 @@ class AI(commands.Cog):
 
             # print(completion)
 
+    # TODO: Add system prompt but first check its reliability at the current state (possibly w/ history)
     @commands.hybrid_command(aliases=["bard"])
     async def gemini(
         self,
