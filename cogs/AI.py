@@ -82,7 +82,7 @@ class AI(commands.Cog):
         prompt: str = None,
         text: discord.Attachment = None,
         model: Literal[
-            "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo"
+            "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo-0125"
         ] = "gpt-4-turbo-preview",
         response: Literal["Embed", "Message"] = "Embed",
         image: discord.Attachment = None,
@@ -232,9 +232,10 @@ class AI(commands.Cog):
             print(completion.usage)
             token_prompt = completion.usage.prompt_tokens
             token_completion = completion.usage.completion_tokens
-            if model == "gpt-3.5-turbo":
-                pricing_prompt = 0.0015
-                pricing_completion = 0.002
+            print(completion.model)
+            if model == "gpt-3.5-turbo-0125":
+                pricing_prompt = 0.0005
+                pricing_completion = 0.0015
             elif model == "gpt-4":
                 pricing_prompt = 0.03
                 pricing_completion = 0.06
