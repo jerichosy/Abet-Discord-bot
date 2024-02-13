@@ -21,7 +21,7 @@ from cogs.utils import responses_abet
 
 class PDFFlags(commands.FlagConverter, prefix="--", delimiter=""):
     url: Optional[str]
-    selection: Optional[str] = commands.flag(aliases=["sel"])
+    selection: Optional[str] = commands.flag(aliases=["sel", "page"])
 
 
 class Tools(commands.Cog):
