@@ -245,8 +245,15 @@ class Tools(commands.Cog):
         url = ctx.message.attachments[0].url if ctx.message.attachments else url
 
         async with ctx.typing():
+            params = {
+                "db": 999,
+                "output_type": 2,
+                "numres": 1,
+                "url": url,
+                "api_key": os.getenv("SAUCENAO_TOKEN"),
+            }
             async with ctx.session.get(
-                f"https://saucenao.com/search.php?db=999&output_type=2&numres=1&url={url}&api_key={os.getenv('SAUCENAO_TOKEN')}"
+                "https://saucenao.com/search.php", params=params
             ) as r:
                 json_data = await r.json()
                 # print(json_data)
