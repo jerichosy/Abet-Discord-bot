@@ -163,7 +163,7 @@ class Tools(commands.Cog):
     ):
         """What Anime Is This"""
 
-        if url is None and len(ctx.message.attachments) == 0:
+        if url is None and not ctx.message.attachments:
             return await ctx.send("Please attach an image / provide a link or URL")
 
         url = ctx.message.attachments[0].url if ctx.message.attachments else url
@@ -239,7 +239,7 @@ class Tools(commands.Cog):
     ):
         """SauceNAO Reverse Image Search (manga, doujinshi, fanart, anime, etc.)"""
 
-        if url is None and len(ctx.message.attachments) == 0:
+        if url is None and not ctx.message.attachments:
             return await ctx.send("Please attach an image / provide a link or URL")
 
         url = ctx.message.attachments[0].url if ctx.message.attachments else url
@@ -324,7 +324,7 @@ class Tools(commands.Cog):
     ):
         """Post the uploaded PDF as a series of images"""
 
-        if flags.url is None and len(ctx.message.attachments) == 0:
+        if flags.url is None and not ctx.message.attachments:
             return await ctx.send("Please attach a PDF / provide a link or URL")
 
         url = ctx.message.attachments[0].url if ctx.message.attachments else flags.url
@@ -375,7 +375,7 @@ class Tools(commands.Cog):
                         print(selected_pages)
                     except ValueError:
                         return await ctx.reply("🛑 Error parsing selection range")
-                    if len(selected_pages) == 0:
+                    if not selected_pages:
                         return await ctx.reply("🛑 Invalid selection range")
 
                     # Get selected pages
@@ -411,7 +411,7 @@ class Tools(commands.Cog):
     ):
         """Remove background from an image"""
 
-        if url is None and len(ctx.message.attachments) == 0:
+        if url is None and not ctx.message.attachments:
             return await ctx.send("Please attach an image / provide a link or URL")
 
         url = ctx.message.attachments[0].url if ctx.message.attachments else url
