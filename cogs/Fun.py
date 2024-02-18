@@ -1,4 +1,6 @@
 import asyncio
+import fcntl
+import json
 import random
 from io import BytesIO
 from typing import List, Literal
@@ -9,8 +11,9 @@ from discord import app_commands
 from discord.app_commands import Group
 from discord.ext import commands
 
-from .utils import responses_waikei
 from .utils.context import Context
+
+WAIKEI_QUOTES_FILE = "./db/waikei_quotes.json"
 
 
 class Fun(commands.Cog):
@@ -50,7 +53,37 @@ class Fun(commands.Cog):
     @commands.hybrid_command(aliases=["wai", "waikeili"])
     async def waikei(self, ctx):
         """random Waikei Li quotes (Waikei as a Service)"""
-        await ctx.send(f"{random.choice(responses_waikei.QUOTES)} -Waikei Li")
+
+        with open(WAIKEI_QUOTES_FILE, "r") as f:
+            fcntl.flock(f, fcntl.LOCK_SH)  # Acquire a shared (read) lock
+            try:
+                quotes = json.load(f)
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)  # Release the lock
+
+        await ctx.send(f"{random.choice(quotes)} -Waikei Li")
+
+    @commands.hybrid_command(name="waikei_addquote")
+    async def waikei_addquote(self, ctx, *, quote: str):
+        """Adds a new quote to the Waikei collection."""
+
+        with open(WAIKEI_QUOTES_FILE, "r+") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)  # Obtain the lock
+
+            try:
+                quotes = json.load(f)
+                if quote in quotes:  # Check for duplicate
+                    await ctx.send("That quote already exists!")
+                    return  # Prevent the duplicate from being added
+
+                quotes.append(quote)
+                f.seek(0)
+                json.dump(quotes, f)
+                f.truncate()
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)  # Release the lock
+
+        await ctx.send("Waikei Li quote added!")
 
     @commands.hybrid_command()
     async def trump(
