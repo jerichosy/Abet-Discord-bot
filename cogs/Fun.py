@@ -2,6 +2,7 @@ import asyncio
 import fcntl
 import json
 import random
+import re
 from io import BytesIO
 from typing import List, Literal
 
@@ -61,7 +62,12 @@ class Fun(commands.Cog):
             finally:
                 fcntl.flock(f, fcntl.LOCK_UN)  # Release the lock
 
-        await ctx.send(f"{random.choice(quotes)} -Waikei Li")
+        quote = random.choice(quotes)
+        image_link_pattern = re.compile(r"(https?://\S+\.(?:jpg|jpeg|png|gif))")
+        if image_link_pattern.match(quote):
+            await ctx.send(f"{quote}")
+        else:
+            await ctx.send(f"{quote} -Waikei Li")
 
     @commands.hybrid_command(name="waikei_addquote")
     async def waikei_addquote(self, ctx, *, quote: str):
