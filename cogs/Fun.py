@@ -89,9 +89,10 @@ class Fun(commands.Cog):
                     "INSERT INTO quotes_waikei (quote, added_by) VALUES (?, ?)",
                     (quote, ctx.author.id),
                 )
+                # quote_id = cursor.lastrowid  # Capture the ID of the newly added quote
                 await db.commit()
 
-                await ctx.send("✅ Waikei Li quote added!")
+                await ctx.send(f"✅ Waikei Li quote added!\n\n> {quote}")
 
     @commands.hybrid_command(aliases=["waikei_listquote", "waikei_l", "waikei_lquote"])
     async def waikei_list(self, ctx):
@@ -117,7 +118,14 @@ class Fun(commands.Cog):
                 )
 
     @commands.hybrid_command(
-        aliases=["waikei_deletequote", "waikei_d", "waikei_dquote", "waikei_del", "waikei_delquote", "delwaikei"]
+        aliases=[
+            "waikei_deletequote",
+            "waikei_d",
+            "waikei_dquote",
+            "waikei_del",
+            "waikei_delquote",
+            "delwaikei",
+        ]
     )
     @app_commands.describe(quote_id="Specify the ID of the quote shown in /waikei_list")
     async def waikei_delete(self, ctx, quote_id: int):
@@ -125,9 +133,10 @@ class Fun(commands.Cog):
 
         async with asqlite.connect(self.bot.DATABASE) as db:
             async with db.cursor() as cursor:
-                # Check if the user is the one who added the quote or if they're the bot owner
+                # Fetch the quote to be deleted
                 await cursor.execute(
-                    "SELECT added_by FROM quotes_waikei WHERE id = ?", (quote_id,)
+                    "SELECT quote, added_by FROM quotes_waikei WHERE id = ?",
+                    (quote_id,),
                 )
                 row = await cursor.fetchone()
 
@@ -135,12 +144,17 @@ class Fun(commands.Cog):
                     await ctx.send("⚠️ Quote not found.")
                     return
 
-                if ctx.author.id == row[0] or ctx.author.id in self.bot.owner_ids:
+                quote, added_by = row
+
+                # Check if the user is the one who added the quote or if they're the bot owner
+                if ctx.author.id == added_by or ctx.author.id in self.bot.owner_ids:
                     await cursor.execute(
                         "DELETE FROM quotes_waikei WHERE id = ?", (quote_id,)
                     )
                     await db.commit()
-                    await ctx.send(f"✅ Quote ID {quote_id} has been deleted.")
+                    await ctx.send(
+                        f"✅ Quote ID {quote_id} has been deleted.\n\n> {quote}"
+                    )
                 else:
                     await ctx.send(
                         "🛑 You do not have permission to delete this quote."
