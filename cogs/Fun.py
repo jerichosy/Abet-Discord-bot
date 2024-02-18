@@ -85,7 +85,7 @@ class Fun(commands.Cog):
 
                 quotes.append(quote)
                 f.seek(0)
-                json.dump(quotes, f)
+                json.dump(quotes, f, indent=4)
                 f.truncate()
             finally:
                 fcntl.flock(f, fcntl.LOCK_UN)  # Release the lock
