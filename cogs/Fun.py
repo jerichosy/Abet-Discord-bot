@@ -93,7 +93,7 @@ class Fun(commands.Cog):
 
                 await ctx.send("Waikei Li quote added!")
 
-    @commands.hybrid_command(aliases=["waikei_l"])
+    @commands.hybrid_command(aliases=["waikei_listquote", "waikei_l", "waikei_lquote"])
     async def waikei_list(self, ctx):
         """Lists all Waikei Li quotes with their IDs."""
         async with asqlite.connect(self.bot.DATABASE) as db:
