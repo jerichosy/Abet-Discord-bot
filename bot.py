@@ -81,7 +81,7 @@ class AbetBot(commands.Bot):
         # self.INVITE_LINK = discord.utils.oauth_url(
         #     client_id=self.application_id, permissions=discord.Permissions.advanced()
         # )
-        self.INVITE_LINK = "https://discord.com/api/oauth2/authorize?client_id=954284775210893344&permissions=70368744177650&scope=bot%20applications.commands"
+        self.INVITE_LINK = "https://discord.com/api/oauth2/authorize?client_id=954284775210893344&permissions=48900991348288&scope=bot+applications.commands"
 
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
