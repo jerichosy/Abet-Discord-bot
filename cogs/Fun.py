@@ -1,21 +1,17 @@
 import asyncio
-import fcntl
-import json
 import random
 import re
-import time
 from io import BytesIO
 from typing import List, Literal
 
 import aiohttp
+import asqlite
 import discord
 from discord import app_commands
 from discord.app_commands import Group
 from discord.ext import commands
 
 from .utils.context import Context
-
-WAIKEI_QUOTES_FILE = "./db/waikei_quotes.json"
 
 
 class Fun(commands.Cog):
@@ -56,45 +52,46 @@ class Fun(commands.Cog):
     async def waikei(self, ctx):
         """random Waikei Li quotes (Waikei as a Service)"""
 
-        start = time.perf_counter()
-        with open(WAIKEI_QUOTES_FILE, "r") as f:
-            fcntl.flock(f, fcntl.LOCK_SH)  # Acquire a shared (read) lock
-            try:
-                quotes = json.load(f)
-            finally:
-                fcntl.flock(f, fcntl.LOCK_UN)  # Release the lock
-        end = time.perf_counter()
-        print(f"Waikei JSON db reading finished in {end - start:.3f}s.")
+        async with asqlite.connect(self.bot.DATABASE) as db:
+            async with db.cursor() as cursor:
+                await cursor.execute(
+                    "SELECT quote FROM quotes_waikei ORDER BY RANDOM() LIMIT 1"
+                )
+                row = await cursor.fetchone()
+                if row:
+                    quote = row[0]
 
-        quote = random.choice(quotes)
-        image_link_pattern = re.compile(r"(https?://\S+\.(?:jpg|jpeg|png|gif))")
-        if image_link_pattern.match(quote):
-            await ctx.send(f"{quote}")
-        else:
-            await ctx.send(f"{quote} -Waikei Li")
+                    image_link_pattern = re.compile(
+                        r"(https?://\S+\.(?:jpg|jpeg|png|gif))"
+                    )
+                    if image_link_pattern.match(quote):
+                        await ctx.send(f"{quote}")
+                    else:
+                        await ctx.send(f"{quote} -Waikei Li")
 
     @commands.hybrid_command(name="waikei_addquote")
     @app_commands.describe(quote="DO NOT INCLUDE QUOTATION MARKS")
     async def waikei_addquote(self, ctx, *, quote: str):
         """Adds a new quote to the Waikei collection."""
 
-        with open(WAIKEI_QUOTES_FILE, "r+") as f:
-            fcntl.flock(f, fcntl.LOCK_EX)  # Obtain the lock
-
-            try:
-                quotes = json.load(f)
-                if quote in quotes:  # Check for duplicate
+        async with asqlite.connect(self.bot.DATABASE) as db:
+            async with db.cursor() as cursor:
+                # Check for duplicate
+                await cursor.execute(
+                    "SELECT quote FROM quotes_waikei WHERE quote = ?", (quote,)
+                )
+                if await cursor.fetchone():
                     await ctx.send("That quote already exists!")
-                    return  # Prevent the duplicate from being added
+                    return
 
-                quotes.append(quote)
-                f.seek(0)
-                json.dump(quotes, f, indent=4)
-                f.truncate()
-            finally:
-                fcntl.flock(f, fcntl.LOCK_UN)  # Release the lock
+                # Add new quote
+                await cursor.execute(
+                    "INSERT INTO quotes_waikei (quote, added_by) VALUES (?, ?)",
+                    (quote, ctx.author.id),
+                )
+                await db.commit()
 
-        await ctx.send("Waikei Li quote added!")
+                await ctx.send("Waikei Li quote added!")
 
     @commands.hybrid_command()
     async def trump(
