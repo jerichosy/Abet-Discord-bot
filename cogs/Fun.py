@@ -115,6 +115,33 @@ class Fun(commands.Cog):
                     allowed_mentions=discord.AllowedMentions(users=False),
                 )
 
+    @commands.hybrid_command(
+        aliases=["waikei_deletequote", "waikei_d", "waikei_dquote"]
+    )
+    @app_commands.describe(quote_id="Specify the ID of the quote shown in /waikei_list")
+    async def waikei_delete(self, ctx, quote_id: int):
+        """Deletes a Waikei Li quote by its ID."""
+        async with asqlite.connect(self.bot.DATABASE) as db:
+            async with db.cursor() as cursor:
+                # Check if the user is the one who added the quote or if they're the bot owner
+                await cursor.execute(
+                    "SELECT added_by FROM quotes_waikei WHERE id = ?", (quote_id,)
+                )
+                row = await cursor.fetchone()
+
+                if row is None:
+                    await ctx.send("Quote not found.")
+                    return
+
+                if ctx.author.id == row[0] or ctx.author.id in self.bot.owner_ids:
+                    await cursor.execute(
+                        "DELETE FROM quotes_waikei WHERE id = ?", (quote_id,)
+                    )
+                    await db.commit()
+                    await ctx.send(f"Quote ID {quote_id} has been deleted.")
+                else:
+                    await ctx.send("You do not have permission to delete this quote.")
+
     @commands.hybrid_command()
     async def trump(
         self,
