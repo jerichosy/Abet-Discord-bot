@@ -81,7 +81,7 @@ class Fun(commands.Cog):
                     "SELECT quote FROM quotes_waikei WHERE quote = ?", (quote,)
                 )
                 if await cursor.fetchone():
-                    await ctx.send("That quote already exists!")
+                    await ctx.send("🛑 That quote already exists!")
                     return
 
                 # Add new quote
@@ -91,7 +91,7 @@ class Fun(commands.Cog):
                 )
                 await db.commit()
 
-                await ctx.send("Waikei Li quote added!")
+                await ctx.send("✅ Waikei Li quote added!")
 
     @commands.hybrid_command(aliases=["waikei_listquote", "waikei_l", "waikei_lquote"])
     async def waikei_list(self, ctx):
@@ -103,7 +103,7 @@ class Fun(commands.Cog):
                 rows = await cursor.fetchall()
 
                 if not rows:
-                    await ctx.send("No quotes found.")
+                    await ctx.send("⚠️ No quotes found.")
                     return
 
                 message = "Waikei quotes:\n"
@@ -132,7 +132,7 @@ class Fun(commands.Cog):
                 row = await cursor.fetchone()
 
                 if row is None:
-                    await ctx.send("Quote not found.")
+                    await ctx.send("⚠️ Quote not found.")
                     return
 
                 if ctx.author.id == row[0] or ctx.author.id in self.bot.owner_ids:
@@ -140,9 +140,11 @@ class Fun(commands.Cog):
                         "DELETE FROM quotes_waikei WHERE id = ?", (quote_id,)
                     )
                     await db.commit()
-                    await ctx.send(f"Quote ID {quote_id} has been deleted.")
+                    await ctx.send(f"✅ Quote ID {quote_id} has been deleted.")
                 else:
-                    await ctx.send("You do not have permission to delete this quote.")
+                    await ctx.send(
+                        "🛑 You do not have permission to delete this quote."
+                    )
 
     @commands.hybrid_command()
     async def trump(
