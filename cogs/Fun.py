@@ -69,7 +69,7 @@ class Fun(commands.Cog):
                     else:
                         await ctx.send(f"{quote} -Waikei Li")
 
-    @commands.hybrid_command(aliases=["waikei_addquote"])
+    @commands.hybrid_command(aliases=["waikei_addquote", "waikei_a", "waikei_aquote"])
     @app_commands.describe(quote="DO NOT INCLUDE QUOTATION MARKS")
     async def waikei_add(self, ctx, *, quote: str):
         """Adds a new quote to the Waikei collection."""
