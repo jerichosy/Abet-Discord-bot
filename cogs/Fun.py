@@ -93,6 +93,28 @@ class Fun(commands.Cog):
 
                 await ctx.send("Waikei Li quote added!")
 
+    @commands.hybrid_command(aliases=["waikei_l"])
+    async def waikei_list(self, ctx):
+        """Lists all Waikei Li quotes with their IDs."""
+        async with asqlite.connect(self.bot.DATABASE) as db:
+            async with db.cursor() as cursor:
+                await cursor.execute("SELECT id, quote FROM quotes_waikei")
+                rows = await cursor.fetchall()
+
+                if not rows:
+                    await ctx.send("No quotes found.")
+                    return
+
+                message = "Waikei quotes:\n"
+                for id, quote in rows:
+                    message += f"**{id}**: '{quote}'\n"
+
+                await ctx.send(
+                    message,
+                    suppress_embeds=True,
+                    allowed_mentions=discord.AllowedMentions(users=False),
+                )
+
     @commands.hybrid_command()
     async def trump(
         self,
