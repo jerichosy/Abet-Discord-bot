@@ -69,9 +69,9 @@ class Fun(commands.Cog):
                     else:
                         await ctx.send(f"{quote} -Waikei Li")
 
-    @commands.hybrid_command(name="waikei_addquote")
+    @commands.hybrid_command(aliases=["waikei_addquote"])
     @app_commands.describe(quote="DO NOT INCLUDE QUOTATION MARKS")
-    async def waikei_addquote(self, ctx, *, quote: str):
+    async def waikei_add(self, ctx, *, quote: str):
         """Adds a new quote to the Waikei collection."""
 
         async with asqlite.connect(self.bot.DATABASE) as db:
