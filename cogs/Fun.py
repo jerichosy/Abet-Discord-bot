@@ -117,7 +117,7 @@ class Fun(commands.Cog):
                 )
 
     @commands.hybrid_command(
-        aliases=["waikei_deletequote", "waikei_d", "waikei_dquote"]
+        aliases=["waikei_deletequote", "waikei_d", "waikei_dquote", "waikei_del", "waikei_delquote", "delwaikei"]
     )
     @app_commands.describe(quote_id="Specify the ID of the quote shown in /waikei_list")
     async def waikei_delete(self, ctx, quote_id: int):
