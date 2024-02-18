@@ -3,6 +3,7 @@ import fcntl
 import json
 import random
 import re
+import time
 from io import BytesIO
 from typing import List, Literal
 
@@ -55,12 +56,15 @@ class Fun(commands.Cog):
     async def waikei(self, ctx):
         """random Waikei Li quotes (Waikei as a Service)"""
 
+        start = time.perf_counter()
         with open(WAIKEI_QUOTES_FILE, "r") as f:
             fcntl.flock(f, fcntl.LOCK_SH)  # Acquire a shared (read) lock
             try:
                 quotes = json.load(f)
             finally:
                 fcntl.flock(f, fcntl.LOCK_UN)  # Release the lock
+        end = time.perf_counter()
+        print(f"Waikei JSON db reading finished in {end - start:.3f}s.")
 
         quote = random.choice(quotes)
         image_link_pattern = re.compile(r"(https?://\S+\.(?:jpg|jpeg|png|gif))")
