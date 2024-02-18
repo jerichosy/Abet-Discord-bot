@@ -96,6 +96,7 @@ class Fun(commands.Cog):
     @commands.hybrid_command(aliases=["waikei_listquote", "waikei_l", "waikei_lquote"])
     async def waikei_list(self, ctx):
         """Lists all Waikei Li quotes with their IDs."""
+
         async with asqlite.connect(self.bot.DATABASE) as db:
             async with db.cursor() as cursor:
                 await cursor.execute("SELECT id, quote FROM quotes_waikei")
@@ -121,6 +122,7 @@ class Fun(commands.Cog):
     @app_commands.describe(quote_id="Specify the ID of the quote shown in /waikei_list")
     async def waikei_delete(self, ctx, quote_id: int):
         """Deletes a Waikei Li quote by its ID."""
+
         async with asqlite.connect(self.bot.DATABASE) as db:
             async with db.cursor() as cursor:
                 # Check if the user is the one who added the quote or if they're the bot owner
