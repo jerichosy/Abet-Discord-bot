@@ -11,4 +11,5 @@ google-generativeai
 pygit2
 rembg
 openai
+git+https://github.com/Rapptz/asqlite
 black
