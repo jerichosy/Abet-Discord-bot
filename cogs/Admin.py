@@ -12,18 +12,18 @@ from cogs.utils.character_limits import EmbedLimit, truncate
 class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.supress_embeds_menu = app_commands.ContextMenu(
+        self.suppress_embeds_menu = app_commands.ContextMenu(
             name="Suppress Embeds", callback=self.suppress_embeds_from_msg
         )
         self.invoke_on_msg_menu = app_commands.ContextMenu(
             name="Invoke on_message()", callback=self.invoke_on_msg
         )
-        self.bot.tree.add_command(self.supress_embeds_menu)
+        self.bot.tree.add_command(self.suppress_embeds_menu)
         self.bot.tree.add_command(self.invoke_on_msg_menu)
 
     async def cog_unload(self) -> None:
         self.bot.tree.remove_command(
-            self.supress_embeds_menu.name, type=self.supress_embeds_menu.type
+            self.suppress_embeds_menu.name, type=self.suppress_embeds_menu.type
         )
         self.bot.tree.remove_command(
             self.invoke_on_msg_menu.name, type=self.invoke_on_msg_menu.type
