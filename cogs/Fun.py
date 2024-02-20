@@ -92,7 +92,7 @@ class Fun(commands.Cog):
                 # quote_id = cursor.lastrowid  # Capture the ID of the newly added quote
                 await db.commit()
 
-                await ctx.send(f"✅ Waikei Li quote added!\n\n> {quote}")
+                await ctx.send(f"✅ Waikei Li quote **added**!\n\n> {quote}")
 
     @commands.hybrid_command(aliases=["waikei_listquote", "waikei_l", "waikei_lquote"])
     async def waikei_list(self, ctx):
@@ -153,7 +153,7 @@ class Fun(commands.Cog):
                     )
                     await db.commit()
                     await ctx.send(
-                        f"✅ Quote ID {quote_id} has been deleted.\n\n> {quote}"
+                        f"✅ Quote ID {quote_id} has been **deleted**.\n\n> {quote}"
                     )
                 else:
                     await ctx.send(
