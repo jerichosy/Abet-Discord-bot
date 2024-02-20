@@ -111,9 +111,11 @@ class Fun(commands.Cog):
                 for id, quote in rows:
                     message += f"**{id}**: '{quote}'\n"
 
+                embed = discord.Embed(description=message)
+
                 await ctx.send(
-                    message,
-                    suppress_embeds=True,
+                    embed=embed,
+                    # suppress_embeds=True,
                     allowed_mentions=discord.AllowedMentions(users=False),
                 )
 
