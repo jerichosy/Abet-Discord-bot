@@ -254,7 +254,8 @@ class AI(commands.Cog):
                 )
                 print(cost_in_USD, cost_in_PHP)
                 footer_cost_text = f"Cost: ₱{round(cost_in_PHP, 3)} | "
-            except:
+            except Exception as e:
+                print(e)
                 footer_cost_text = ""
 
             # Send response

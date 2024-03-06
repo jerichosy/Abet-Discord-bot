@@ -14,12 +14,16 @@ class ExchangeRateUSDPHP:
         self._loop.create_task(self._update())
 
     async def _update(self):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json"
-            ) as resp:
-                if resp.status == 200:
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd/php.json"
+                ) as resp:
+                    resp.raise_for_status()
                     self._exchange_rate = (await resp.json())["usd"]["php"]
+        except Exception as e:
+            print(f"Failed to update exchange rate: {e}")
+            raise e
 
     async def _check_latest(self):
         if time.time() - self._last_updated >= UPDATE_INTERVAL:
