@@ -248,13 +248,19 @@ class AI(commands.Cog):
             cost_in_USD = ((token_prompt * pricing_prompt) / 1000) + (
                 (token_completion * pricing_completion) / 1000
             )
-            cost_in_PHP = cost_in_USD * await currency_USD_PHP.latest_exchange_rate()
-            print(cost_in_USD, cost_in_PHP)
+            try:
+                cost_in_PHP = (
+                    cost_in_USD * await currency_USD_PHP.latest_exchange_rate()
+                )
+                print(cost_in_USD, cost_in_PHP)
+                footer_cost_text = f"Cost: ₱{round(cost_in_PHP, 3)} | "
+            except:
+                footer_cost_text = ""
 
             # Send response
             embed = discord.Embed(color=0x74AA9C)
             embed.set_footer(
-                text=f"Model: {model} | Cost: ₱{round(cost_in_PHP, 3)} | Prompt tokens: {token_prompt}, Completion tokens: {token_completion}",
+                text=f"Model: {model} | {footer_cost_text}Prompt tokens: {token_prompt}, Completion tokens: {token_completion}",
                 icon_url="https://cdn.oaistatic.com/_next/static/media/favicon-32x32.be48395e.png",
             )
             # If we decide that we want the author of the prompt to be shown in the embed, uncomment the ff:
