@@ -8,6 +8,7 @@ UPDATE_INTERVAL = 86400  # 24 hours
 
 class ExchangeRateUSDPHP:
     def __init__(self):
+        self._exchange_rate = None
         self._last_updated = time.time()
         self._loop = asyncio.get_event_loop()
         self._loop.create_task(self._update())
