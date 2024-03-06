@@ -21,6 +21,7 @@ class ExchangeRateUSDPHP:
                 ) as resp:
                     resp.raise_for_status()
                     self._exchange_rate = (await resp.json())["usd"]["php"]
+                    self._last_updated = time.time()
         except Exception as e:
             print(f"Failed to update exchange rate: {e}")
             raise e
