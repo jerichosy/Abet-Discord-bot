@@ -361,10 +361,10 @@ class Tools(commands.Cog):
         async with ctx.typing():
             async with ctx.session.get(url) as resp:
                 print(resp.headers.get("Content-Type"))
-                if resp.headers.get("Content-Type") not in [
+                if resp.headers.get("Content-Type") not in (
                     "application/pdf",
                     "application/octet-stream",
-                ]:
+                ):
                     return await ctx.send(
                         "ERROR: Given file / link or URL is not a PDF file"
                     )
