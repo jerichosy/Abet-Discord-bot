@@ -17,7 +17,7 @@ class ExchangeRateUSDPHP:
         try:
             async with aiohttp.ClientSession() as session:
                 async with session.get(
-                    "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd/php.json"
+                    "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json"
                 ) as resp:
                     resp.raise_for_status()
                     self._exchange_rate = (await resp.json())["usd"]["php"]
