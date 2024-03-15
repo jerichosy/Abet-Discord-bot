@@ -5,3 +5,4 @@ nohup.out
 .env
 temp/
 db/
+audio-output/

@@ -35,6 +35,7 @@ initial_extensions = (
     "cogs.Genshin",
     "cogs.AI",
     "cogs.Math",
+    "cogs.VoiceListen",
 )
 
 # Load environment variables
@@ -364,11 +365,12 @@ async def on_presence_update(before, after):
                 await send_alert(after, "VALORANT")
 
 
-# https://docs.python.org/3/library/asyncio-task.html
-async def main():
-    await bot.load_extension("jishaku")
+if __name__ == "__main__":
+    # https://docs.python.org/3/library/asyncio-task.html
+    async def main():
+        await bot.load_extension("jishaku")
 
-    await bot.start(os.getenv("BOT_TOKEN"))
+        await bot.start(os.getenv("BOT_TOKEN"))
 
 
-asyncio.run(main())
+    asyncio.run(main())
