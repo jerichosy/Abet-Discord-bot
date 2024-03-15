@@ -1,3 +1,6 @@
+# The code below is pretty much sourced from: https://github.com/Sheppsu/discord-ext-listening/blob/807ef488f8010bd2ce8d15801b98dfa87a402575/examples/basic_voice_listening.py
+# Credits to Sheppsu for a full-featured example code
+
 import subprocess
 from typing import Literal, Optional
 
