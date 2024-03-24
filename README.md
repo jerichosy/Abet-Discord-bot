@@ -1,2 +1,2 @@
 # Abet's Rainbow and Unicorn Army
-</> with 💖 by Kyoya Intelligence Agency and Tre' Industries
+</> with 💖 by Kyoya Intelligence Agency, Samir Corp, and Tre' Industries

@@ -68,7 +68,7 @@ class Info(commands.Cog):
 
         version = pkg_resources.get_distribution("discord.py").version
         embed.set_footer(
-            text=f"</> with 💖 by Kyoya Intelligence Agency and Tre' Industries using Python (discord.py v{version})",
+            text=f"</> with 💖 by Kyoya Intelligence Agency, Samir Corp, and Tre' Industries using Python (discord.py v{version})",
             icon_url="https://media.discordapp.net/stickers/946824812658065459.png",
         )
 
