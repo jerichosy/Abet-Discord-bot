@@ -1,3 +1,9 @@
+# Samir Copyright Services
+#
+# Wai Kei Li has no rights to his content, quotes, knowledge, data leaks.
+# All of the aforementioned are collectively owned by Samir Corp
+
+
 import asyncio
 import random
 import re
@@ -48,37 +54,61 @@ class Fun(commands.Cog):
         quote = json_data["quote"] + " -Kanye West"
         await ctx.send(quote)
 
-    @commands.hybrid_command(aliases=["wai", "waikeili"])
-    async def waikei(self, ctx):
-        """random Waikei Li quotes (Waikei as a Service)"""
+    @commands.hybrid_command(aliases=["wai", "waikeili", "waikei"])
+    @app_commands.describe(member="The member you want a random quote from")
+    async def quote(self, ctx: Context, member: discord.Member = None):
+        """random quotes (formerly Waikei as a Service)"""
+
+        # If we're in CS-ST Friends and Co, default to waikei and get his discord.Member object
+        if ctx.guild.id == self.bot.ABANGERS_GUILD.id:
+            # But if the user specified a member, use that instead
+            member = (
+                member
+                if member
+                else await ctx.guild.fetch_member(self.bot.WAIKEI_DISCORD_ID)
+            )
+
+        # If the user didn't specify a member (happens outside CS-ST Friends and Co), return
+        if not member:
+            return await ctx.send("Please specify a member.")
 
         async with asqlite.connect(self.bot.DATABASE) as db:
             async with db.cursor() as cursor:
                 await cursor.execute(
-                    "SELECT quote FROM quotes_waikei ORDER BY RANDOM() LIMIT 1"
+                    "SELECT quote FROM quotes WHERE quote_by = ? ORDER BY RANDOM() LIMIT 1",
+                    (member.id,),
                 )
                 row = await cursor.fetchone()
                 if row:
                     quote = row[0]
 
-                    image_link_pattern = re.compile(
-                        r"(https?://\S+\.(?:jpg|jpeg|png|gif))"
-                    )
-                    if image_link_pattern.match(quote):
-                        await ctx.send(f"{quote}")
-                    else:
-                        await ctx.send(f"{quote} -Waikei Li")
+                    # image_link_pattern = re.compile(
+                    #     r"(https?://\S+\.(?:jpg|jpeg|png|gif))"
+                    # )
+                    # if image_link_pattern.match(quote):
+                    #     await ctx.send(f"{quote}")
+                    # else:
+                    #     await ctx.send(f"{quote} -Waikei Li")
+                    await ctx.send(f"{quote} -{member.display_name}")
+                else:
+                    await ctx.send(f"No quotes found for {member.display_name}.")
 
-    @commands.hybrid_command(aliases=["waikei_addquote", "waikei_a", "waikei_aquote"])
+    @commands.hybrid_command(
+        # aliases=["waikei_addquote", "waikei_a", "waikei_aquote", "waikei_add"]
+    )
     @app_commands.describe(quote="DO NOT INCLUDE QUOTATION MARKS")
-    async def waikei_add(self, ctx, *, quote: str):
-        """Adds a new quote to the Waikei collection."""
+    async def quote_add(self, ctx: Context, member: discord.Member, *, quote: str):
+        """Adds a new quote to the collection."""
 
         async with asqlite.connect(self.bot.DATABASE) as db:
             async with db.cursor() as cursor:
                 # Check for duplicate
                 await cursor.execute(
-                    "SELECT quote FROM quotes_waikei WHERE quote = ?", (quote,)
+                    "SELECT quote FROM quotes WHERE quote = ? AND quote_by = ?",
+                    (
+                        quote,
+                        member.id,
+                    ),
                 )
                 if await cursor.fetchone():
                     await ctx.send("🛑 That quote already exists!")
@@ -86,28 +116,47 @@ class Fun(commands.Cog):
 
                 # Add new quote
                 await cursor.execute(
-                    "INSERT INTO quotes_waikei (quote, added_by) VALUES (?, ?)",
-                    (quote, ctx.author.id),
+                    "INSERT INTO quotes (quote, quote_by, added_by) VALUES (?, ?, ?)",
+                    (quote, member.id, ctx.author.id),
                 )
                 # quote_id = cursor.lastrowid  # Capture the ID of the newly added quote
                 await db.commit()
 
-                await ctx.send(f"✅ Waikei Li quote **added**!\n\n> {quote}")
+                await ctx.send(
+                    f"✅ {member.display_name} quote **added**!\n\n>>> {quote}"
+                )
 
-    @commands.hybrid_command(aliases=["waikei_listquote", "waikei_l", "waikei_lquote"])
-    async def waikei_list(self, ctx):
-        """Lists all Waikei Li quotes with their IDs."""
+    @commands.hybrid_command(
+        aliases=["waikei_listquote", "waikei_l", "waikei_lquote", "waikei_list"]
+    )
+    async def quote_list(self, ctx: Context, member: discord.Member = None):
+        """Lists all quotes with their IDs."""
+
+        # If we're in CS-ST Friends and Co, default to waikei and get his discord.Member object
+        if ctx.guild.id == self.bot.ABANGERS_GUILD.id:
+            # But if the user specified a member, use that instead
+            member = (
+                member
+                if member
+                else await ctx.guild.fetch_member(self.bot.WAIKEI_DISCORD_ID)
+            )
+
+        # If the user didn't specify a member (happens outside CS-ST Friends and Co), return
+        if not member:
+            return await ctx.send("Please specify a member.")
 
         async with asqlite.connect(self.bot.DATABASE) as db:
             async with db.cursor() as cursor:
-                await cursor.execute("SELECT id, quote FROM quotes_waikei")
+                await cursor.execute(
+                    "SELECT id, quote FROM quotes WHERE quote_by = ?", (member.id,)
+                )
                 rows = await cursor.fetchall()
 
                 if not rows:
                     await ctx.send("⚠️ No quotes found.")
                     return
 
-                message = "Waikei quotes:\n"
+                message = f"{member.display_name} quotes:\n"
                 for id, quote in rows:
                     message += f"**{id}**: '{quote}'\n"
 
@@ -119,25 +168,27 @@ class Fun(commands.Cog):
                     allowed_mentions=discord.AllowedMentions(users=False),
                 )
 
+    # TODO: Maybe add a confirmation, but tbh not needed because quotes can only be removed by the person who added them
     @commands.hybrid_command(
-        aliases=[
-            "waikei_deletequote",
-            "waikei_d",
-            "waikei_dquote",
-            "waikei_del",
-            "waikei_delquote",
-            "delwaikei",
-        ]
+        # aliases=[
+        #     "waikei_deletequote",
+        #     "waikei_d",
+        #     "waikei_dquote",
+        #     "waikei_del",
+        #     "waikei_delquote",
+        #     "delwaikei",
+        #     "waikei_delete",
+        # ]
     )
-    @app_commands.describe(quote_id="Specify the ID of the quote shown in /waikei_list")
-    async def waikei_delete(self, ctx, quote_id: int):
-        """Deletes a Waikei Li quote by its ID."""
+    @app_commands.describe(quote_id="Specify the ID of the quote shown in /quote_list")
+    async def quote_delete(self, ctx: Context, quote_id: int):
+        """Deletes a quote by its ID."""
 
         async with asqlite.connect(self.bot.DATABASE) as db:
             async with db.cursor() as cursor:
                 # Fetch the quote to be deleted
                 await cursor.execute(
-                    "SELECT quote, added_by FROM quotes_waikei WHERE id = ?",
+                    "SELECT quote, added_by FROM quotes WHERE id = ?",
                     (quote_id,),
                 )
                 row = await cursor.fetchone()
@@ -150,9 +201,7 @@ class Fun(commands.Cog):
 
                 # Check if the user is the one who added the quote or if they're the bot owner
                 if ctx.author.id == added_by or ctx.author.id in self.bot.owner_ids:
-                    await cursor.execute(
-                        "DELETE FROM quotes_waikei WHERE id = ?", (quote_id,)
-                    )
+                    await cursor.execute("DELETE FROM quotes WHERE id = ?", (quote_id,))
                     await db.commit()
                     await ctx.send(
                         f"✅ Quote ID {quote_id} has been **deleted**.\n\n> {quote}"

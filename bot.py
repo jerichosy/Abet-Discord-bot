@@ -79,13 +79,17 @@ class AbetBot(commands.Bot):
         self.HOME_GUILD = discord.Object(id=867811644322611200)  # Inocencio server
         self.OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
         self.TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
+        self.ABANGERS_GUILD = discord.Object(id=909626375374245938)  # abangers
+
+        # TODO: Maybe make this a discord.Object
+        self.WAIKEI_DISCORD_ID = 192192501187215361
 
         # self.INVITE_LINK = discord.utils.oauth_url(
         #     client_id=self.application_id, permissions=discord.Permissions.advanced()
         # )
         self.INVITE_LINK = "https://discord.com/api/oauth2/authorize?client_id=954284775210893344&permissions=48900991348288&scope=bot+applications.commands"
 
-        self.DATABASE = "./db/AbetDatabase.db"
+        self.DATABASE = "./database/AbetDatabase.db"
 
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
@@ -106,14 +110,17 @@ class AbetBot(commands.Bot):
         async with asqlite.connect(self.DATABASE) as db:
             async with db.cursor() as cursor:
                 # Ensure your schema is set up. This example assumes a simple table
-                await cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS quotes_waikei (
+                await cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS quotes (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         quote TEXT,
+                        quote_by INTEGER,
                         added_by INTEGER,
                         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
                     )
-                """)
+                """
+                )
                 await db.commit()
 
     async def on_ready(self):
@@ -371,6 +378,5 @@ if __name__ == "__main__":
         await bot.load_extension("jishaku")
 
         await bot.start(os.getenv("BOT_TOKEN"))
-
 
     asyncio.run(main())
