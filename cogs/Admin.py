@@ -248,6 +248,14 @@ class Admin(commands.Cog):
         # Send the file as a message
         await ctx.send(file=file)
 
+    @app_commands.command()
+    @app_commands.guilds(887980840347398144)
+    @commands.is_owner()
+    async def test_interaction_input_member(
+        self, interaction: discord.Interaction, member: discord.Member
+    ):
+        await interaction.response.send_message(f"Member: {member.mention}")
+
 
 async def setup(bot):
     await bot.add_cog(Admin(bot))
