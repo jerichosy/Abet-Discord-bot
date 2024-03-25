@@ -212,7 +212,7 @@ class Fun(commands.Cog):
                     await cursor.execute("DELETE FROM quotes WHERE id = ?", (quote_id,))
                     await db.commit()
                     await ctx.send(
-                        f"✅ Quote ID {quote_id} by {member.display_name} has been **deleted**.\n\n> {quote}"
+                        f"✅ Quote ID {quote_id} by {member.display_name} has been **deleted**.\n\n>>> {quote}"
                     )
                 else:
                     await ctx.send(
