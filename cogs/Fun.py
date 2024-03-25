@@ -188,7 +188,7 @@ class Fun(commands.Cog):
             async with db.cursor() as cursor:
                 # Fetch the quote to be deleted
                 await cursor.execute(
-                    "SELECT quote, added_by FROM quotes WHERE id = ?",
+                    "SELECT quote, added_by, quote_by FROM quotes WHERE id = ?",
                     (quote_id,),
                 )
                 row = await cursor.fetchone()
@@ -197,14 +197,16 @@ class Fun(commands.Cog):
                     await ctx.send("⚠️ Quote not found.")
                     return
 
-                quote, added_by = row
+                quote, added_by, quote_by = row
+
+                member = await ctx.guild.fetch_member(quote_by)
 
                 # Check if the user is the one who added the quote or if they're the bot owner
                 if ctx.author.id == added_by or ctx.author.id in self.bot.owner_ids:
                     await cursor.execute("DELETE FROM quotes WHERE id = ?", (quote_id,))
                     await db.commit()
                     await ctx.send(
-                        f"✅ Quote ID {quote_id} has been **deleted**.\n\n> {quote}"
+                        f"✅ Quote ID {quote_id} by {member.display_name} has been **deleted**.\n\n> {quote}"
                     )
                 else:
                     await ctx.send(
