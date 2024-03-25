@@ -82,8 +82,7 @@ class AbetBot(commands.Bot):
         self.ABANGERS_PREMIUM_GUILD = discord.Object(id=909626375374245938)  # abangers
         self.ABANGERS_DELUXE_GUILD = discord.Object(id=448025150101913602)  # deluxe man
 
-        # TODO: Maybe make this a discord.Object
-        self.WAIKEI_DISCORD_ID = 192192501187215361
+        self.WAIKEI_USER = discord.Object(id=192192501187215361)
 
         # self.INVITE_LINK = discord.utils.oauth_url(
         #     client_id=self.application_id, permissions=discord.Permissions.advanced()

@@ -68,7 +68,7 @@ class Fun(commands.Cog):
             member = (
                 member
                 if member
-                else await ctx.guild.fetch_member(self.bot.WAIKEI_DISCORD_ID)
+                else await ctx.guild.fetch_member(self.bot.WAIKEI_USER.id)
             )
 
         # If the user didn't specify a member (happens outside CS-ST Friends and Co), return
@@ -144,7 +144,7 @@ class Fun(commands.Cog):
             member = (
                 member
                 if member
-                else await ctx.guild.fetch_member(self.bot.WAIKEI_DISCORD_ID)
+                else await ctx.guild.fetch_member(self.bot.WAIKEI_USER.id)
             )
 
         # If the user didn't specify a member (happens outside CS-ST Friends and Co), return
