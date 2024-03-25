@@ -59,8 +59,11 @@ class Fun(commands.Cog):
     async def quote(self, ctx: Context, member: discord.Member = None):
         """random quotes (formerly Waikei as a Service)"""
 
-        # If we're in CS-ST Friends and Co, default to waikei and get his discord.Member object
-        if ctx.guild.id == self.bot.ABANGERS_GUILD.id:
+        # If we're in CS-ST Friends and Co or Bored, default to waikei and get his discord.Member object
+        if ctx.guild.id in (
+            self.bot.ABANGERS_PREMIUM_GUILD.id,
+            self.bot.ABANGERS_DELUXE_GUILD.id,
+        ):
             # But if the user specified a member, use that instead
             member = (
                 member
@@ -132,8 +135,11 @@ class Fun(commands.Cog):
     async def quote_list(self, ctx: Context, member: discord.Member = None):
         """Lists all quotes with their IDs."""
 
-        # If we're in CS-ST Friends and Co, default to waikei and get his discord.Member object
-        if ctx.guild.id == self.bot.ABANGERS_GUILD.id:
+        # If we're in CS-ST Friends and Co or Bored, default to waikei and get his discord.Member object
+        if ctx.guild.id in (
+            self.bot.ABANGERS_PREMIUM_GUILD.id,
+            self.bot.ABANGERS_DELUXE_GUILD.id,
+        ):
             # But if the user specified a member, use that instead
             member = (
                 member
