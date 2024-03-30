@@ -42,6 +42,7 @@ class QuoteButtonView(discord.ui.View):
             await interaction.response.send_message(
                 content=f"{quote} -{self.member.display_name}", view=self
             )
+            self.message = await interaction.original_response()
         else:
             # If no quotes found, send a notice without the buttons
             await interaction.response.send_message(
@@ -130,7 +131,7 @@ class Fun(commands.Cog):
             #     await ctx.send(f"{quote}")
             # else:
             #     await ctx.send(f"{quote} -Waikei Li")
-            await ctx.send(f"{quote} -{member.display_name}", view=view)
+            view.message = await ctx.send(f"{quote} -{member.display_name}", view=view)
         else:
             # If no quotes found, send a notice without the buttons
             await ctx.send(f"No quotes found for {member.display_name}.")
