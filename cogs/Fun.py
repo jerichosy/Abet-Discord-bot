@@ -20,6 +20,39 @@ from discord.ext import commands
 from .utils.context import Context
 
 
+class QuoteButtonView(discord.ui.View):
+    def __init__(self, fun_instance, member):
+        super().__init__()
+        self.fun_instance = fun_instance
+        self.member = member
+
+    async def on_timeout(self) -> None:
+        for item in self.children:
+            item.disabled = True
+
+        await self.message.edit(view=self)
+
+    @discord.ui.button(label="Get Another Quote")
+    async def quote_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        # Get a random quote and send an interaction response using the same view
+        quote = await self.fun_instance.get_random_quote(self.member)
+        if quote:
+            await interaction.response.send_message(
+                content=f"{quote} -{self.member.display_name}", view=self
+            )
+        else:
+            # If no quotes found, send a notice without the buttons
+            await interaction.response.send_message(
+                content=f"No quotes found for {self.member.display_name}."
+            )
+
+        # Remove buttons on the current interaction (i.e., "previous" msg.)
+        # through its webhook (`followup`) since we can't edit an interaction response anymore as it's already been responded
+        await interaction.followup.edit_message(interaction.message.id, view=None)
+
+
 class Fun(commands.Cog):
     def __init__(self, bot, waifu_im_tags):
         self.bot = bot
@@ -54,6 +87,16 @@ class Fun(commands.Cog):
         quote = json_data["quote"] + " -Kanye West"
         await ctx.send(quote)
 
+    async def get_random_quote(self, member: discord.Member):
+        async with asqlite.connect(self.bot.DATABASE) as db:
+            async with db.cursor() as cursor:
+                await cursor.execute(
+                    "SELECT quote FROM quotes WHERE quote_by = ? ORDER BY RANDOM() LIMIT 1",
+                    (member.id,),
+                )
+                row = await cursor.fetchone()
+                return row[0] if row else None
+
     @commands.hybrid_command(aliases=["wai", "waikeili", "waikei"])
     @app_commands.describe(member="The member you want a random quote from")
     async def quote(self, ctx: Context, member: discord.Member = None):
@@ -75,26 +118,22 @@ class Fun(commands.Cog):
         if not member:
             return await ctx.send("Please specify a member.")
 
-        async with asqlite.connect(self.bot.DATABASE) as db:
-            async with db.cursor() as cursor:
-                await cursor.execute(
-                    "SELECT quote FROM quotes WHERE quote_by = ? ORDER BY RANDOM() LIMIT 1",
-                    (member.id,),
-                )
-                row = await cursor.fetchone()
-                if row:
-                    quote = row[0]
+        quote = await self.get_random_quote(member)
 
-                    # image_link_pattern = re.compile(
-                    #     r"(https?://\S+\.(?:jpg|jpeg|png|gif))"
-                    # )
-                    # if image_link_pattern.match(quote):
-                    #     await ctx.send(f"{quote}")
-                    # else:
-                    #     await ctx.send(f"{quote} -Waikei Li")
-                    await ctx.send(f"{quote} -{member.display_name}")
-                else:
-                    await ctx.send(f"No quotes found for {member.display_name}.")
+        if quote:
+            view = QuoteButtonView(self, member=member)  # self is the Fun instance
+
+            # image_link_pattern = re.compile(
+            #     r"(https?://\S+\.(?:jpg|jpeg|png|gif))"
+            # )
+            # if image_link_pattern.match(quote):
+            #     await ctx.send(f"{quote}")
+            # else:
+            #     await ctx.send(f"{quote} -Waikei Li")
+            await ctx.send(f"{quote} -{member.display_name}", view=view)
+        else:
+            # If no quotes found, send a notice without the buttons
+            await ctx.send(f"No quotes found for {member.display_name}.")
 
     @commands.hybrid_command(
         # aliases=["waikei_addquote", "waikei_a", "waikei_aquote", "waikei_add"]
