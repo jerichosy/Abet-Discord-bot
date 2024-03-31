@@ -137,7 +137,8 @@ class Fun(commands.Cog):
             await ctx.send(f"No quotes found for {member.display_name}.")
 
     @commands.hybrid_command(
-        # aliases=["waikei_addquote", "waikei_a", "waikei_aquote", "waikei_add"]
+        # aliases=["waikei_addquote", "waikei_a", "waikei_aquote", "waikei_add"],
+        name="quote-add"
     )
     @app_commands.describe(quote="DO NOT INCLUDE QUOTATION MARKS")
     async def quote_add(self, ctx: Context, member: discord.Member, *, quote: str):
@@ -170,7 +171,8 @@ class Fun(commands.Cog):
                 )
 
     @commands.hybrid_command(
-        aliases=["waikei_listquote", "waikei_l", "waikei_lquote", "waikei_list"]
+        aliases=["waikei_listquote", "waikei_l", "waikei_lquote", "waikei_list"],
+        name="quote-list",
     )
     async def quote_list(self, ctx: Context, member: discord.Member = None):
         """Lists all quotes with their IDs."""
@@ -224,7 +226,8 @@ class Fun(commands.Cog):
         #     "waikei_delquote",
         #     "delwaikei",
         #     "waikei_delete",
-        # ]
+        # ],
+        name="quote-delete"
     )
     @app_commands.describe(quote_id="Specify the ID of the quote shown in /quote_list")
     async def quote_delete(self, ctx: Context, quote_id: int):
