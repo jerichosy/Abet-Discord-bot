@@ -363,7 +363,7 @@ async def on_presence_update(before, after):
                 channel = bot.get_channel(867811644322611202)  # sala
                 # channel = bot.get_channel(870095545992101958)  #bot-spam
                 await channel.send(
-                    f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {member.mention}'s footsteps and playing {offending}!** ⚠️"
+                    f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {member.mention}'s footsteps and playing {offending}!** 🚩"
                 )
 
             if check_offending(after, "VALORANT") and not check_offending(
