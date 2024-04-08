@@ -69,6 +69,9 @@ class AI(commands.Cog):
     @app_commands.describe(prompt="Your question to ChatGPT")
     @app_commands.describe(text="Pass in your prompt as a text file if it's too long")
     @app_commands.describe(
+        image='Use GPT-4 Vision model to allow images as input and answer questions about them'
+    )
+    @app_commands.describe(
         model="Defaults to GPT-4 (ChatGPT Plus) but can be specified to use GPT-3.5 (ChatGPT)"
     )
     @app_commands.describe(
@@ -81,11 +84,11 @@ class AI(commands.Cog):
         *,
         prompt: str = None,
         text: discord.Attachment = None,
+        image: discord.Attachment = None,
         model: Literal[
             "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo-0125"
         ] = "gpt-4-turbo-preview",
         response: Literal["Embed", "Message"] = "Embed",
-        image: discord.Attachment = None,
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
 
@@ -101,6 +104,11 @@ class AI(commands.Cog):
         #     return await ctx.send(
         #         "ChatGPT, a mind so vast, \nCosts ascended, now amassed. \nService sleeps, its free days passed."
         #     )
+
+        # TODO: Audit every check logic
+        # We know that either prompt or text must be present, with image being optional
+        # But it's complicated by the fact that we assume prompt/text can be a message attachment in traditional cmd invokation
+        # and so on...
 
         if not prompt and not text and not ctx.message.attachments:
             return await ctx.reply("Please input your prompt")
