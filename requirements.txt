@@ -12,4 +12,5 @@ pygit2
 rembg
 openai
 git+https://github.com/Rapptz/asqlite
+git+https://github.com/Sheppsu/discord-ext-listening
 black
