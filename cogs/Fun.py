@@ -143,9 +143,7 @@ class Fun(commands.Cog):
 
         await self.bot.DATABASE.insert_quote(quote, member.id, ctx.author.id)
 
-        await ctx.send(
-            f"✅ {member.display_name} quote **added**!\n\n>>> {quote}"
-        )
+        await ctx.send(f"✅ {member.display_name} quote **added**!\n\n>>> {quote}")
 
     @commands.hybrid_command(
         aliases=["waikei_listquote", "waikei_l", "waikei_lquote", "waikei_list"],
@@ -185,7 +183,7 @@ class Fun(commands.Cog):
             embed=embed,
             # suppress_embeds=True,
             allowed_mentions=discord.AllowedMentions(users=False),
-            )
+        )
 
     # TODO: Maybe add a confirmation, but tbh not needed because quotes can only be removed by the person who added them
     @commands.hybrid_command(
@@ -215,12 +213,10 @@ class Fun(commands.Cog):
         if ctx.author.id == int(quote.added_by) or ctx.author.id in self.bot.owner_ids:
             await self.bot.DATABASE.delete_quote_by_id(quote_id)
             await ctx.send(
-                f"✅ Quote ID {quote_id} by {member.display_name} has been **deleted**.\n\n>>> {quote}"
+                f"✅ Quote ID {quote_id} by {member.display_name} has been **deleted**.\n\n>>> {quote.quote}"
             )
         else:
-            await ctx.send(
-                "🛑 You do not have permission to delete this quote."
-            )
+            await ctx.send("🛑 You do not have permission to delete this quote.")
 
     @commands.hybrid_command()
     async def trump(
