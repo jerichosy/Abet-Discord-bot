@@ -1,9 +1,10 @@
-from typing import Sequence, Tuple
+from typing import Sequence
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
-from sqlalchemy import Result, ScalarResult, delete, select
+from sqlalchemy import delete, select
+from sqlalchemy import func
 
-from .schema import *
+from .schema import Base, Quote
 
 
 class QuotesDB():
