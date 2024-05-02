@@ -71,8 +71,8 @@ class AbetBot(commands.Bot):
             command_prefix=commands.when_mentioned_or("&"),
             activity=None,
             intents=intents,
-            owner_ids=set([298454523624554501, 784478723448635444]),
-            application_id=954284775210893344,
+            owner_ids=set(list(map(int, os.getenv('BOT_OWNERS', "").split(',')))),
+            application_id=int(os.getenv('BOT_APP_ID', -1)),
             help_command=AbetHelp(command_attrs={"hidden": True}),
         )  # , description=
 
@@ -89,7 +89,7 @@ class AbetBot(commands.Bot):
         # )
         self.INVITE_LINK = "https://discord.com/api/oauth2/authorize?client_id=954284775210893344&permissions=48900991348288&scope=bot+applications.commands"
 
-        self.DATABASE = "./database/AbetDatabase.db"
+        self.DATABASE = os.getenv('DB_URI')
 
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
