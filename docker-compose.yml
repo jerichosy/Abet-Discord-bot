@@ -6,10 +6,12 @@ services:
         - action: sync+restart
           path: .
           target: /app
-          ignore: 
+          ignore:
             - ./requirements.txt
         - action: rebuild
           path: ./requirements.txt
+    networks:
+      - zen-zone
 
   db:
     image: postgres
@@ -27,3 +29,7 @@ services:
       - 8080:8080
     profiles:
       - dev
+
+networks:
+  zen-zone:
+    external: true
