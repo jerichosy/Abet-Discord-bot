@@ -38,9 +38,6 @@ initial_extensions = (
     "cogs.VoiceListen",
 )
 
-# Load environment variables
-load_dotenv()
-
 # Set up logger
 logger = logging.getLogger("discord")
 logger.setLevel(logging.INFO)
@@ -49,6 +46,9 @@ handler.setFormatter(
     logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
 )
 logger.addHandler(handler)
+
+# Load environment variables
+load_dotenv()
 
 
 class AbetHelp(commands.MinimalHelpCommand):
@@ -71,8 +71,8 @@ class AbetBot(commands.Bot):
             command_prefix=commands.when_mentioned_or("&"),
             activity=None,
             intents=intents,
-            owner_ids=set(list(map(int, os.getenv('BOT_OWNERS', "").split(',')))),
-            application_id=int(os.getenv('BOT_APP_ID', -1)),
+            owner_ids=set(list(map(int, os.getenv("BOT_OWNERS", "").split(",")))),
+            application_id=int(os.getenv("BOT_APP_ID", -1)),
             help_command=AbetHelp(command_attrs={"hidden": True}),
         )  # , description=
 
@@ -89,7 +89,7 @@ class AbetBot(commands.Bot):
         # )
         self.INVITE_LINK = "https://discord.com/api/oauth2/authorize?client_id=954284775210893344&permissions=48900991348288&scope=bot+applications.commands"
 
-        self.DATABASE = QuotesDB(os.getenv('DB_URI', ""))
+        self.DATABASE = QuotesDB(os.getenv("DB_URI", ""))
 
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
