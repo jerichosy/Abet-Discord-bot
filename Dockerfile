@@ -4,10 +4,10 @@ RUN apt update
 RUN apt install -y git \
 	libpq-dev \
 	build-essential
-RUN pip install --no-cache-dir -r requirements.txt
 
 RUN mkdir /app
 WORKDIR /app
 COPY . .
+RUN pip install --no-cache-dir -r requirements.txt
 
 CMD ["python", "bot.py"]
