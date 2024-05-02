@@ -3,7 +3,8 @@ FROM python:3.10-slim-bookworm
 RUN apt update
 RUN apt install -y git \
 	libpq-dev \
-	build-essential
+	build-essential \
+	poppler-utils
 
 RUN mkdir /app
 WORKDIR /app
