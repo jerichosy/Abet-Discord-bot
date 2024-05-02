@@ -53,16 +53,16 @@ class QuotesDB():
             result = await session.execute(stmt)
             return result.scalars().all()
 
-    async def find_quote_by_id(self, id: int) -> (Quote | None):
+    async def find_quote_by_id(self, quote_id: int) -> (Quote | None):
         async with self.session() as session:
-            stmt = select(Quote).where(Quote.id == id)
+            stmt = select(Quote).where(Quote.id == quote_id)
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
 
-    async def delete_quote_by_id(self, id: int) -> None:
+    async def delete_quote_by_id(self, quote_id: int) -> None:
         async with self.session() as session:
             async with session.begin():
-                stmt = delete(Quote).where(Quote.id == id)
+                stmt = delete(Quote).where(Quote.id == quote_id)
                 await session.execute(stmt)
 
     async def close(self) -> None:
