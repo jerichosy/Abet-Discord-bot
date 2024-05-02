@@ -11,7 +11,6 @@ from io import BytesIO
 from typing import List, Literal
 
 import aiohttp
-import asqlite
 import discord
 from discord import app_commands
 from discord.app_commands import Group
@@ -89,14 +88,8 @@ class Fun(commands.Cog):
         await ctx.send(quote)
 
     async def get_random_quote(self, member: discord.Member):
-        async with asqlite.connect(self.bot.DATABASE) as db:
-            async with db.cursor() as cursor:
-                await cursor.execute(
-                    "SELECT quote FROM quotes WHERE quote_by = ? ORDER BY RANDOM() LIMIT 1",
-                    (member.id,),
-                )
-                row = await cursor.fetchone()
-                return row[0] if row else None
+        result = await self.bot.DATABASE.find_random_quote(member.id)
+        return result.quote if result else None
 
     @commands.hybrid_command(aliases=["wai", "waikeili", "waikei"])
     @app_commands.describe(member="The member you want a random quote from")
@@ -144,31 +137,15 @@ class Fun(commands.Cog):
     async def quote_add(self, ctx: Context, member: discord.Member, *, quote: str):
         """Adds a new quote to the collection."""
 
-        async with asqlite.connect(self.bot.DATABASE) as db:
-            async with db.cursor() as cursor:
-                # Check for duplicate
-                await cursor.execute(
-                    "SELECT quote FROM quotes WHERE quote = ? AND quote_by = ?",
-                    (
-                        quote,
-                        member.id,
-                    ),
-                )
-                if await cursor.fetchone():
-                    await ctx.send("🛑 That quote already exists!")
-                    return
+        if await self.bot.DATABASE.find_if_quote_exists_by_quote(quote, member.id):
+            await ctx.send("🛑 That quote already exists!")
+            return
 
-                # Add new quote
-                await cursor.execute(
-                    "INSERT INTO quotes (quote, quote_by, added_by) VALUES (?, ?, ?)",
-                    (quote, member.id, ctx.author.id),
-                )
-                # quote_id = cursor.lastrowid  # Capture the ID of the newly added quote
-                await db.commit()
+        await self.bot.DATABASE.insert_quote(quote, member.id, ctx.author.id)
 
-                await ctx.send(
-                    f"✅ {member.display_name} quote **added**!\n\n>>> {quote}"
-                )
+        await ctx.send(
+            f"✅ {member.display_name} quote **added**!\n\n>>> {quote}"
+        )
 
     @commands.hybrid_command(
         aliases=["waikei_listquote", "waikei_l", "waikei_lquote", "waikei_list"],
@@ -193,28 +170,22 @@ class Fun(commands.Cog):
         if not member:
             return await ctx.send("Please specify a member.")
 
-        async with asqlite.connect(self.bot.DATABASE) as db:
-            async with db.cursor() as cursor:
-                await cursor.execute(
-                    "SELECT id, quote FROM quotes WHERE quote_by = ?", (member.id,)
-                )
-                rows = await cursor.fetchall()
+        quotes = await self.bot.DATABASE.find_quotes_by_member_id(member.id)
+        if not quotes:
+            await ctx.send("⚠️ No quotes found.")
+            return
 
-                if not rows:
-                    await ctx.send("⚠️ No quotes found.")
-                    return
+        message = f"{member.display_name} quotes:\n"
+        for quote in quotes:
+            message += f"**{quote.id}**: '{quote.quote}'\n"
 
-                message = f"{member.display_name} quotes:\n"
-                for id, quote in rows:
-                    message += f"**{id}**: '{quote}'\n"
+        embed = discord.Embed(description=message)
 
-                embed = discord.Embed(description=message)
-
-                await ctx.send(
-                    embed=embed,
-                    # suppress_embeds=True,
-                    allowed_mentions=discord.AllowedMentions(users=False),
-                )
+        await ctx.send(
+            embed=embed,
+            # suppress_embeds=True,
+            allowed_mentions=discord.AllowedMentions(users=False),
+            )
 
     # TODO: Maybe add a confirmation, but tbh not needed because quotes can only be removed by the person who added them
     @commands.hybrid_command(
@@ -233,34 +204,23 @@ class Fun(commands.Cog):
     async def quote_delete(self, ctx: Context, quote_id: int):
         """Deletes a quote by its ID."""
 
-        async with asqlite.connect(self.bot.DATABASE) as db:
-            async with db.cursor() as cursor:
-                # Fetch the quote to be deleted
-                await cursor.execute(
-                    "SELECT quote, added_by, quote_by FROM quotes WHERE id = ?",
-                    (quote_id,),
-                )
-                row = await cursor.fetchone()
+        quote = await self.bot.DATABASE.find_quote_by_id(quote_id)
 
-                if row is None:
-                    await ctx.send("⚠️ Quote not found.")
-                    return
+        if quote is None:
+            await ctx.send("⚠️ Quote not found.")
+            return
 
-                quote, added_by, quote_by = row
+        member = await ctx.guild.fetch_member(quote.quote_by)
 
-                member = await ctx.guild.fetch_member(quote_by)
-
-                # Check if the user is the one who added the quote or if they're the bot owner
-                if ctx.author.id == added_by or ctx.author.id in self.bot.owner_ids:
-                    await cursor.execute("DELETE FROM quotes WHERE id = ?", (quote_id,))
-                    await db.commit()
-                    await ctx.send(
-                        f"✅ Quote ID {quote_id} by {member.display_name} has been **deleted**.\n\n>>> {quote}"
-                    )
-                else:
-                    await ctx.send(
-                        "🛑 You do not have permission to delete this quote."
-                    )
+        if ctx.author.id == int(quote.added_by) or ctx.author.id in self.bot.owner_ids:
+            await self.bot.DATABASE.delete_quote_by_id(quote_id)
+            await ctx.send(
+                f"✅ Quote ID {quote_id} by {member.display_name} has been **deleted**.\n\n>>> {quote}"
+            )
+        else:
+            await ctx.send(
+                "🛑 You do not have permission to delete this quote."
+            )
 
     @commands.hybrid_command()
     async def trump(
