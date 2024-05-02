@@ -1,0 +1,29 @@
+services:
+  bot:
+    build: .
+    develop:
+      watch:
+        - action: sync+restart
+          path: .
+          target: /app
+          ignore: 
+            - ./requirements.txt
+        - action: rebuild
+          path: ./requirements.txt
+
+  db:
+    image: postgres
+    restart: unless-stopped
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: secret
+    profiles:
+      - dev
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    profiles:
+      - dev

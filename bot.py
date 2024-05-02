@@ -17,13 +17,13 @@ from io import BytesIO
 from typing import Union
 
 import aiohttp
-import asqlite
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
 from cogs.utils import responses_random
 from cogs.utils.context import Context
+from models.db import QuotesDB
 
 initial_extensions = (
     "cogs.Fun",
@@ -71,8 +71,8 @@ class AbetBot(commands.Bot):
             command_prefix=commands.when_mentioned_or("&"),
             activity=None,
             intents=intents,
-            owner_ids=set([298454523624554501, 784478723448635444]),
-            application_id=954284775210893344,
+            owner_ids=set(list(map(int, os.getenv('BOT_OWNERS', "").split(',')))),
+            application_id=int(os.getenv('BOT_APP_ID', -1)),
             help_command=AbetHelp(command_attrs={"hidden": True}),
         )  # , description=
 
@@ -89,7 +89,7 @@ class AbetBot(commands.Bot):
         # )
         self.INVITE_LINK = "https://discord.com/api/oauth2/authorize?client_id=954284775210893344&permissions=48900991348288&scope=bot+applications.commands"
 
-        self.DATABASE = "./database/AbetDatabase.db"
+        self.DATABASE = QuotesDB(os.getenv('DB_URI', ""))
 
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
@@ -107,21 +107,7 @@ class AbetBot(commands.Bot):
         # synced = await self.tree.sync(guild=self.TEST_GUILD)
         # print(f"Copied {len(synced)} global commands to guild {self.TEST_GUILD.id}.")
 
-        async with asqlite.connect(self.DATABASE) as db:
-            async with db.cursor() as cursor:
-                # Ensure your schema is set up. This example assumes a simple table
-                await cursor.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS quotes (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        quote TEXT,
-                        quote_by INTEGER,
-                        added_by INTEGER,
-                        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-                    )
-                """
-                )
-                await db.commit()
+        await self.DATABASE._create_tables()
 
     async def on_ready(self):
         # Do not make API calls here as this can be triggered multiple times
