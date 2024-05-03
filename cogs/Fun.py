@@ -6,9 +6,8 @@
 
 import asyncio
 import random
-import re
 from io import BytesIO
-from typing import List, Literal
+from typing import List, Literal, Optional, Sequence
 
 import aiohttp
 import discord
@@ -53,6 +52,46 @@ class QuoteButtonView(discord.ui.View):
         await interaction.followup.edit_message(interaction.message.id, view=None)
 
 
+class QuoteListView(discord.ui.View):
+    def __init__(self, fun_instance, member: discord.Member, page: int, per_page: int, timeout: Optional[float] = 180):
+        super().__init__(timeout=timeout)
+        self.fun_instance = fun_instance
+        self.member = member
+        self.page = page
+        self.per_page = per_page
+
+    async def _create_quotes_embed(self, quotes: Sequence) -> discord.Embed:
+        if not quotes:
+            return discord.Embed(description="⚠️ No quotes found.")
+
+        embed = discord.Embed(description=f"**{self.member.display_name} quotes:**\n")
+        for quote in quotes:
+            embed.add_field(name="", value=f"`{quote.id}`\t\t\t'{quote.quote}'", inline=False)
+        return embed
+
+    @discord.ui.button(emoji="◀️")
+    async def prev_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.page = max(1, self.page - 1)
+        quotes = await self.fun_instance.get_quotes_list(self.member, self.page, self.per_page)
+        embed = await self._create_quotes_embed(quotes)
+        await interaction.response.edit_message(
+            content=f"> Page {self.page}",
+            embed=embed, 
+            view=self
+        )
+
+    @discord.ui.button(emoji="▶️")
+    async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.page = self.page + 1
+        quotes = await self.fun_instance.get_quotes_list(self.member, self.page, self.per_page)
+        embed = await self._create_quotes_embed(quotes)
+        await interaction.response.edit_message(
+            content=f"> Page {self.page}",
+            embed=embed, 
+            view=self
+        )
+
+
 class Fun(commands.Cog):
     def __init__(self, bot, waifu_im_tags):
         self.bot = bot
@@ -90,6 +129,9 @@ class Fun(commands.Cog):
     async def get_random_quote(self, member: discord.Member):
         result = await self.bot.DATABASE.find_random_quote(member.id)
         return result.quote if result else None
+
+    async def get_quotes_list(self, member: discord.Member, page: int = 1, per_page: int = 20):
+        return await self.bot.DATABASE.find_quotes_by_member_id(member.id, page, per_page)
 
     @commands.hybrid_command(aliases=["wai", "waikeili", "waikei"])
     @app_commands.describe(member="The member you want a random quote from")
@@ -168,21 +210,22 @@ class Fun(commands.Cog):
         if not member:
             return await ctx.send("Please specify a member.")
 
-        quotes = await self.bot.DATABASE.find_quotes_by_member_id(member.id)
+        quotes = await self.get_quotes_list(member, 1, 20)
+
         if not quotes:
-            await ctx.send("⚠️ No quotes found.")
+            await ctx.send(embed=discord.Embed(description="⚠️ No quotes found."))
             return
 
-        message = f"{member.display_name} quotes:\n"
+        view = QuoteListView(self, member, 1, 20)
+        embed = discord.Embed(description=f"**{member.display_name} quotes:**\n")
         for quote in quotes:
-            message += f"**{quote.id}**: '{quote.quote}'\n"
-
-        embed = discord.Embed(description=message)
+            embed.add_field(name="", value=f"**{quote.id}**\t\t\t'{quote.quote}'", inline=False)
 
         await ctx.send(
+            content="> Page 1",
             embed=embed,
-            # suppress_embeds=True,
             allowed_mentions=discord.AllowedMentions(users=False),
+            view=view
         )
 
     # TODO: Maybe add a confirmation, but tbh not needed because quotes can only be removed by the person who added them

@@ -54,12 +54,14 @@ class QuotesDB:
         new_quote = Quote(quote=quote, quote_by=str(quote_by), added_by=str(added_by))
         await self._insert_objects([new_quote])
 
-    async def find_quotes_by_member_id(self, quote_by: int) -> Sequence[Quote]:
+    async def find_quotes_by_member_id(self, quote_by: int, page: int, per_page: int) -> Sequence[Quote]:
         async with self.session() as session:
             stmt = (
                 select(Quote)
                 .where(Quote.quote_by.ilike(str(quote_by)))
                 .order_by(Quote.id)
+                .limit(per_page)
+                .offset((page - 1) * per_page)
             )
             result = await session.execute(stmt)
             return result.scalars().all()
