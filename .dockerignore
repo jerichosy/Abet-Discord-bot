@@ -10,7 +10,7 @@
 **/venv
 **/.classpath
 **/.dockerignore
-**/.git
+# **/.git
 **/.gitignore
 **/.project
 **/.settings
