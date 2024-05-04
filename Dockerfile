@@ -11,7 +11,9 @@ RUN apt update
 RUN apt install -y git \
 	libpq-dev \
 	build-essential \
-	poppler-utils
+	poppler-utils \
+	libopus0 \
+	ffmpeg
 
 WORKDIR /app
 
