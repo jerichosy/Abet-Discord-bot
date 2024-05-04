@@ -1,26 +1,16 @@
-FROM python:3.10-slim-bookworm
+FROM python:3.10-slim-bookworm AS builder
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Keeps Python from buffering stdout and stderr to avoid situations where
-# the application crashes without emitting any logs due to buffering.
-ENV PYTHONUNBUFFERED=1
-
-RUN apt update
-RUN apt install -y git \
+RUN apt update && apt install -y --no-install-recommends \
+	git \
 	libpq-dev \
-	build-essential \
-	poppler-utils \
-	libopus0 \
-	ffmpeg
+	build-essential
 
-WORKDIR /app
-
-# Create a directory to temporarily store speechtotext cmd input audio files
-RUN mkdir /app/temp
-# Create a directory to store voicelisten cmd output audio files
-RUN mkdir /app/audio-output
+# Got the multi-stage venv technique from https://pythonspeed.com/articles/multi-stage-docker-python/
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
@@ -30,7 +20,30 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 	--mount=type=bind,source=requirements.txt,target=requirements.txt \
 	python -m pip install -r requirements.txt
 
+FROM python:3.10-slim-bookworm AS runtime
+
+COPY --from=builder /opt/venv /opt/venv
+
+RUN apt update && apt install -y --no-install-recommends \
+	poppler-utils \
+	libopus0 \
+	ffmpeg
+
+WORKDIR /app
+
+# Create a directory to temporarily store speechtotext cmd input audio files
+RUN mkdir /app/temp
+
+# Create a directory to store voicelisten cmd output audio files
+RUN mkdir /app/audio-output
+
 # Copy the source code into the container.
 COPY . .
+
+# Keeps Python from buffering stdout and stderr to avoid situations where
+# the application crashes without emitting any logs due to buffering.
+ENV PYTHONUNBUFFERED=1
+
+ENV PATH="/opt/venv/bin:$PATH"
 
 CMD ["python", "bot.py"]
