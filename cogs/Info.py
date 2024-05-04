@@ -59,6 +59,7 @@ class Info(commands.Cog):
 
         embed.set_thumbnail(url=self.bot.user.display_avatar.url)
 
+        # FIXME: Make sure this works for a different bot owner (can't hardcode the guild), and for a user invoking this cmd on a guild I'm not on (probably why we hardcoded the guild in the first place)
         # # main_guild = self.bot.get_guild(self.bot.HOME_GUILD.id)
         # owner = ctx.guild.get_member(list(self.bot.owner_ids)[-1])
         # embed.set_author(
