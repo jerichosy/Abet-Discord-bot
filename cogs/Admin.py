@@ -113,6 +113,10 @@ class Admin(commands.Cog):
         await ctx.send(f"**Replied:** {content}\n**Where:** <{sent.jump_url}>")
 
     @commands.command()
+    async def echo(self, ctx, *, content):
+        await ctx.send(content)
+
+    @commands.command()
     @commands.is_owner()
     @commands.guild_only()
     async def sync(
