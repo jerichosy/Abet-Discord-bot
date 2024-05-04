@@ -66,20 +66,11 @@ class QuoteListView(discord.ui.View):
 
         await self.message.edit(view=self)
 
-    async def _create_quotes_embed(self, quotes: Sequence) -> discord.Embed:
-        if not quotes:
-            return discord.Embed(description="⚠️ No quotes found.")
-
-        embed = discord.Embed(description=f"**{self.member.display_name} quotes:**\n")
-        for quote in quotes:
-            embed.add_field(name="", value=f"`{quote.id}`\t\t\t'{quote.quote}'", inline=False)
-        return embed
-
     @discord.ui.button(emoji="◀️")
     async def prev_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page = max(1, self.page - 1)
         quotes = await self.fun_instance.get_quotes_list(self.member, self.page, self.per_page)
-        embed = await self._create_quotes_embed(quotes)
+        embed = await self.fun_instance.create_quotes_embed(self.member, quotes)
         await interaction.response.edit_message(
             content=f"> Page {self.page}",
             embed=embed,
@@ -90,7 +81,7 @@ class QuoteListView(discord.ui.View):
     async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page = self.page + 1
         quotes = await self.fun_instance.get_quotes_list(self.member, self.page, self.per_page)
-        embed = await self._create_quotes_embed(quotes)
+        embed = await self.fun_instance.create_quotes_embed(self.member, quotes)
         await interaction.response.edit_message(
             content=f"> Page {self.page}",
             embed=embed,
@@ -138,6 +129,15 @@ class Fun(commands.Cog):
 
     async def get_quotes_list(self, member: discord.Member, page: int = 1, per_page: int = 20):
         return await self.bot.DATABASE.find_quotes_by_member_id(member.id, page, per_page)
+
+    async def create_quotes_embed(self, member: discord.Member, quotes: Sequence) -> discord.Embed:
+        if not quotes:
+            return discord.Embed(description="⚠️ No quotes found.")
+
+        embed = discord.Embed(description=f"**{member.mention} quotes:**\n")
+        for quote in quotes:
+            embed.add_field(name="", value=f"**{quote.id}**: '{quote.quote}'", inline=False)
+        return embed
 
     @commands.hybrid_command(aliases=["wai", "waikeili", "waikei"])
     @app_commands.describe(member="The member you want a random quote from")
@@ -223,9 +223,7 @@ class Fun(commands.Cog):
             return
 
         view = QuoteListView(self, member, 1, 20)
-        embed = discord.Embed(description=f"**{member.display_name} quotes:**\n")
-        for quote in quotes:
-            embed.add_field(name="", value=f"**{quote.id}**\t\t\t'{quote.quote}'", inline=False)
+        embed = await self.create_quotes_embed(member, quotes)
 
         await ctx.send(
             content="> Page 1",
