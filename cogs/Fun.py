@@ -60,6 +60,12 @@ class QuoteListView(discord.ui.View):
         self.page = page
         self.per_page = per_page
 
+    async def on_timeout(self) -> None:
+        for item in self.children:
+            item.disabled = True
+
+        await self.message.edit(view=self)
+
     async def _create_quotes_embed(self, quotes: Sequence) -> discord.Embed:
         if not quotes:
             return discord.Embed(description="⚠️ No quotes found.")
@@ -76,7 +82,7 @@ class QuoteListView(discord.ui.View):
         embed = await self._create_quotes_embed(quotes)
         await interaction.response.edit_message(
             content=f"> Page {self.page}",
-            embed=embed, 
+            embed=embed,
             view=self
         )
 
@@ -87,7 +93,7 @@ class QuoteListView(discord.ui.View):
         embed = await self._create_quotes_embed(quotes)
         await interaction.response.edit_message(
             content=f"> Page {self.page}",
-            embed=embed, 
+            embed=embed,
             view=self
         )
 
