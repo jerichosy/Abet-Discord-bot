@@ -69,7 +69,7 @@ class AI(commands.Cog):
     @app_commands.describe(prompt="Your question to ChatGPT")
     @app_commands.describe(text="Pass in your prompt as a text file if it's too long")
     @app_commands.describe(
-        image='Use GPT-4 Vision model to allow images as input and answer questions about them'
+        image="Use GPT-4 Vision model to allow images as input and answer questions about them"
     )
     @app_commands.describe(
         model="Defaults to GPT-4 (ChatGPT Plus) but can be specified to use GPT-3.5 (ChatGPT)"
@@ -283,18 +283,18 @@ class AI(commands.Cog):
             # Add prompt as title in embed if ctx.interaction. Without it, it seems no-context.
             if ctx.interaction or ctx.message.attachments:
                 title_ellipsis = " ..."
-                embed.title = truncate(prompt, EmbedLimit.TITLE, title_ellipsis)
+                embed.title = truncate(prompt, EmbedLimit.TITLE.value, title_ellipsis)
 
             content = None
             if response == "Embed":
                 # If answer is long, truncate it and inform in embed
                 answer_ellipsis = f" ... (truncated due to {EmbedLimit.DESCRIPTION.value} character limit)"
                 embed.description = truncate(
-                    answer, EmbedLimit.DESCRIPTION, answer_ellipsis
+                    answer, EmbedLimit.DESCRIPTION.value, answer_ellipsis
                 )
             else:
                 answer_ellipsis = f" ... (truncated due to {MessageLimit.CONTENT.value} character limit)"
-                content = truncate(answer, MessageLimit.CONTENT, answer_ellipsis)
+                content = truncate(answer, MessageLimit.CONTENT.value, answer_ellipsis)
 
             # print("Truncated length: ", len(answer))
 
@@ -328,7 +328,9 @@ class AI(commands.Cog):
 
                 if ctx.interaction:
                     title_ellipsis = " ..."
-                    embed.title = truncate(prompt, EmbedLimit.TITLE, title_ellipsis)
+                    embed.title = truncate(
+                        prompt, EmbedLimit.TITLE.value, title_ellipsis
+                    )
 
                 await ctx.reply(embed=embed, mention_author=False)
             except ValueError:
