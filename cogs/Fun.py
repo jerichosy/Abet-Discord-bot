@@ -15,6 +15,7 @@ from discord import app_commands
 from discord.app_commands import Group
 from discord.ext import commands
 
+from .utils.character_limits import truncate
 from .utils.context import Context
 
 
@@ -53,7 +54,14 @@ class QuoteButtonView(discord.ui.View):
 
 
 class QuoteListView(discord.ui.View):
-    def __init__(self, fun_instance, member: discord.Member, page: int, per_page: int, timeout: Optional[float] = 180):
+    def __init__(
+        self,
+        fun_instance,
+        member: discord.Member,
+        page: int,
+        per_page: int,
+        timeout: Optional[float] = 180,
+    ):
         super().__init__(timeout=timeout)
         self.fun_instance = fun_instance
         self.member = member
@@ -67,25 +75,29 @@ class QuoteListView(discord.ui.View):
         await self.message.edit(view=self)
 
     @discord.ui.button(emoji="◀️")
-    async def prev_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def prev_page(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         self.page = max(1, self.page - 1)
-        quotes = await self.fun_instance.get_quotes_list(self.member, self.page, self.per_page)
+        quotes = await self.fun_instance.get_quotes_list(
+            self.member, self.page, self.per_page
+        )
         embed = await self.fun_instance.create_quotes_embed(self.member, quotes)
         await interaction.response.edit_message(
-            content=f"> Page {self.page}",
-            embed=embed,
-            view=self
+            content=f"> Page {self.page}", embed=embed, view=self
         )
 
     @discord.ui.button(emoji="▶️")
-    async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+    async def next_page(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
         self.page = self.page + 1
-        quotes = await self.fun_instance.get_quotes_list(self.member, self.page, self.per_page)
+        quotes = await self.fun_instance.get_quotes_list(
+            self.member, self.page, self.per_page
+        )
         embed = await self.fun_instance.create_quotes_embed(self.member, quotes)
         await interaction.response.edit_message(
-            content=f"> Page {self.page}",
-            embed=embed,
-            view=self
+            content=f"> Page {self.page}", embed=embed, view=self
         )
 
 
@@ -127,16 +139,24 @@ class Fun(commands.Cog):
         result = await self.bot.DATABASE.find_random_quote(member.id)
         return result.quote if result else None
 
-    async def get_quotes_list(self, member: discord.Member, page: int = 1, per_page: int = 20):
-        return await self.bot.DATABASE.find_quotes_by_member_id(member.id, page, per_page)
+    async def get_quotes_list(
+        self, member: discord.Member, page: int = 1, per_page: int = 20
+    ):
+        return await self.bot.DATABASE.find_quotes_by_member_id(
+            member.id, page, per_page
+        )
 
-    async def create_quotes_embed(self, member: discord.Member, quotes: Sequence) -> discord.Embed:
+    async def create_quotes_embed(
+        self, member: discord.Member, quotes: Sequence
+    ) -> discord.Embed:
         if not quotes:
             return discord.Embed(description="⚠️ No quotes found.")
 
         embed = discord.Embed(description=f"**{member.mention} quotes:**\n")
         for quote in quotes:
-            embed.add_field(name="", value=f"**{quote.id}**: '{quote.quote}'", inline=False)
+            embed.add_field(
+                name="", value=f"**{quote.id}**: '{quote.quote}'", inline=False
+            )
         return embed
 
     @commands.hybrid_command(aliases=["wai", "waikeili", "waikei"])
@@ -182,7 +202,13 @@ class Fun(commands.Cog):
         name="quote-add"
     )
     @app_commands.describe(quote="DO NOT INCLUDE QUOTATION MARKS")
-    async def quote_add(self, ctx: Context, member: discord.Member, *, quote: str):
+    async def quote_add(
+        self,
+        ctx: Context,
+        member: discord.Member,
+        *,
+        quote: commands.Range[str, None, 1966],
+    ):
         """Adds a new quote to the collection."""
 
         if await self.bot.DATABASE.find_if_quote_exists_by_quote(quote, member.id):
@@ -191,7 +217,9 @@ class Fun(commands.Cog):
 
         await self.bot.DATABASE.insert_quote(quote, member.id, ctx.author.id)
 
-        await ctx.send(f"✅ {member.display_name} quote **added**!\n\n>>> {quote}")
+        await ctx.send(
+            f"✅ {member.display_name} quote **added**!\n\n>>> {truncate(quote, 1943)}"
+        )
 
     @commands.hybrid_command(
         aliases=["waikei_listquote", "waikei_l", "waikei_lquote", "waikei_list"],
@@ -229,7 +257,7 @@ class Fun(commands.Cog):
             content="> Page 1",
             embed=embed,
             allowed_mentions=discord.AllowedMentions(users=False),
-            view=view
+            view=view,
         )
 
     # TODO: Maybe add a confirmation, but tbh not needed because quotes can only be removed by the person who added them
