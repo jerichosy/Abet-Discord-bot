@@ -36,6 +36,7 @@ class QuoteButtonView(discord.ui.View):
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
         # Get a random quote and send an interaction response using the same view
+        # FIXME: Would be better to invoke the command than to call the function directly
         quote = await self.fun_instance.get_random_quote(self.member)
         if quote:
             await interaction.response.send_message(
