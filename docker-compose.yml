@@ -15,6 +15,8 @@ services:
     networks:
       - default
       - zen-zone
+    volumes:
+      - ./audio-output:/app/audio-ouput
 
   dev-db:
     image: postgres
