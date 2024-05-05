@@ -2,7 +2,7 @@
 
 while true
 do
-        docker compose logs --follow -t
+        docker compose logs -f ../docker-compose.yml --follow -t
         echo "Detached from logs. Re-attaching in 5 seconds..."
         echo "Press Ctrl+C to cancel."
         sleep 5
