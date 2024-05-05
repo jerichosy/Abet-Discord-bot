@@ -421,6 +421,11 @@ class Tools(commands.Cog):
         self, ctx, url=None, attachment: Optional[discord.Attachment] = None
     ):
         """Remove background from an image"""
+        # ? Note: This might be non-blocking. If so, then there's no incentive to make the rembg library a microservice.
+        # ? It seems to block, but it works very fast anyway. For now, we'll keep it as a library.
+        # While it will make this bot's Docker container significantly smaller, the microservice will have to install
+        # additional dependencies for it to work as a service instead of a library, which consumes more space and RAM
+        # overall in our system. In here, it is just a library that is imported and used directly.
 
         if url is None and not ctx.message.attachments:
             return await ctx.send("Please attach an image / provide a link or URL")
