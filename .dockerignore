@@ -33,8 +33,7 @@
 LICENSE
 README.md
 
-logsdocker
-restart
+**/scripts
 **/database
 **/temp
 **/audio-output
