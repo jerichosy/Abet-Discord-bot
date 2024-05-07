@@ -156,7 +156,7 @@ class Fun(commands.Cog):
         embed = discord.Embed(description=f"**{member.mention} quotes:**\n")
         for quote in quotes:
             embed.add_field(
-                name="", value=f"**{quote.id}**: {quote.quote}", inline=False
+                name="", value=truncate(f"**{quote.id}**: {quote.quote}", 298), inline=False
             )
         return embed
 
