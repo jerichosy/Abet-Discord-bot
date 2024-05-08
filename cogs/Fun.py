@@ -15,7 +15,7 @@ from discord import app_commands
 from discord.app_commands import Group
 from discord.ext import commands
 
-from .utils.character_limits import truncate
+from .utils.character_limits import MessageLimit, truncate
 from .utils.context import Context
 
 
@@ -156,7 +156,10 @@ class Fun(commands.Cog):
         embed = discord.Embed(description=f"**{member.mention} quotes:**\n")
         for quote in quotes:
             embed.add_field(
-                name="", value=truncate(f"**{quote.id}**: {quote.quote}", 298), inline=False
+                name="",
+                # Truncate whole embed's field.value as quote.id length is unbounded
+                value=truncate(f"**{quote.id}**: {quote.quote}", 298),
+                inline=False,
             )
         return embed
 
@@ -219,6 +222,7 @@ class Fun(commands.Cog):
         await self.bot.DATABASE.insert_quote(quote, member.id, ctx.author.id)
 
         await ctx.send(
+            # Truncate `quote` only as member.display_name is bounded to a limit of 32 chars.
             f"✅ {member.display_name} quote **added**!\n\n>>> {truncate(quote, 1943)}"
         )
 
@@ -289,7 +293,11 @@ class Fun(commands.Cog):
         if ctx.author.id == int(quote.added_by) or ctx.author.id in self.bot.owner_ids:
             await self.bot.DATABASE.delete_quote_by_id(quote_id)
             await ctx.send(
-                f"✅ Quote ID {quote_id} by {member.display_name} has been **deleted**.\n\n>>> {quote.quote}"
+                # Truncate whole sent string as quote_id length is unbounded
+                truncate(
+                    f"✅ Quote ID {quote_id} by {member.display_name} has been **deleted**.\n\n>>> {quote.quote}",
+                    MessageLimit.CONTENT.value,
+                )
             )
         else:
             await ctx.send("🛑 You do not have permission to delete this quote.")
