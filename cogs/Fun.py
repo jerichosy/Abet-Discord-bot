@@ -258,7 +258,7 @@ class Fun(commands.Cog):
         view = QuoteListView(self, member, 1, 20)
         embed = await self.create_quotes_embed(member, quotes)
 
-        await ctx.send(
+        view.message = await ctx.send(
             content="> Page 1",
             embed=embed,
             allowed_mentions=discord.AllowedMentions(users=False),
