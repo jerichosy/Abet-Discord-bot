@@ -50,11 +50,17 @@ class QuotesDB:
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
 
-    async def insert_quote(self, quote: str, quote_by: int, added_by: int) -> None:
+    async def insert_quote(self, quote: str, quote_by: int, added_by: int) -> int:
         new_quote = Quote(quote=quote, quote_by=str(quote_by), added_by=str(added_by))
+        # print(f"Adding quote: {new_quote}")  # doesn't have id field
         await self._insert_objects([new_quote])
+        # print(f"Added quote: {new_quote}")  # now has id field
+        # print(f"Added quote id: {new_quote.id}, type: {type(new_quote.id)}")
+        return new_quote.id
 
-    async def find_quotes_by_member_id(self, quote_by: int, page: int, per_page: int) -> Sequence[Quote]:
+    async def find_quotes_by_member_id(
+        self, quote_by: int, page: int, per_page: int
+    ) -> Sequence[Quote]:
         async with self.session() as session:
             stmt = (
                 select(Quote)

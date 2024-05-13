@@ -219,11 +219,11 @@ class Fun(commands.Cog):
             await ctx.send("🛑 That quote already exists!")
             return
 
-        await self.bot.DATABASE.insert_quote(quote, member.id, ctx.author.id)
+        quote_id = await self.bot.DATABASE.insert_quote(quote, member.id, ctx.author.id)
 
         await ctx.send(
             # Truncate `quote` only as member.display_name is bounded to a limit of 32 chars.
-            f"✅ {member.display_name} quote **added**!\n\n>>> {truncate(quote, 1943)}"
+            f"✅ {member.display_name} quote (ID: {quote_id}) **added**!\n\n>>> {truncate(quote, 1943)}"
         )
 
     @commands.hybrid_command(
