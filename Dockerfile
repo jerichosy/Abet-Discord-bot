@@ -6,7 +6,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 RUN apt update && apt install -y --no-install-recommends \
 	git \
 	libpq-dev \
-	build-essential
+	build-essential \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Got the multi-stage venv technique from https://pythonspeed.com/articles/multi-stage-docker-python/
 RUN python -m venv /opt/venv
@@ -27,7 +28,8 @@ COPY --from=builder /opt/venv /opt/venv
 RUN apt update && apt install -y --no-install-recommends \
 	poppler-utils \
 	libopus0 \
-	ffmpeg
+	ffmpeg \
+	&& rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
