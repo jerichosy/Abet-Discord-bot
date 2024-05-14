@@ -86,8 +86,8 @@ class AI(commands.Cog):
         text: discord.Attachment = None,
         image: discord.Attachment = None,
         model: Literal[
-            "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo-0125"
-        ] = "gpt-4-turbo-preview",
+            "gpt-4o", "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo-0125"
+        ] = "gpt-4o",
         response: Literal["Embed", "Message"] = "Embed",
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
@@ -253,6 +253,9 @@ class AI(commands.Cog):
             elif model == "gpt-4-vision-preview":
                 pricing_prompt = 0.01
                 pricing_completion = 0.03
+            elif model == "gpt-4o":
+                pricing_prompt = 0.005
+                pricing_completion = 0.015
             cost_in_USD = ((token_prompt * pricing_prompt) / 1000) + (
                 (token_completion * pricing_completion) / 1000
             )
