@@ -190,8 +190,8 @@ async def on_message(message):
                     resp_json = await resp.json()
                     # This can also be sent instead and it will embed although it is very long
                     # Not sure but this specifically may be simplified to ["url"]
-                    dl_link = resp_json["formats"][0]["url"]
-                    file_format = resp_json["formats"][0]["ext"]
+                    dl_link = resp_json["formats"][-1]["url"]
+                    file_format = resp_json["formats"][-1]["ext"]
                     desc = resp_json["description"]
                     timestamp = resp_json["timestamp"]
                     likes = resp_json["like_count"]
