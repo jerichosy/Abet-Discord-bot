@@ -224,7 +224,9 @@ async def on_message(message):
                             embed.add_field(name="Comments", value=comments)
                             try:
                                 await message.reply(
-                                    embed=embed,
+                                    embed=(
+                                        message.embeds[0] if message.embeds else embed
+                                    ),
                                     mention_author=False,
                                     file=discord.File(
                                         video_bytes,
