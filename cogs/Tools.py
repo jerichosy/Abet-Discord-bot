@@ -466,7 +466,7 @@ class Tools(commands.Cog):
 
         await interaction.response.defer()
 
-        async with interaction.session.get(
+        async with self.bot.session.get(
             url
         ) as resp:  # TODO: Currently does not validate URLs
             print(
