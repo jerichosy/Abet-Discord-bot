@@ -7,7 +7,7 @@ from datetime import timedelta
 from io import BytesIO
 from random import choices
 from typing import Optional
-from urllib.parse import urlparse
+from urllib.parse import quote_plus, urlparse
 
 import aiohttp
 import discord
@@ -170,7 +170,9 @@ class Tools(commands.Cog):
 
         async with ctx.typing():
             async with ctx.session.get(
-                f"https://api.trace.moe/search?cutBorders&anilistInfo&url={url}"
+                "https://api.trace.moe/search?cutBorders&anilistInfo&url={}".format(
+                    quote_plus(url)
+                )
             ) as resp:
                 json_data = await resp.json()
 
