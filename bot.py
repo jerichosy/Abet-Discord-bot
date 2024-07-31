@@ -315,27 +315,61 @@ async def on_presence_update(before, after):
     if after.bot:
         return
 
-    if after.guild.id == bot.HOME_GUILD.id:
-        logger.info(f"on_presence_update() {after} | {after.guild}")
-        logger.info(f"on_presence_update()   BEFORE: {before.activity}")
-        logger.info(f"on_presence_update()   AFTER:  {after.activity}")
-        if after.activity is not None:
+    # Check if the event is from the monitored server
+    MONITORED_SERVER_ID = bot.HOME_GUILD.id
+    if after.guild.id != MONITORED_SERVER_ID:
+        return
 
-            def check_offending(member, offending):
-                for activity in member.activities:
-                    if activity.name == offending:
-                        return True
-                return False
+    logger.info(f"on_presence_update() {after} | {after.guild}")
+    logger.info(f"on_presence_update()   BEFORE: {before.activity}")
+    logger.info(f"on_presence_update()   AFTER:  {after.activity}")
+    if after.activity is not None:
 
-            async def send_alert(member, offending):
-                channel = bot.get_channel(867811644322611202)  # sala
-                # channel = bot.get_channel(870095545992101958)  #bot-spam
-                await channel.send(
-                    f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {member.mention}'s footsteps and playing {offending}!** 🚩"
-                )
+        def check_offending(member, offending):
+            for activity in member.activities:
+                if activity.name == offending:
+                    return True
+            return False
 
-            if check_offending(after, "VALORANT") and not check_offending(before, "VALORANT"):
-                await send_alert(after, "VALORANT")
+        async def send_alert(member, offending):
+            channel = bot.get_channel(867811644322611202)  # sala
+            # channel = bot.get_channel(870095545992101958)  #bot-spam
+            await channel.send(
+                f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {member.mention}'s footsteps and playing {offending}!** 🚩"
+            )
+
+        if check_offending(after, "VALORANT") and not check_offending(before, "VALORANT"):
+            await send_alert(after, "VALORANT")
+
+
+@bot.event
+async def on_voice_state_update(member, before, after):
+    # Check if the event is from the monitored server
+    MONITORED_SERVER_ID = bot.ABANGERS_PREMIUM_GUILD.id
+    if member.guild.id != MONITORED_SERVER_ID:
+        return
+
+    log_channel = bot.get_channel(1268267323249397862)  # logs-vc-other in JDS (Jericho's Discord Server)
+
+    if before.channel != after.channel:
+        if before.channel is None:
+            await log_channel.send(f"{member.name} joined {after.channel.name}")
+        elif after.channel is None:
+            await log_channel.send(f"{member.name} left {before.channel.name}")
+        else:
+            await log_channel.send(f"{member.name} moved from {before.channel.name} to {after.channel.name}")
+
+    if before.self_mute != after.self_mute:
+        status = "muted" if after.self_mute else "unmuted"
+        await log_channel.send(f"{member.name} {status} themselves")
+
+    if before.self_deaf != after.self_deaf:
+        status = "deafened" if after.self_deaf else "undeafened"
+        await log_channel.send(f"{member.name} {status} themselves")
+
+    if before.self_stream != after.self_stream:
+        status = "started streaming" if after.self_stream else "stopped streaming"
+        await log_channel.send(f"{member.name} {status}")
 
 
 if __name__ == "__main__":
