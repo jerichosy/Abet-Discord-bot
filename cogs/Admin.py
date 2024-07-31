@@ -12,47 +12,29 @@ from cogs.utils.character_limits import EmbedLimit, truncate
 class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.suppress_embeds_menu = app_commands.ContextMenu(
-            name="Suppress Embeds", callback=self.suppress_embeds_from_msg
-        )
-        self.invoke_on_msg_menu = app_commands.ContextMenu(
-            name="Invoke on_message()", callback=self.invoke_on_msg
-        )
+        self.suppress_embeds_menu = app_commands.ContextMenu(name="Suppress Embeds", callback=self.suppress_embeds_from_msg)
+        self.invoke_on_msg_menu = app_commands.ContextMenu(name="Invoke on_message()", callback=self.invoke_on_msg)
         self.bot.tree.add_command(self.suppress_embeds_menu)
         self.bot.tree.add_command(self.invoke_on_msg_menu)
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(
-            self.suppress_embeds_menu.name, type=self.suppress_embeds_menu.type
-        )
-        self.bot.tree.remove_command(
-            self.invoke_on_msg_menu.name, type=self.invoke_on_msg_menu.type
-        )
+        self.bot.tree.remove_command(self.suppress_embeds_menu.name, type=self.suppress_embeds_menu.type)
+        self.bot.tree.remove_command(self.invoke_on_msg_menu.name, type=self.invoke_on_msg_menu.type)
 
     @app_commands.checks.has_permissions(manage_messages=True)
-    async def suppress_embeds_from_msg(
-        self, interaction: discord.Interaction, message: discord.Message
-    ):
+    async def suppress_embeds_from_msg(self, interaction: discord.Interaction, message: discord.Message):
         if not message.embeds:
-            emby = discord.Embed(
-                description=f"🛑 There are no embeds in that [message]({message.jump_url})"
-            )
+            emby = discord.Embed(description=f"🛑 There are no embeds in that [message]({message.jump_url})")
             return await interaction.response.send_message(embed=emby)
 
         await message.edit(suppress=True)
-        emby = discord.Embed(
-            description=f"Embeds from [message]({message.jump_url}) removed"
-        )
+        emby = discord.Embed(description=f"Embeds from [message]({message.jump_url}) removed")
         await interaction.response.send_message(embed=emby)
 
     @app_commands.checks.has_permissions(manage_messages=True)
-    async def invoke_on_msg(
-        self, interaction: discord.Interaction, message: discord.Message
-    ):
+    async def invoke_on_msg(self, interaction: discord.Interaction, message: discord.Message):
         # First respond because awaiting on_message might exceed timeout
-        emby = discord.Embed(
-            description=f"✅ `on_message()` called for [message]({message.jump_url})"
-        )
+        emby = discord.Embed(description=f"✅ `on_message()` called for [message]({message.jump_url})")
         await interaction.response.send_message(embed=emby, ephemeral=True)
         # Then actually process the msg
         await self.bot.on_message(message)
@@ -90,13 +72,9 @@ class Admin(commands.Cog):
             elif activity == "Watching":
                 activity_type = discord.ActivityType.watching
 
-            await self.bot.change_presence(
-                activity=discord.Activity(name=status_msg, type=activity_type)
-            )
+            await self.bot.change_presence(activity=discord.Activity(name=status_msg, type=activity_type))
 
-        await interaction.response.send_message(
-            f'✅ My status is now "{activity} **{status_msg}**"'
-        )
+        await interaction.response.send_message(f'✅ My status is now "{activity} **{status_msg}**"')
 
     @commands.command()
     async def sendmsg(self, ctx, channel_id: int, *, content):
@@ -204,18 +182,14 @@ class Admin(commands.Cog):
 
         # Send the role list
         role_list_str = "\n".join(role_list)
-        await ctx.send(
-            f"**__Here are the member counts for each role:__**\n{role_list_str}"
-        )
+        await ctx.send(f"**__Here are the member counts for each role:__**\n{role_list_str}")
 
     @commands.command(aliases=["error", "send_error"])
     @commands.is_owner()
     async def test_error(self, ctx):
         raise Exception("This is a test\nThis is another line")
 
-    @commands.command(
-        aliases=["message", "send_message", "test_msg", "msg", "send_msg"]
-    )
+    @commands.command(aliases=["message", "send_message", "test_msg", "msg", "send_msg"])
     @commands.is_owner()
     async def test_message(self, ctx, length: int = 5000):
         content = "a" * length
@@ -225,14 +199,8 @@ class Admin(commands.Cog):
     @commands.is_owner()
     async def test_embed(self, ctx, length: int = 5000):
         content = "a" * length
-        await ctx.send(
-            embed=discord.Embed(title=truncate(content, EmbedLimit.TITLE.value))
-        )
-        await ctx.send(
-            embed=discord.Embed(
-                description=truncate(content, EmbedLimit.DESCRIPTION.value)
-            )
-        )
+        await ctx.send(embed=discord.Embed(title=truncate(content, EmbedLimit.TITLE.value)))
+        await ctx.send(embed=discord.Embed(description=truncate(content, EmbedLimit.DESCRIPTION.value)))
 
     @commands.command(aliases=["hyperlink", "send_hyperlink", "test_hyperlink"])
     @commands.is_owner()
@@ -241,9 +209,7 @@ class Admin(commands.Cog):
         content = "[" + content[: length - 2] + "]"
         print(len(content))
         await ctx.send(embed=discord.Embed(description=content))
-        await ctx.send(
-            embed=discord.Embed(description=f"[{content}](http://example.com/)")
-        )
+        await ctx.send(embed=discord.Embed(description=f"[{content}](http://example.com/)"))
 
     @commands.command(aliases=["string", "send_string", "test_string"])
     @commands.is_owner()
@@ -260,9 +226,7 @@ class Admin(commands.Cog):
     @app_commands.command()
     @app_commands.guilds(887980840347398144)
     @commands.is_owner()
-    async def test_interaction_input_member(
-        self, interaction: discord.Interaction, member: discord.Member
-    ):
+    async def test_interaction_input_member(self, interaction: discord.Interaction, member: discord.Member):
         await interaction.response.send_message(f"Member: {member.mention}")
 
 

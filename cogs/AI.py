@@ -36,9 +36,7 @@ class ConfirmPrompt(discord.ui.View):
     # When the confirm button is pressed, set the inner value to `True` and
     # stop the View from listening to more input.
     @discord.ui.button(label="Confirm", style=discord.ButtonStyle.green)
-    async def confirm(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
+    async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
         if interaction.user.id != self.user.id:
             return await interaction.response.send_message(
                 "🛑 This is not your button to press", ephemeral=True, delete_after=10
@@ -68,15 +66,9 @@ class AI(commands.Cog):
     @commands.max_concurrency(number=1, per=commands.BucketType.member, wait=False)
     @app_commands.describe(prompt="Your question to ChatGPT")
     @app_commands.describe(text="Pass in your prompt as a text file if it's too long")
-    @app_commands.describe(
-        image="Use GPT-4 Vision model to allow images as input and answer questions about them"
-    )
-    @app_commands.describe(
-        model="Defaults to GPT-4 (ChatGPT Plus) but can be specified to use GPT-3.5 (ChatGPT)"
-    )
-    @app_commands.describe(
-        response='Defaults to "Embed" but can be changed to "Message" for easy copying on mobile'
-    )
+    @app_commands.describe(image="Use GPT-4 Vision model to allow images as input and answer questions about them")
+    @app_commands.describe(model="Defaults to GPT-4 (ChatGPT Plus) but can be specified to use GPT-3.5 (ChatGPT)")
+    @app_commands.describe(response='Defaults to "Embed" but can be changed to "Message" for easy copying on mobile')
     # @commands.is_owner()
     async def chatgpt(
         self,
@@ -85,9 +77,7 @@ class AI(commands.Cog):
         prompt: str = None,
         text: discord.Attachment = None,
         image: discord.Attachment = None,
-        model: Literal[
-            "gpt-4o", "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo-0125"
-        ] = "gpt-4o",
+        model: Literal["gpt-4o", "gpt-4-turbo-preview", "gpt-4", "gpt-3.5-turbo-0125"] = "gpt-4o",
         response: Literal["Embed", "Message"] = "Embed",
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
@@ -129,9 +119,7 @@ class AI(commands.Cog):
         # FIXME: This logic is borked when this cmd is invoked thru slash
         if not ctx.interaction:
             trigger_words_translate = ["translate", "translation"]
-            trigger_words_translate_match = any(
-                [word in prompt.lower() for word in trigger_words_translate]
-            )
+            trigger_words_translate_match = any([word in prompt.lower() for word in trigger_words_translate])
             if trigger_words_translate_match:
                 view = ConfirmPrompt(ctx.author)
                 view.message = await ctx.reply(
@@ -151,9 +139,7 @@ class AI(commands.Cog):
             """This creates an OpenAI Chat Completion with a manual exponential backoff strategy in case of no responses."""
             max_retries = 5
             min_delay = 5
-            max_delay = (
-                60  # actually max_retries = 5 will make the max_delay practically 40
-            )
+            max_delay = 60  # actually max_retries = 5 will make the max_delay practically 40
             sent = None
 
             for retry_attempt in range(1, max_retries + 1):
@@ -176,9 +162,7 @@ class AI(commands.Cog):
                         raise e
 
                     delay = min(max_delay, min_delay * (2 ** (retry_attempt - 1)))
-                    inform_delay = (
-                        f"Your request errored. Retrying in {delay:.1f} seconds..."
-                    )
+                    inform_delay = f"Your request errored. Retrying in {delay:.1f} seconds..."
                     if sent:
                         await sent.edit(content=inform_delay)
                     else:
@@ -256,13 +240,9 @@ class AI(commands.Cog):
             elif model == "gpt-4o":
                 pricing_prompt = 0.005
                 pricing_completion = 0.015
-            cost_in_USD = ((token_prompt * pricing_prompt) / 1000) + (
-                (token_completion * pricing_completion) / 1000
-            )
+            cost_in_USD = ((token_prompt * pricing_prompt) / 1000) + ((token_completion * pricing_completion) / 1000)
             try:
-                cost_in_PHP = (
-                    cost_in_USD * await currency_USD_PHP.latest_exchange_rate()
-                )
+                cost_in_PHP = cost_in_USD * await currency_USD_PHP.latest_exchange_rate()
                 print(cost_in_USD, cost_in_PHP)
                 footer_cost_text = f"Cost: ₱{round(cost_in_PHP, 3)} | "
             except Exception as e:
@@ -292,9 +272,7 @@ class AI(commands.Cog):
             if response == "Embed":
                 # If answer is long, truncate it and inform in embed
                 answer_ellipsis = f" ... (truncated due to {EmbedLimit.DESCRIPTION.value} character limit)"
-                embed.description = truncate(
-                    answer, EmbedLimit.DESCRIPTION.value, answer_ellipsis
-                )
+                embed.description = truncate(answer, EmbedLimit.DESCRIPTION.value, answer_ellipsis)
             else:
                 answer_ellipsis = f" ... (truncated due to {MessageLimit.CONTENT.value} character limit)"
                 content = truncate(answer, MessageLimit.CONTENT.value, answer_ellipsis)
@@ -331,9 +309,7 @@ class AI(commands.Cog):
 
                 if ctx.interaction:
                     title_ellipsis = " ..."
-                    embed.title = truncate(
-                        prompt, EmbedLimit.TITLE.value, title_ellipsis
-                    )
+                    embed.title = truncate(prompt, EmbedLimit.TITLE.value, title_ellipsis)
 
                 await ctx.reply(embed=embed, mention_author=False)
             except ValueError:
@@ -343,20 +319,14 @@ class AI(commands.Cog):
                 )
 
     @app_commands.command()
-    @app_commands.describe(
-        audio_file="Supports MP3, MP4, MPEG, MPGA, M4A, WAV, and WEBM. Limited to 25 MB."
-    )
-    async def speechtotext(
-        self, interaction: discord.Interaction, audio_file: discord.Attachment
-    ):
+    @app_commands.describe(audio_file="Supports MP3, MP4, MPEG, MPGA, M4A, WAV, and WEBM. Limited to 25 MB.")
+    async def speechtotext(self, interaction: discord.Interaction, audio_file: discord.Attachment):
         """Uses OpenAI's Whisper model to transcribe audio (speech) to text"""
 
         # Check if over 25 MB
         FILESIZE_LIMITATION = 26214400  # 25 MiB to bytes
         if audio_file.size > FILESIZE_LIMITATION:
-            return await interaction.response.send_message(
-                "🛑 Your attachment is over the 25 MB filesize limit."
-            )
+            return await interaction.response.send_message("🛑 Your attachment is over the 25 MB filesize limit.")
 
         # TODO: Check if accepted format
         print(audio_file.content_type)
@@ -383,9 +353,7 @@ class AI(commands.Cog):
 
             # Send transcript
             FILENAME = audio_filename_split[0] + "_transcript.txt"
-            await interaction.followup.send(
-                file=discord.File(BytesIO(transcript.text.encode()), FILENAME)
-            )
+            await interaction.followup.send(file=discord.File(BytesIO(transcript.text.encode()), FILENAME))
 
         finally:
             # Clean up the temporary file

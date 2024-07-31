@@ -32,22 +32,16 @@ class QuoteButtonView(discord.ui.View):
         await self.message.edit(view=self)
 
     @discord.ui.button(label="Get Another Quote")
-    async def quote_button(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
+    async def quote_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         # Get a random quote and send an interaction response using the same view
         # FIXME: Would be better to invoke the command than to call the function directly
         quote = await self.fun_instance.get_random_quote(self.member)
         if quote:
-            await interaction.response.send_message(
-                content=f"{quote} -{self.member.display_name}", view=self
-            )
+            await interaction.response.send_message(content=f"{quote} -{self.member.display_name}", view=self)
             self.message = await interaction.original_response()
         else:
             # If no quotes found, send a notice without the buttons
-            await interaction.response.send_message(
-                content=f"No quotes found for {self.member.display_name}."
-            )
+            await interaction.response.send_message(content=f"No quotes found for {self.member.display_name}.")
 
         # Remove buttons on the current interaction (i.e., "previous" msg.)
         # through its webhook (`followup`) since we can't edit an interaction response anymore as it's already been responded
@@ -76,30 +70,18 @@ class QuoteListView(discord.ui.View):
         await self.message.edit(view=self)
 
     @discord.ui.button(emoji="◀️")
-    async def prev_page(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
+    async def prev_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page = max(1, self.page - 1)
-        quotes = await self.fun_instance.get_quotes_list(
-            self.member, self.page, self.per_page
-        )
+        quotes = await self.fun_instance.get_quotes_list(self.member, self.page, self.per_page)
         embed = await self.fun_instance.create_quotes_embed(self.member, quotes)
-        await interaction.response.edit_message(
-            content=f"> Page {self.page}", embed=embed, view=self
-        )
+        await interaction.response.edit_message(content=f"> Page {self.page}", embed=embed, view=self)
 
     @discord.ui.button(emoji="▶️")
-    async def next_page(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
+    async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page = self.page + 1
-        quotes = await self.fun_instance.get_quotes_list(
-            self.member, self.page, self.per_page
-        )
+        quotes = await self.fun_instance.get_quotes_list(self.member, self.page, self.per_page)
         embed = await self.fun_instance.create_quotes_embed(self.member, quotes)
-        await interaction.response.edit_message(
-            content=f"> Page {self.page}", embed=embed, view=self
-        )
+        await interaction.response.edit_message(content=f"> Page {self.page}", embed=embed, view=self)
 
 
 class Fun(commands.Cog):
@@ -111,9 +93,7 @@ class Fun(commands.Cog):
     @commands.hybrid_command(aliases=["fuckcarl"])
     async def carl(self, ctx):
         """Dish Carl"""
-        await ctx.send(
-            "https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png"
-        )
+        await ctx.send("https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png")
 
     @staticmethod
     async def get_json_quote(url):
@@ -140,16 +120,10 @@ class Fun(commands.Cog):
         result = await self.bot.DATABASE.find_random_quote(member.id)
         return result.quote if result else None
 
-    async def get_quotes_list(
-        self, member: discord.Member, page: int = 1, per_page: int = 20
-    ):
-        return await self.bot.DATABASE.find_quotes_by_member_id(
-            member.id, page, per_page
-        )
+    async def get_quotes_list(self, member: discord.Member, page: int = 1, per_page: int = 20):
+        return await self.bot.DATABASE.find_quotes_by_member_id(member.id, page, per_page)
 
-    async def create_quotes_embed(
-        self, member: discord.Member, quotes: Sequence
-    ) -> discord.Embed:
+    async def create_quotes_embed(self, member: discord.Member, quotes: Sequence) -> discord.Embed:
         if not quotes:
             return discord.Embed(description="⚠️ No quotes found.")
 
@@ -174,11 +148,7 @@ class Fun(commands.Cog):
             self.bot.ABANGERS_DELUXE_GUILD.id,
         ):
             # But if the user specified a member, use that instead
-            member = (
-                member
-                if member
-                else await ctx.guild.fetch_member(self.bot.WAIKEI_USER.id)
-            )
+            member = member if member else await ctx.guild.fetch_member(self.bot.WAIKEI_USER.id)
 
         # If the user didn't specify a member (happens outside CS-ST Friends and Co), return
         if not member:
@@ -239,11 +209,7 @@ class Fun(commands.Cog):
             self.bot.ABANGERS_DELUXE_GUILD.id,
         ):
             # But if the user specified a member, use that instead
-            member = (
-                member
-                if member
-                else await ctx.guild.fetch_member(self.bot.WAIKEI_USER.id)
-            )
+            member = member if member else await ctx.guild.fetch_member(self.bot.WAIKEI_USER.id)
 
         # If the user didn't specify a member (happens outside CS-ST Friends and Co), return
         if not member:
@@ -311,9 +277,7 @@ class Fun(commands.Cog):
         """random dumbest things Donald Trump has ever said"""
 
         if in_image_form == "No":
-            json_data = await self.get_json_quote(
-                "https://api.tronalddump.io/random/quote"
-            )
+            json_data = await self.get_json_quote("https://api.tronalddump.io/random/quote")
             quote = json_data["value"] + " -Donald Trump"
             await ctx.send(quote, suppress_embeds=True)
         else:
@@ -324,15 +288,11 @@ class Fun(commands.Cog):
     @commands.hybrid_command(aliases=["meow"])
     async def cat(self, ctx: Context):
         """Gives you a random cat."""
-        async with ctx.session.get(
-            "https://api.thecatapi.com/v1/images/search"
-        ) as resp:
+        async with ctx.session.get("https://api.thecatapi.com/v1/images/search") as resp:
             if resp.status != 200:
                 return await ctx.send("No cat found :(")
             js = await resp.json()
-            await ctx.send(
-                embed=discord.Embed(title="Random Cat").set_image(url=js[0]["url"])
-            )
+            await ctx.send(embed=discord.Embed(title="Random Cat").set_image(url=js[0]["url"]))
 
     @commands.hybrid_command()
     async def dog(self, ctx: Context):
@@ -351,23 +311,17 @@ class Fun(commands.Cog):
                             return await ctx.send("Could not download dog video :(")
 
                         if int(other.headers["Content-Length"]) >= filesize:
-                            return await ctx.send(
-                                f"Video was too big to upload... See it here: {url} instead."
-                            )
+                            return await ctx.send(f"Video was too big to upload... See it here: {url} instead.")
 
                         fp = BytesIO(await other.read())
                         await ctx.send(file=discord.File(fp, filename=filename))
             else:
-                await ctx.send(
-                    embed=discord.Embed(title="Random Dog").set_image(url=url)
-                )
+                await ctx.send(embed=discord.Embed(title="Random Dog").set_image(url=url))
 
     @commands.hybrid_command()
     async def uselessfact(self, ctx):
         """Not sure why I added a totally useless feature"""
-        async with ctx.session.get(
-            "https://uselessfacts.jsph.pl/api/v2/facts/random?language=en"
-        ) as r:
+        async with ctx.session.get("https://uselessfacts.jsph.pl/api/v2/facts/random?language=en") as r:
             await ctx.send((await r.json())["text"])
 
     # Lifted from https://github.com/Rapptz/discord.py/blob/master/examples/guessing_game.py
@@ -393,9 +347,7 @@ class Fun(commands.Cog):
     @staticmethod
     async def get_waifu_im_embed(type, category):
         type = "false" if type == "sfw" else "true"
-        url_string = (
-            f"https://api.waifu.im/search/?included_tags={category}&is_nsfw={type}"
-        )
+        url_string = f"https://api.waifu.im/search/?included_tags={category}&is_nsfw={type}"
         headers = {"Accept-Version": "v6"}
 
         async with aiohttp.ClientSession(headers=headers) as session:
@@ -425,9 +377,7 @@ class Fun(commands.Cog):
     waifu_group = Group(name="waifu", description="Waifu.im slash commands")
 
     @waifu_group.command()
-    @app_commands.describe(
-        is_ephemeral='If "Yes", the image will only be visible to you'
-    )
+    @app_commands.describe(is_ephemeral='If "Yes", the image will only be visible to you')
     async def sfw(
         self,
         interaction: discord.Interaction,
@@ -449,9 +399,7 @@ class Fun(commands.Cog):
         )
 
     @waifu_group.command()
-    @app_commands.describe(
-        is_ephemeral='If "Yes", the image will only be visible to you'
-    )
+    @app_commands.describe(is_ephemeral='If "Yes", the image will only be visible to you')
     async def nsfw(
         self,
         interaction: discord.Interaction,
@@ -478,9 +426,7 @@ class Fun(commands.Cog):
         )
 
     @sfw.autocomplete("tag")
-    async def sfw_autocomplete(
-        self, interaction: discord.Interaction, current: str
-    ) -> List[app_commands.Choice[str]]:
+    async def sfw_autocomplete(self, interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return [
             app_commands.Choice(name=waifu_im_tag, value=waifu_im_tag)
             for waifu_im_tag in self.waifu_im_tags["versatile"]
@@ -488,9 +434,7 @@ class Fun(commands.Cog):
         ]
 
     @nsfw.autocomplete("tag")
-    async def nsfw_autocomplete(
-        self, interaction: discord.Interaction, current: str
-    ) -> List[app_commands.Choice[str]]:
+    async def nsfw_autocomplete(self, interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
         return [
             app_commands.Choice(name=waifu_im_tag, value=waifu_im_tag)
             for waifu_im_tag in self.waifu_im_tags["nsfw"]

@@ -18,26 +18,16 @@ class Info(commands.Cog):
     def format_commit(self, commit: pygit2.Commit) -> str:
         short, _, _ = commit.message.partition("\n")
         short_sha2 = commit.hex[0:6]
-        commit_tz = datetime.timezone(
-            datetime.timedelta(minutes=commit.commit_time_offset)
-        )
-        commit_time = datetime.datetime.fromtimestamp(commit.commit_time).astimezone(
-            commit_tz
-        )
+        commit_tz = datetime.timezone(datetime.timedelta(minutes=commit.commit_time_offset))
+        commit_time = datetime.datetime.fromtimestamp(commit.commit_time).astimezone(commit_tz)
 
         # [`hash`](url) message (offset)
-        offset = timeutils.format_relative(
-            commit_time.astimezone(datetime.timezone.utc)
-        )
+        offset = timeutils.format_relative(commit_time.astimezone(datetime.timezone.utc))
         return f"[`{short_sha2}`](https://github.com/jerichosy/Abet-Discord-bot/commit/{commit.hex}) {short} ({offset})"
 
     def get_last_commits(self, count=3):
         repo = pygit2.Repository(".git")
-        commits = list(
-            itertools.islice(
-                repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL), count
-            )
-        )
+        commits = list(itertools.islice(repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL), count))
         return "\n".join(self.format_commit(c) for c in commits)
 
     @commands.hybrid_command(aliases=["info", "github", "repo", "repository"])
@@ -77,9 +67,7 @@ class Info(commands.Cog):
 
         memory_usage = process.memory_full_info().uss / 1024**2
         cpu_usage = process.cpu_percent() / psutil.cpu_count()
-        embed.add_field(
-            name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU"
-        )
+        embed.add_field(name="Process", value=f"{memory_usage:.2f} MiB\n{cpu_usage:.2f}% CPU")
 
         # embed.add_field(name='Uptime', value=self.get_bot_uptime(brief=True))  # TODO: Follow https://github.com/Rapptz/RoboDanny/blob/rewrite/cogs/stats.py#L301
 
