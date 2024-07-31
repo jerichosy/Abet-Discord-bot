@@ -58,9 +58,7 @@ class Genshin(commands.Cog):
 
         # validation
         if current_level >= target_level:
-            return await interaction.response.send_message(
-                "Already achieved the target level."
-            )
+            return await interaction.response.send_message("Already achieved the target level.")
         if genshinutils.CHARACTER_EXP_LIST[current_level] < current_experience:
             return await interaction.response.send_message(
                 "Current experience exceeds the maximum experience in the current level."
@@ -70,9 +68,7 @@ class Genshin(commands.Cog):
 
         for i in range(current_level, target_level):
             if i == current_level:
-                totalExpNeeded += (
-                    genshinutils.CHARACTER_EXP_LIST[i] - current_experience
-                )
+                totalExpNeeded += genshinutils.CHARACTER_EXP_LIST[i] - current_experience
             else:
                 totalExpNeeded += genshinutils.CHARACTER_EXP_LIST[i]
 

@@ -21,15 +21,9 @@ class QuotesDB:
             async with session.begin():
                 session.add_all(objects)
 
-    async def find_if_quote_exists_by_quote(
-        self, quote: str, member_id: int
-    ) -> Quote | None:
+    async def find_if_quote_exists_by_quote(self, quote: str, member_id: int) -> Quote | None:
         async with self.session() as session:
-            stmt = (
-                select(Quote)
-                .where(Quote.quote.ilike(quote))
-                .where(Quote.quote_by.ilike(str(member_id)))
-            )
+            stmt = select(Quote).where(Quote.quote.ilike(quote)).where(Quote.quote_by.ilike(str(member_id)))
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
 
@@ -41,12 +35,7 @@ class QuotesDB:
 
     async def find_random_quote(self, member_id: int) -> Quote | None:
         async with self.session() as session:
-            stmt = (
-                select(Quote)
-                .where(Quote.quote_by.ilike(str(member_id)))
-                .order_by(func.random())
-                .limit(1)
-            )
+            stmt = select(Quote).where(Quote.quote_by.ilike(str(member_id))).order_by(func.random()).limit(1)
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
 
@@ -58,9 +47,7 @@ class QuotesDB:
         # print(f"Added quote id: {new_quote.id}, type: {type(new_quote.id)}")
         return new_quote.id
 
-    async def find_quotes_by_member_id(
-        self, quote_by: int, page: int, per_page: int
-    ) -> Sequence[Quote]:
+    async def find_quotes_by_member_id(self, quote_by: int, page: int, per_page: int) -> Sequence[Quote]:
         async with self.session() as session:
             stmt = (
                 select(Quote)

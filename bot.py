@@ -42,9 +42,7 @@ initial_extensions = (
 logger = logging.getLogger("discord")
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename="discord.log", encoding="utf-8", mode="w")
-handler.setFormatter(
-    logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
-)
+handler.setFormatter(logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s"))
 logger.addHandler(handler)
 
 # Load environment variables
@@ -115,9 +113,7 @@ class AbetBot(commands.Bot):
         print("Invite URL:", self.INVITE_LINK)
         print("------")
 
-    async def get_context(
-        self, origin: Union[discord.Interaction, discord.Message], /, *, cls=Context
-    ) -> Context:
+    async def get_context(self, origin: Union[discord.Interaction, discord.Message], /, *, cls=Context) -> Context:
         return await super().get_context(origin, cls=cls)
 
 
@@ -136,9 +132,7 @@ async def on_message(message):
     print("\nProcessing message:", message.content)
 
     if message.guild:  # Check if home guild (and if not #rant channel) then react
-        if (message.guild.id == bot.HOME_GUILD.id) and (
-            "rant" not in message.channel.name
-        ):
+        if (message.guild.id == bot.HOME_GUILD.id) and ("rant" not in message.channel.name):
             msg = message.content.lower()
 
             # These stay here because it's easier to side-by-side compare these to their corresponding trigger words and responses
@@ -147,9 +141,7 @@ async def on_message(message):
 
             for x in responses_random.SAD_WORDS:
                 if findWholeWord(x)(msg):
-                    await message.channel.send(
-                        random.choice(responses_random.SAD_RESPONSE)
-                    )
+                    await message.channel.send(random.choice(responses_random.SAD_RESPONSE))
                     break
 
             if any(word in msg for word in responses_random.YAY_WORDS):
@@ -158,17 +150,13 @@ async def on_message(message):
             for x in responses_random.WISH_WORDS:
                 if findWholeWord(x)(msg):
                     if random.random() < 0.1:
-                        await message.channel.send(
-                            random.choice(responses_random.WISH_RESPONSE)
-                        )
+                        await message.channel.send(random.choice(responses_random.WISH_RESPONSE))
                     break
 
             for x in responses_random.MHY_WORDS:
                 if findWholeWord(x)(msg):
                     if random.random() < 0.1:
-                        await message.channel.send(
-                            random.choice(responses_random.MHY_RESPONSE)
-                        )
+                        await message.channel.send(random.choice(responses_random.MHY_RESPONSE))
                     break
 
     # --- REPOSTERS START ---
@@ -182,9 +170,7 @@ async def on_message(message):
     print("IG Reel match:", ig_reel_url)
     if ig_reel_url:
         async with message.channel.typing():
-            async with bot.session.get(
-                f"{os.getenv('YT_DLP_MICROSERVICE')}{ig_reel_url[0][0]}"
-            ) as resp:
+            async with bot.session.get(f"{os.getenv('YT_DLP_MICROSERVICE')}{ig_reel_url[0][0]}") as resp:
                 print(resp.status)
                 if resp.status == 200:
                     resp_json = await resp.json()
@@ -224,9 +210,7 @@ async def on_message(message):
                             embed.add_field(name="Comments", value=comments)
                             try:
                                 await message.reply(
-                                    embed=(
-                                        message.embeds[0] if message.embeds else embed
-                                    ),
+                                    embed=(message.embeds[0] if message.embeds else embed),
                                     mention_author=False,
                                     file=discord.File(
                                         video_bytes,
@@ -247,9 +231,7 @@ async def on_message(message):
     print("FB Reel match:", fb_reel_url)
     if fb_reel_url:
         async with message.channel.typing():
-            async with bot.session.get(
-                f"{os.getenv('YT_DLP_MICROSERVICE')}{fb_reel_url[0][0]}"
-            ) as resp:
+            async with bot.session.get(f"{os.getenv('YT_DLP_MICROSERVICE')}{fb_reel_url[0][0]}") as resp:
                 print(resp.status)
                 if resp.status == 200:
                     resp_json = await resp.json()
@@ -311,9 +293,7 @@ async def on_command_error(ctx, error):
     ):
         # `NotOwner` exception doesn't require my attention but the default error msg could be clearer
         if isinstance(error, commands.NotOwner):
-            return await ctx.send(
-                f"Sorry, this command is restricted only to the bot's owner."
-            )
+            return await ctx.send(f"Sorry, this command is restricted only to the bot's owner.")
         return await ctx.send(f"{error}")
 
     # Errors that reached here require my attention
@@ -354,9 +334,7 @@ async def on_presence_update(before, after):
                     f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {member.mention}'s footsteps and playing {offending}!** 🚩"
                 )
 
-            if check_offending(after, "VALORANT") and not check_offending(
-                before, "VALORANT"
-            ):
+            if check_offending(after, "VALORANT") and not check_offending(before, "VALORANT"):
                 await send_alert(after, "VALORANT")
 
 

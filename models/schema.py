@@ -1,12 +1,13 @@
 from datetime import datetime
+
 from sqlalchemy import func
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
 from sqlalchemy.ext.asyncio.session import AsyncAttrs
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
 
 class Base(AsyncAttrs, DeclarativeBase):
     pass
+
 
 class Quote(Base):
     __tablename__ = "quotes"

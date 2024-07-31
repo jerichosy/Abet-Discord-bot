@@ -39,20 +39,12 @@ class Tools(commands.Cog):
         self.bot.tree.add_command(self.raw_embed_desc_menu)
 
     async def cog_unload(self) -> None:
-        self.bot.tree.remove_command(
-            self.raw_string_menu.name, type=self.raw_string_menu.type
-        )
-        self.bot.tree.remove_command(
-            self.raw_embed_desc_menu.name, type=self.raw_embed_desc_menu.type
-        )
+        self.bot.tree.remove_command(self.raw_string_menu.name, type=self.raw_string_menu.type)
+        self.bot.tree.remove_command(self.raw_embed_desc_menu.name, type=self.raw_embed_desc_menu.type)
 
-    async def get_raw_string(
-        self, interaction: discord.Interaction, message: discord.Message
-    ):
+    async def get_raw_string(self, interaction: discord.Interaction, message: discord.Message):
         if not message.content:
-            emby = discord.Embed(
-                description=f"🛑 That [message]({message.jump_url}) has no content"
-            )
+            emby = discord.Embed(description=f"🛑 That [message]({message.jump_url}) has no content")
             return await interaction.response.send_message(embed=emby, ephemeral=True)
 
         emby = discord.Embed(
@@ -64,13 +56,9 @@ class Tools(commands.Cog):
             ephemeral=True,
         )
 
-    async def get_raw_embed_desc_menu(
-        self, interaction: discord.Interaction, message: discord.Message
-    ):
+    async def get_raw_embed_desc_menu(self, interaction: discord.Interaction, message: discord.Message):
         if not message.embeds:
-            emby = discord.Embed(
-                description=f"🛑 That [message]({message.jump_url}) has no embeds"
-            )
+            emby = discord.Embed(description=f"🛑 That [message]({message.jump_url}) has no embeds")
             return await interaction.response.send_message(embed=emby, ephemeral=True)
 
         emby = discord.Embed(
@@ -78,9 +66,7 @@ class Tools(commands.Cog):
         )
         await interaction.response.send_message(
             embed=emby,
-            file=discord.File(
-                BytesIO(message.embeds[0].description.encode()), "output.txt"
-            ),
+            file=discord.File(BytesIO(message.embeds[0].description.encode()), "output.txt"),
             ephemeral=True,
         )
 
@@ -116,11 +102,7 @@ class Tools(commands.Cog):
 
         if ctx.guild.id == self.bot.HOME_GUILD.id:
             print("Home guild")
-            await ctx.send(
-                random.choice(
-                    responses_abet.GLOBAL + responses_abet.OTHER + responses_abet.HOME
-                )
-            )
+            await ctx.send(random.choice(responses_abet.GLOBAL + responses_abet.OTHER + responses_abet.HOME))
         elif ctx.guild.id == self.bot.OTHER_GUILD.id:
             print("Other guild")
             await ctx.send(random.choice(responses_abet.GLOBAL + responses_abet.OTHER))
@@ -151,16 +133,12 @@ class Tools(commands.Cog):
         if len(results) > 10:
             response.append("Only showing top 10 results...")
         for index, (elem, count) in enumerate(results.most_common(10), start=1):
-            response.append(
-                f'{index}. {elem} ({count} {"time" if count == 1 else "times"}, {count/times:.2%})'
-            )
+            response.append(f'{index}. {elem} ({count} {"time" if count == 1 else "times"}, {count/times:.2%})')
 
         await ctx.send("\n".join(response))
 
     @commands.hybrid_command(aliases=["wait", "anime"])
-    async def whatanime(
-        self, ctx, url=None, attachment: Optional[discord.Attachment] = None
-    ):
+    async def whatanime(self, ctx, url=None, attachment: Optional[discord.Attachment] = None):
         """What Anime Is This"""
 
         if url is None and not ctx.message.attachments:
@@ -170,9 +148,7 @@ class Tools(commands.Cog):
 
         async with ctx.typing():
             async with ctx.session.get(
-                "https://api.trace.moe/search?cutBorders&anilistInfo&url={}".format(
-                    quote_plus(url)
-                )
+                "https://api.trace.moe/search?cutBorders&anilistInfo&url={}".format(quote_plus(url))
             ) as resp:
                 json_data = await resp.json()
 
@@ -226,19 +202,11 @@ class Tools(commands.Cog):
 
             await ctx.reply(
                 f"{native}{romaji}{english}``{file_name}``\n{timestamp}\n{'{:.1f}'.format(similarity * 100)}% similarity\n\n{warning}",
-                file=(
-                    discord.File(fp=data, filename="preview.mp4", spoiler=spoiler)
-                    if data
-                    else None
-                ),
+                file=(discord.File(fp=data, filename="preview.mp4", spoiler=spoiler) if data else None),
             )
 
-    @commands.hybrid_command(
-        aliases=["sauce", "source", "getsource", "artsource", "getartsource"]
-    )
-    async def saucenao(
-        self, ctx, url=None, attachment: Optional[discord.Attachment] = None
-    ):
+    @commands.hybrid_command(aliases=["sauce", "source", "getsource", "artsource", "getartsource"])
+    async def saucenao(self, ctx, url=None, attachment: Optional[discord.Attachment] = None):
         """SauceNAO Reverse Image Search (manga, doujinshi, fanart, anime, etc.)"""
 
         if url is None and not ctx.message.attachments:
@@ -254,9 +222,7 @@ class Tools(commands.Cog):
                 "url": url,
                 "api_key": os.getenv("SAUCENAO_TOKEN"),
             }
-            async with ctx.session.get(
-                "https://saucenao.com/search.php", params=params
-            ) as r:
+            async with ctx.session.get("https://saucenao.com/search.php", params=params) as r:
                 json_data = await r.json()
                 # print(json_data)
 
@@ -270,9 +236,7 @@ class Tools(commands.Cog):
                                 "Search Rate Too High. Your IP has exceeded the basic account type's rate limit of 6 searches every 30 seconds."
                             )
                         else:
-                            return await ctx.send(
-                                "Client side error (bad image, out of searches, etc)"
-                            )
+                            return await ctx.send("Client side error (bad image, out of searches, etc)")
                     else:
                         return await ctx.send(
                             "Server side error (failed descriptor gen, failed query, etc). Please try again!"
@@ -294,9 +258,7 @@ class Tools(commands.Cog):
 
                 source = get_json_field("**Sauce:** ", "source")
                 if source == "":
-                    source = (
-                        f"**Sauce:** {json_data['results'][0]['data']['ext_urls'][0]}\n"
-                    )
+                    source = f"**Sauce:** {json_data['results'][0]['data']['ext_urls'][0]}\n"
                 # to handle Pixiv urls like
                 # https://i.pximg.net/img-original/img/2021/07/28/07/50/29/91550773 with https://cdn.discordapp.com/attachments/870095545992101958/947297823945293834/lASQNdS.jpg or
                 # http://i2.pixiv.net/img-original/img/2016/01/16/01/19/56/54734137 with https://cdn.discordapp.com/attachments/870095545992101958/947296081354588211/54734137_p0_master1200.png
@@ -310,15 +272,9 @@ class Tools(commands.Cog):
                 yandere = get_json_field("Yandere ID: ", "yandere_id")
                 gelbooru = get_json_field("Gelbooru ID: ", "gelbooru_id")
 
-                separator = (
-                    ""
-                    if danbooru == "" and yandere == "" and gelbooru == ""
-                    else "\n------------------------\n"
-                )
+                separator = "" if danbooru == "" and yandere == "" and gelbooru == "" else "\n------------------------\n"
 
-                await ctx.reply(
-                    f"{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}"
-                )
+                await ctx.reply(f"{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}")
 
     # FIXME: This is blocking
     @commands.hybrid_command()
@@ -367,9 +323,7 @@ class Tools(commands.Cog):
                     "application/pdf",
                     "application/octet-stream",
                 ):
-                    return await ctx.send(
-                        "ERROR: Given file / link or URL is not a PDF file"
-                    )
+                    return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
 
                 images = convert_from_bytes(await resp.read())
 
@@ -382,9 +336,7 @@ class Tools(commands.Cog):
 
                 if flags.selection:
                     try:
-                        selected_pages = parse_selected_pages(
-                            flags.selection, len(image_list)
-                        )
+                        selected_pages = parse_selected_pages(flags.selection, len(image_list))
                         print(selected_pages)
                     except ValueError:
                         return await ctx.reply("🛑 Error parsing selection range")
@@ -419,9 +371,7 @@ class Tools(commands.Cog):
                     )
 
     @commands.hybrid_command(aliases=["rembg", "rmbg", "bgremove"])
-    async def removebg(
-        self, ctx, url=None, attachment: Optional[discord.Attachment] = None
-    ):
+    async def removebg(self, ctx, url=None, attachment: Optional[discord.Attachment] = None):
         """Remove background from an image"""
         # ? Note: This might be non-blocking. If so, then there's no incentive to make the rembg library a microservice.
         # ? It seems to block, but it works very fast anyway. For now, we'll keep it as a library.
@@ -442,9 +392,7 @@ class Tools(commands.Cog):
                 # I think PIL in rembg code should handle errors related to non-image urls
 
                 output = remove(await resp.read())
-                await ctx.send(
-                    file=discord.File(BytesIO(output), f"{uuid.uuid4()}.png")
-                )
+                await ctx.send(file=discord.File(BytesIO(output), f"{uuid.uuid4()}.png"))
 
     @commands.hybrid_command()
     @app_commands.describe(location="Check the weather at the specified location")
@@ -455,9 +403,7 @@ class Tools(commands.Cog):
             async with ctx.session.get(f"https://wttr.in/{location}?0T") as resp:
                 text = await resp.text()
                 if text == "" or text == "Follow @igor_chubin for wttr.in updates":
-                    return await ctx.send(
-                        "The weather service is having problems. Please try again later."
-                    )
+                    return await ctx.send("The weather service is having problems. Please try again later.")
                 # print(text)
                 await ctx.send(f"```{text}```")
 
@@ -468,12 +414,8 @@ class Tools(commands.Cog):
 
         await interaction.response.defer()
 
-        async with self.bot.session.get(
-            url
-        ) as resp:  # TODO: Currently does not validate URLs
-            print(
-                f"Reposter HTTP status: {resp.status}, Content length: {resp.content_length}"
-            )
+        async with self.bot.session.get(url) as resp:  # TODO: Currently does not validate URLs
+            print(f"Reposter HTTP status: {resp.status}, Content length: {resp.content_length}")
             if resp.status == 200:
                 file_bytes = BytesIO(await resp.read())
                 filename = os.path.basename(urlparse(url).path)
@@ -491,13 +433,9 @@ class Tools(commands.Cog):
                         ),
                     )
                 except discord.HTTPException as e:
-                    await interaction.followup.send(
-                        content=f"HTTPException: {e}", ephemeral=True
-                    )
+                    await interaction.followup.send(content=f"HTTPException: {e}", ephemeral=True)
             else:
-                await interaction.followup.send(
-                    content="Did not return 200 status code", ephemeral=True
-                )
+                await interaction.followup.send(content="Did not return 200 status code", ephemeral=True)
 
 
 async def setup(bot):

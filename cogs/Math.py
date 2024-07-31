@@ -10,15 +10,9 @@ class Math(commands.GroupCog, name="math"):
         self.bot = bot
 
     @app_commands.command()
-    @app_commands.describe(
-        display_size="The diagonal measurement of your display in inches"
-    )
-    @app_commands.describe(
-        resolution_width="Number of pixels across the width of your display (native)"
-    )
-    @app_commands.describe(
-        resolution_height="Number of pixels across the height of your display (native)"
-    )
+    @app_commands.describe(display_size="The diagonal measurement of your display in inches")
+    @app_commands.describe(resolution_width="Number of pixels across the width of your display (native)")
+    @app_commands.describe(resolution_height="Number of pixels across the height of your display (native)")
     async def screen_dimensions(
         self,
         interaction: discord.Interaction,
@@ -28,13 +22,9 @@ class Math(commands.GroupCog, name="math"):
     ) -> None:
         """Calculates the dimensions of your screen given the diagonal display size and resolution."""
 
-        def calculate_screen_dimensions(
-            diagonal_size_inches, resolution_width_px, resolution_height_px
-        ):
+        def calculate_screen_dimensions(diagonal_size_inches, resolution_width_px, resolution_height_px):
             # Calculate the physical width and height of the screen
-            diagonal_size_px = math.sqrt(
-                resolution_width_px**2 + resolution_height_px**2
-            )
+            diagonal_size_px = math.sqrt(resolution_width_px**2 + resolution_height_px**2)
             pixel_size_inches = diagonal_size_inches / diagonal_size_px
 
             # Calculate the physical width and height based on pixel size
@@ -53,9 +43,7 @@ class Math(commands.GroupCog, name="math"):
             resolution_height,
         )  # Screen resolution (width px x height px)
 
-        width_inches, height_inches, width_cm, height_cm = calculate_screen_dimensions(
-            diagonal_size, *resolution
-        )
+        width_inches, height_inches, width_cm, height_cm = calculate_screen_dimensions(diagonal_size, *resolution)
 
         await interaction.response.send_message(
             f"Screen width: {width_inches:.2f} inches ({width_cm:.2f} cm)\nScreen height: {height_inches:.2f} inches ({height_cm:.2f} cm)"

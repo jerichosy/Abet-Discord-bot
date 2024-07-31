@@ -10,149 +10,79 @@ class Roleplay(commands.Cog):
 
     @staticmethod
     async def get_roleplay_embed(author_name, user_mentioned, type, category, action):
-        title = (
-            f"{author_name} {action} {user_mentioned.name if user_mentioned else ''}"
-        )
+        title = f"{author_name} {action} {user_mentioned.name if user_mentioned else ''}"
         embed = discord.Embed(title=title, color=0xEE615B)
         embed.set_image(url=await get_waifu(type, category))
         return embed
 
     @commands.command()
     async def cuddle(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "cuddle", "cuddles"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "cuddle", "cuddles"))
 
     @commands.command()
     async def hug(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "hug", "hugs"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "hug", "hugs"))
 
     @commands.command()
     async def kiss(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "kiss", "kisses"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "kiss", "kisses"))
 
     @commands.command()
     async def lick(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "lick", "licks"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "lick", "licks"))
 
     @commands.command()
     async def pat(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "pat", "pats"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "pat", "pats"))
 
     @commands.command()
     async def bonk(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "bonk", "bonks"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "bonk", "bonks"))
 
     @commands.command()
     async def yeet(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "yeet", "yeets"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "yeet", "yeets"))
 
     @commands.command()
     async def wave(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "wave", "waves"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "wave", "waves"))
 
     @commands.command()
     async def highfive(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "highfive", "highfives"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "highfive", "highfives"))
 
     @commands.command()
     async def handhold(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "handhold", "handholds"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "handhold", "handholds"))
 
     @commands.command()
     async def bite(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "bite", "bites"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "bite", "bites"))
 
     @commands.command()
     async def glomp(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "glomp", "glomps"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "glomp", "glomps"))
 
     @commands.command()
     async def slap(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "slap", "slaps"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "slap", "slaps"))
 
     # TODO: Add kill Abet bot easter egg (go offline status then back online and send some scary/taunting shit)
     @commands.command()
     async def kill(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "kill", "kills"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "kill", "kills"))
 
     @commands.command()
     async def kick(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "kick", "kicks"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "kick", "kicks"))
 
     @commands.command()
     async def wink(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "wink", "winks at"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "wink", "winks at"))
 
     @commands.command()
     async def poke(self, ctx, user_mentioned: discord.User = None):
-        await ctx.send(
-            embed=await self.get_roleplay_embed(
-                ctx.author.name, user_mentioned, "sfw", "poke", "pokes"
-            )
-        )
+        await ctx.send(embed=await self.get_roleplay_embed(ctx.author.name, user_mentioned, "sfw", "poke", "pokes"))
 
 
 async def setup(bot):
