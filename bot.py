@@ -367,8 +367,20 @@ async def on_voice_state_update(member, before, after):
         status = "deafened" if after.self_deaf else "undeafened"
         await log_channel.send(f"{member.name} {status} themselves")
 
+    if before.mute != after.mute:
+        status = "server muted" if after.mute else "server unmuted"
+        await log_channel.send(f"{member.name} {status}")
+
+    if before.deaf != after.deaf:
+        status = "server deafened" if after.deaf else "server undeafened"
+        await log_channel.send(f"{member.name} {status}")
+
     if before.self_stream != after.self_stream:
         status = "started streaming" if after.self_stream else "stopped streaming"
+        await log_channel.send(f"{member.name} {status}")
+
+    if before.self_video != after.self_video:
+        status = "turned on their camera" if after.self_video else "turned off their camera"
         await log_channel.send(f"{member.name} {status}")
 
 
