@@ -342,6 +342,31 @@ async def on_presence_update(before, after):
             await send_alert(after, "VALORANT")
 
 
+def get_event_color(event_type):
+    color_map = {
+        "join": discord.Color.green(),
+        "leave": discord.Color.red(),
+        "move": discord.Color.blue(),
+        "mute": discord.Color.light_gray(),
+        "unmute": discord.Color.dark_gray(),
+        "deafen": discord.Color.dark_orange(),
+        "undeafen": discord.Color.orange(),
+        "stream_start": discord.Color.purple(),
+        "stream_stop": discord.Color.dark_purple(),
+    }
+    return color_map.get(event_type, discord.Color.default())
+
+
+def create_voice_log_embed(member, event_type, details=None):
+    embed = discord.Embed(title="Voice Event Log", color=get_event_color(event_type), timestamp=datetime.utcnow())
+    embed.set_author(name=member.name, icon_url=member.avatar.url if member.avatar else member.default_avatar.url)
+    embed.add_field(name="Event", value=event_type.capitalize(), inline=False)
+    if details:
+        embed.add_field(name="Details", value=details, inline=False)
+    embed.set_footer(text=f"User ID: {member.id}")
+    return embed
+
+
 @bot.event
 async def on_voice_state_update(member, before, after):
     # Check if the event is from the monitored server
@@ -349,39 +374,44 @@ async def on_voice_state_update(member, before, after):
     if member.guild.id != MONITORED_SERVER_ID:
         return
 
-    log_channel = bot.get_channel(1268267323249397862)  # logs-vc-other in JDS (Jericho's Discord Server)
+    LOG_CHANNEL_ID = 1268267323249397862
+    log_channel = bot.get_channel(LOG_CHANNEL_ID)  # logs-vc-other in JDS (Jericho's Discord Server)
+    if not log_channel:
+        print(f"Couldn't find log channel with ID {LOG_CHANNEL_ID}")
+        return
 
     if before.channel != after.channel:
         if before.channel is None:
-            await log_channel.send(f"{member.name} joined {after.channel.name}")
+            embed = create_voice_log_embed(member, "join", f"Channel: {after.channel.name}")
         elif after.channel is None:
-            await log_channel.send(f"{member.name} left {before.channel.name}")
+            embed = create_voice_log_embed(member, "leave", f"Channel: {before.channel.name}")
         else:
-            await log_channel.send(f"{member.name} moved from {before.channel.name} to {after.channel.name}")
+            embed = create_voice_log_embed(member, "move", f"From: {before.channel.name}\nTo: {after.channel.name}")
+        await log_channel.send(embed=embed)
 
     if before.self_mute != after.self_mute:
         status = "muted" if after.self_mute else "unmuted"
-        await log_channel.send(f"{member.name} {status} themselves")
+        await log_channel.send(f"<t:{datetime.utcnow().timestamp():.0f}:f> {member.name} {status} themselves")
 
     if before.self_deaf != after.self_deaf:
         status = "deafened" if after.self_deaf else "undeafened"
-        await log_channel.send(f"{member.name} {status} themselves")
+        await log_channel.send(f"<t:{datetime.utcnow().timestamp():.0f}:f> {member.name} {status} themselves")
 
     if before.mute != after.mute:
         status = "server muted" if after.mute else "server unmuted"
-        await log_channel.send(f"{member.name} {status}")
+        await log_channel.send(f"<t:{datetime.utcnow().timestamp():.0f}:f> {member.name} {status}")
 
     if before.deaf != after.deaf:
         status = "server deafened" if after.deaf else "server undeafened"
-        await log_channel.send(f"{member.name} {status}")
+        await log_channel.send(f"<t:{datetime.utcnow().timestamp():.0f}:f> {member.name} {status}")
 
     if before.self_stream != after.self_stream:
         status = "started streaming" if after.self_stream else "stopped streaming"
-        await log_channel.send(f"{member.name} {status}")
+        await log_channel.send(f"<t:{datetime.utcnow().timestamp():.0f}:f> {member.name} {status}")
 
     if before.self_video != after.self_video:
         status = "turned on their camera" if after.self_video else "turned off their camera"
-        await log_channel.send(f"{member.name} {status}")
+        await log_channel.send(f"<t:{datetime.utcnow().timestamp():.0f}:f> {member.name} {status}")
 
 
 if __name__ == "__main__":
