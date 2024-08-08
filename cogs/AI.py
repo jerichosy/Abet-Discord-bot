@@ -82,7 +82,7 @@ class AI(commands.Cog):
         prompt: str = None,
         text: discord.Attachment = None,
         image: discord.Attachment = None,
-        model: Literal["gpt-4o", "gpt-4-turbo-preview", "gpt-4", "gpt-4o-mini"] = "gpt-4o",
+        model: Literal["gpt-4o", "gpt-4-turbo", "gpt-4o-mini"] = "gpt-4o",
         response: Literal["Embed", "Message"] = "Embed",
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
@@ -117,9 +117,6 @@ class AI(commands.Cog):
                 prompt_text = (await ctx.message.attachments[0].read()).decode()
 
             prompt = prompt_text if not prompt else f"{prompt}\n\n{prompt_text}"
-
-        if image:
-            model = "gpt-4-vision-preview"
 
         # FIXME: This logic is borked when this cmd is invoked thru slash
         if not ctx.interaction:
@@ -233,13 +230,7 @@ class AI(commands.Cog):
             if model == "gpt-4o-mini":
                 pricing_prompt = 0.000150
                 pricing_completion = 0.000600
-            elif model == "gpt-4":
-                pricing_prompt = 0.03
-                pricing_completion = 0.06
-            elif model == "gpt-4-turbo-preview":
-                pricing_prompt = 0.01
-                pricing_completion = 0.03
-            elif model == "gpt-4-vision-preview":
+            elif model == "gpt-4-turbo":
                 pricing_prompt = 0.01
                 pricing_completion = 0.03
             elif model == "gpt-4o":
