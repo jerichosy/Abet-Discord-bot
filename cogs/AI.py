@@ -57,6 +57,11 @@ class ConfirmPrompt(discord.ui.View):
         self.stop()
 
 
+# Commands here may invoke AI APIs/requests that cost money. Due to this, take care to either limit access to and/or the capabilities of these commands.
+# Example:
+# - Only allowing certain users to use the command
+# - Rate limiting
+# - Not allowing users to use expensive models or prompts
 class AI(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -284,18 +289,20 @@ class AI(commands.Cog):
             # print(completion)
 
     # TODO: Add system prompt but first check its reliability at the current state (possibly w/ history)
+    # This doesn't have rate limiting as it's free
     @commands.hybrid_command(aliases=["bard"])
     async def gemini(
         self,
         ctx,
         *,
         prompt: str,
+        model: Literal["gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.0-pro"] = "gemini-1.5-pro",
     ):
         """Ask Gemini (formely Bard)! Now powered by Google's Gemini Pro model."""
 
-        model = genai.GenerativeModel("gemini-pro")
+        generativemodel = genai.GenerativeModel(model)
         async with ctx.typing():
-            response = await model.generate_content_async(prompt)
+            response = await generativemodel.generate_content_async(prompt)
             # print(response)
             # print(response.text)
             # print(response.__dict__)
@@ -303,7 +310,7 @@ class AI(commands.Cog):
             try:
                 embed = discord.Embed(description=response.text, color=0x4285F4)
                 embed.set_footer(
-                    text="Model: Gemini Pro | Cost: Free (60 queries per minute)",
+                    text=f"Model: {model} | Cost: Free (subject to rate limits)",
                     icon_url="https://www.gstatic.com/lamda/images/favicon_v1_70c80ffdf27202fd2e84f.png",
                 )
 
@@ -319,6 +326,8 @@ class AI(commands.Cog):
                 )
 
     @app_commands.command()
+    @commands.cooldown(rate=1, per=8, type=commands.BucketType.member)
+    @commands.max_concurrency(number=1, per=commands.BucketType.member, wait=False)
     @app_commands.describe(audio_file="Supports MP3, MP4, MPEG, MPGA, M4A, WAV, and WEBM. Limited to 25 MB.")
     async def speechtotext(self, interaction: discord.Interaction, audio_file: discord.Attachment):
         """Uses OpenAI's Whisper model to transcribe audio (speech) to text"""
