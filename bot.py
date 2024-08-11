@@ -63,6 +63,7 @@ class AbetBot(commands.Bot):
     # However, prefer current approach with only those ones related to startup inside, like so:
 
     def __init__(self):
+        # --- BOT DISCORD ATTRIBUTES ---
         # Other fields/attrs of bot: https://discordpy.readthedocs.io/en/stable/ext/commands/api.html?highlight=bot#bot
         intents = discord.Intents.all()
         super().__init__(
@@ -75,22 +76,23 @@ class AbetBot(commands.Bot):
             help_command=AbetHelp(command_attrs={"hidden": True}),
         )  # , description=
 
+        # --- BOT SYSTEM ATTRIBUTES
+        self.DATABASE = QuotesDB(os.getenv("DB_URI", ""))
+        self.executor = ThreadPoolExecutor(max_workers=4)
+
+        # --- GUILD CONSTANTS ---
         self.HOME_GUILD = discord.Object(id=867811644322611200)  # Inocencio server
         self.OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
         self.TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
         self.ABANGERS_PREMIUM_GUILD = discord.Object(id=909626375374245938)  # abangers
         self.ABANGERS_DELUXE_GUILD = discord.Object(id=448025150101913602)  # deluxe man
 
+        # --- USER CONSTANTS ---
         self.WAIKEI_USER = discord.Object(id=192192501187215361)
 
-        # self.INVITE_LINK = discord.utils.oauth_url(
-        #     client_id=self.application_id, permissions=discord.Permissions.advanced()
-        # )
+        # --- BOT OTHER ATTRIBUTES ---
+        # self.INVITE_LINK = discord.utils.oauth_url(client_id=self.application_id, permissions=discord.Permissions.advanced())
         self.INVITE_LINK = "https://discord.com/api/oauth2/authorize?client_id=954284775210893344&permissions=48900991348288&scope=bot+applications.commands"
-
-        self.DATABASE = QuotesDB(os.getenv("DB_URI", ""))
-
-        self.executor = ThreadPoolExecutor(max_workers=4)
 
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
