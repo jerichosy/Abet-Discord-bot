@@ -340,6 +340,10 @@ class Tools(commands.Cog):
                     image_list.append(discord.File(image_bytes, f"{uuid.uuid4()}.jpg"))
 
                 if flags.selection:
+                    # FIXME: Move the parsing of the selected pages higher before any web request and subsequent conversion is made.
+                    # Because, currently, the bot will download the entire PDF file and convert it to images before parsing the selected pages.
+                    # If there's an error in the selection range, the bot will have wasted resources downloading and converting the entire PDF file,
+                    # since the command terminates after the error is detected and the bot will not send any images.
                     try:
                         selected_pages = parse_selected_pages(flags.selection, len(image_list))
                         print(selected_pages)
@@ -348,6 +352,11 @@ class Tools(commands.Cog):
                     if not selected_pages:
                         return await ctx.reply("🛑 Invalid selection range")
 
+                    # FIXME: We should instead be using the library's built-in page selection feature to avoid converting the entire PDF file,
+                    # instead of converting the whole thing and then manually selecting pages from the resulting output (list) of images.
+                    # This will save resources and time, especially for large PDF files. But, this might be difficult if the library only specifies
+                    # a start and end page selection argument, and not free-form page selection like we have in this cmd arguments.
+                    # See: https://github.com/Belval/pdf2image
                     # Get selected pages
                     image_list = [
                         # image_list[min(max(i, 1) - 1, len(image_list) - 1)]
