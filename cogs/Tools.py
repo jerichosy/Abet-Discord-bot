@@ -414,7 +414,8 @@ class Tools(commands.Cog):
         """Check the weather!"""
 
         async with ctx.typing():
-            async with ctx.session.get(f"https://wttr.in/{location}?0T") as resp:
+            timeout = aiohttp.ClientTimeout(total=5)
+            async with ctx.session.get(f"https://wttr.in/{location}?0T", timeout=timeout) as resp:
                 text = await resp.text()
                 if text == "" or text == "Follow @igor_chubin for wttr.in updates":
                     return await ctx.send("The weather service is having problems. Please try again later.")
