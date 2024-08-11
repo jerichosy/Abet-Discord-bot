@@ -1,3 +1,4 @@
+import asyncio
 import mimetypes
 import os
 import random
@@ -276,7 +277,6 @@ class Tools(commands.Cog):
 
                 await ctx.reply(f"{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}")
 
-    # FIXME: This is blocking
     @commands.hybrid_command()
     # "attachment" is not accessed as the attachment is already retrievable by message.attachments[0].url
     # and to maintain compatibility with traditional cmd usage. But the arg. is necessary to indicate as a slash cmd arg. for the user
@@ -316,6 +316,10 @@ class Tools(commands.Cog):
             # Sort, then return
             return sorted(pages)
 
+        async def convert_pdf_to_images(data):
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(self.bot.executor, convert_from_bytes, data)
+
         async with ctx.typing():
             async with ctx.session.get(url) as resp:
                 print(resp.headers.get("Content-Type"))
@@ -325,7 +329,8 @@ class Tools(commands.Cog):
                 ):
                     return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
 
-                images = convert_from_bytes(await resp.read())
+                pdf_bytes = await resp.read()
+                images = await convert_pdf_to_images(pdf_bytes)
 
                 image_list = []
                 for image in images:

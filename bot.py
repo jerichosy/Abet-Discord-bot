@@ -12,6 +12,7 @@ import re
 import sys
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from io import BytesIO
 from typing import Union
@@ -88,6 +89,8 @@ class AbetBot(commands.Bot):
         self.INVITE_LINK = "https://discord.com/api/oauth2/authorize?client_id=954284775210893344&permissions=48900991348288&scope=bot+applications.commands"
 
         self.DATABASE = QuotesDB(os.getenv("DB_URI", ""))
+
+        self.executor = ThreadPoolExecutor(max_workers=4)
 
     async def setup_hook(self) -> None:
         self.session = aiohttp.ClientSession()
