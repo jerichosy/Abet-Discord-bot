@@ -278,6 +278,7 @@ class Tools(commands.Cog):
                 await ctx.reply(f"{source}{part}{characters}{similarity}{separator}{danbooru}{yandere}{gelbooru}")
 
     @commands.hybrid_command()
+    @commands.max_concurrency(number=1, per=commands.BucketType.default, wait=True)
     # "attachment" is not accessed as the attachment is already retrievable by message.attachments[0].url
     # and to maintain compatibility with traditional cmd usage. But the arg. is necessary to indicate as a slash cmd arg. for the user
     async def pdf(
