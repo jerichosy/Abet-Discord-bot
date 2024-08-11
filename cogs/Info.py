@@ -39,7 +39,7 @@ class Info(commands.Cog):
         embed = discord.Embed(
             title="FUCK CARL",
             color=0xEE615B,
-            url="https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png",
+            url="https://imgur.com/a/kNwaiaX",
             description=f"Latest Changes:\n{revision}\n\nSource code & documentation: [GitHub repository](https://github.com/jerichosy/Abet-Discord-bot)",
         )
 
