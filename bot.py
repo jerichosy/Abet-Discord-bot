@@ -282,6 +282,8 @@ async def on_message(message):
 # Command error message sender
 @bot.event
 async def on_command_error(ctx, error):
+    # List of errors and their default messages (if present): https://github.com/Rapptz/discord.py/blob/master/discord/ext/commands/errors.py
+
     # Errors that bot owner should be able to bypass
     if isinstance(error, (commands.CommandOnCooldown, commands.MaxConcurrencyReached)):
         if ctx.author.id in bot.owner_ids:
@@ -297,6 +299,7 @@ async def on_command_error(ctx, error):
             commands.BadArgument,
             commands.NotOwner,
             commands.MissingPermissions,
+            commands.NoPrivateMessage,
         ),
     ):
         # `NotOwner` exception doesn't require my attention but the default error msg could be clearer

@@ -87,6 +87,14 @@ class Quotes(commands.Cog):
         self.bot = bot
         self.quotes_manager = quotes_manager
 
+    async def cog_check(self, ctx):
+        # Only allow commands in this cog in guilds
+        in_guild = ctx.guild is not None
+        # print(f"{ctx.command.name} is invoked in guild: {in_guild}")
+        if not in_guild:
+            raise commands.NoPrivateMessage()
+        return True
+
     async def get_random_quote(self, member: discord.Member):
         result = await self.quotes_manager.find_random_quote(member.id)
         return result.quote if result else None
