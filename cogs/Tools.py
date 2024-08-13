@@ -457,7 +457,7 @@ class Tools(commands.Cog):
             else:
                 await interaction.followup.send(content="Did not return 200 status code", ephemeral=True)
 
-    @commands.hybrid_command()
+    @commands.hybrid_command(aliases=["tag-show", "tagshow"])
     @app_commands.describe(name="The name of the tag to find")
     async def tag(self, ctx: Context, name: str):
         """Finds a tag with the given name and displays its content"""
@@ -474,7 +474,7 @@ class Tools(commands.Cog):
         # ? Add owner as embed text footer
         await ctx.send(tag.content)
 
-    @commands.hybrid_command(name="tag-create")
+    @commands.hybrid_command(name="tag-create", aliases=["tagcreate", "tag-add", "tagadd"])
     @app_commands.describe(name="The name of the tag to be created")
     @app_commands.describe(content="The content of the tag to be created")
     async def tag_create(self, ctx: Context, name: str, *, content: commands.Range[str, None, MessageLimit.CONTENT.value]):
@@ -490,7 +490,7 @@ class Tools(commands.Cog):
 
         await ctx.send(f'✅ Tag "{name}" successfully created.')
 
-    @commands.hybrid_command(name="tag-list")
+    @commands.hybrid_command(name="tag-list", aliases=["taglist"])
     @app_commands.describe(user="The user to list tags for")
     async def tag_list(self, ctx: Context, user: discord.User = None):
         """Lists tags by user"""
@@ -515,7 +515,7 @@ class Tools(commands.Cog):
 
     # TODO: Implement tag-seach
 
-    @commands.hybrid_command(name="tag-delete")
+    @commands.hybrid_command(name="tag-delete", aliases=["tagdelete", "tag-rm", "tagrm"])
     @app_commands.describe(name="The name of the tag to delete")
     async def tag_delete(self, ctx: Context, name: str):
         """Deletes a tag with the given name"""
