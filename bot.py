@@ -38,6 +38,7 @@ initial_extensions = (
     "cogs.AI",
     "cogs.Math",
     "cogs.VoiceListen",
+    "cogs.Quotes",
 )
 
 # Set up logger
