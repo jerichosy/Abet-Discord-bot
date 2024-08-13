@@ -472,12 +472,12 @@ class Tools(commands.Cog):
 
         # Send the tag content
         # ? Add owner as embed text footer
-        await ctx.send(truncate(tag.content, MessageLimit.CONTENT.value))
+        await ctx.send(tag.content)
 
     @commands.hybrid_command(name="tag-create")
     @app_commands.describe(name="The name of the tag to be created")
     @app_commands.describe(content="The content of the tag to be created")
-    async def tag_create(self, ctx: Context, name: str, *, content: str):
+    async def tag_create(self, ctx: Context, name: str, *, content: commands.Range[str, None, MessageLimit.CONTENT.value]):
         """Creates a tag with the given name and content"""
 
         # Check if the tag already exists
