@@ -229,6 +229,15 @@ class Admin(commands.Cog):
     async def test_interaction_input_member(self, interaction: discord.Interaction, member: discord.Member):
         await interaction.response.send_message(f"Member: {member.mention}")
 
+    @commands.hybrid_group(fallback="get")
+    @app_commands.guilds(887980840347398144)
+    async def test(self, ctx, name):
+        await ctx.send(f"Showing test: {name}")
+
+    @test.command()
+    async def run(self, ctx, name):
+        await ctx.send(f"Run test: {name}")
+
 
 async def setup(bot):
     await bot.add_cog(Admin(bot))
