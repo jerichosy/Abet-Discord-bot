@@ -320,7 +320,7 @@ class AI(commands.Cog):
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
     @commands.max_concurrency(number=1, per=commands.BucketType.user, wait=False)
     @app_commands.describe(audio_file="Supports MP3, MP4, MPEG, MPGA, M4A, WAV, and WEBM. Limited to 25 MB.")
-    async def speechtotext(self, interaction: discord.Interaction, audio_file: discord.Attachment):
+    async def whisper(self, interaction: discord.Interaction, audio_file: discord.Attachment):
         """Uses OpenAI's Whisper model to transcribe audio (speech) to text"""
 
         # Check if over 25 MB
