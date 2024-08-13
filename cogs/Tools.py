@@ -18,6 +18,9 @@ from pdf2image import convert_from_bytes
 from rembg import remove
 
 from cogs.utils import responses_abet
+from cogs.utils.character_limits import MessageLimit, truncate
+from cogs.utils.context import Context
+from models.db import TagsManager
 
 
 class PDFFlags(commands.FlagConverter, prefix="--", delimiter=""):
@@ -26,8 +29,9 @@ class PDFFlags(commands.FlagConverter, prefix="--", delimiter=""):
 
 
 class Tools(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot, tags_manager: TagsManager):
         self.bot = bot
+        self.tags_manager = tags_manager
         self.raw_string_menu = app_commands.ContextMenu(
             name="Get Message Content",
             callback=self.get_raw_string,
@@ -453,6 +457,93 @@ class Tools(commands.Cog):
             else:
                 await interaction.followup.send(content="Did not return 200 status code", ephemeral=True)
 
+    @commands.hybrid_command()
+    @app_commands.describe(name="The name of the tag to find")
+    async def tag(self, ctx: Context, name: str):
+        """Finds a tag with the given name and displays its content"""
+
+        # Find the tag by name
+        tag = await self.tags_manager.find_tag_by_name(name)
+
+        # If the tag is not found, send an error message
+        if not tag:
+            await ctx.send("That tag does not exist.")
+            return
+
+        # Send the tag content
+        # ? Add owner as embed text footer
+        await ctx.send(truncate(tag.content, MessageLimit.CONTENT.value))
+
+    @commands.hybrid_command(name="tag-create")
+    @app_commands.describe(name="The name of the tag to be created")
+    @app_commands.describe(content="The content of the tag to be created")
+    async def tag_create(self, ctx: Context, name: str, *, content: str):
+        """Creates a tag with the given name and content"""
+
+        # Check if the tag already exists
+        if await self.tags_manager.find_tag_by_name(name):
+            await ctx.send("🛑 That tag already exists.")
+            return
+
+        author = ctx.author
+        await self.tags_manager.insert_tag(name, content, author.id)
+
+        await ctx.send(f'✅ Tag "{name}" successfully created.')
+
+    @commands.hybrid_command(name="tag-list")
+    @app_commands.describe(user="The user to list tags for")
+    async def tag_list(self, ctx: Context, user: discord.User = None):
+        """Lists tags by user"""
+
+        # If no user is specified, use the author of the command
+        if user is None:
+            user = ctx.author
+
+        # Get the tags for the user
+        tags = await self.tags_manager.find_tags_by_user_id(user.id)
+
+        # If the user has no tags, send an error message
+        if not tags:
+            await ctx.send("⚠️ No tags found.")
+            return
+
+        # Format the tags as a string
+        tag_list = "\n".join(f"- {tag.name}" for tag in tags)
+
+        # Send the list of tags
+        await ctx.send(f"Tags for {user.display_name}:\n{tag_list}")
+
+    # TODO: Implement tag-seach
+
+    @commands.hybrid_command(name="tag-delete")
+    @app_commands.describe(name="The name of the tag to delete")
+    async def tag_delete(self, ctx: Context, name: str):
+        """Deletes a tag with the given name"""
+
+        # Find the tag by name
+        tag = await self.tags_manager.find_tag_by_name(name)
+
+        # If the tag is not found, send an error message
+        if not tag:
+            await ctx.send("⚠️ That tag does not exist.")
+            return
+
+        # Check if the author of the command is the owner of the tag
+        # FIXME: Allow bot owner to delete any tag
+        # FIXME: If you look at the quote equivalent, the style of checks is different. Make the two consisent across all functions.
+        if ctx.author.id != int(tag.owner):
+            await ctx.send("🛑 You do not own that tag.")
+            return
+
+        # Delete the tag
+        await self.tags_manager.delete_tag_by_name(name)
+        # Send a confirmation message
+        # ? Maybe add ownership info
+        await ctx.send(f'✅ Tag "{name}" successfully deleted.')
+
 
 async def setup(bot):
-    await bot.add_cog(Tools(bot))
+    engine = bot.db_engine
+    tags_manager = TagsManager(engine)
+
+    await bot.add_cog(Tools(bot, tags_manager))
