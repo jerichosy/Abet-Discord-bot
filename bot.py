@@ -284,10 +284,17 @@ async def on_message(message):
 async def on_command_error(ctx, error):
     # List of errors and their default messages (if present): https://github.com/Rapptz/discord.py/blob/master/discord/ext/commands/errors.py
 
+    # print(error)
+
     # Errors that bot owner should be able to bypass
     if isinstance(error, (commands.CommandOnCooldown, commands.MaxConcurrencyReached)):
         if ctx.author.id in bot.owner_ids:
+
+            # print("Bypassing cooldown/max concurrency for owner")
+
+            # This doesn't work for slash: https://discord.com/channels/336642139381301249/669155775700271126/969250454225686548
             return await ctx.reinvoke()
+
     # Errors that don't require my attention should be sent as is
     if isinstance(
         error,
