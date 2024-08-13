@@ -319,6 +319,8 @@ async def on_command_error(ctx, error):
     # error_string = "\n".join([f"> {line}" for line in str(error).splitlines()])
     # error_string = f">>> {error}"  # alternatively, ">>> " takes care of equivalently prepending every line with "> "
     # send
+    # FIXME: The mention here will not work for users who haven't met me in Discord. But for those that will see me, it's fine even if I'm not actually pinged.
+    # FIXME: For those that will not see me, find a way to let them be able to reach out to me.
     await ctx.send(
         f"**Uh oh, looks like <@298454523624554501> needs to take a look at this:**\n```{error}```",
         suppress_embeds=True,
