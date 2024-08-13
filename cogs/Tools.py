@@ -477,7 +477,13 @@ class Tools(commands.Cog):
     @commands.hybrid_command(name="tag-create", aliases=["tagcreate", "tag-add", "tagadd"])
     @app_commands.describe(name="The name of the tag to be created")
     @app_commands.describe(content="The content of the tag to be created")
-    async def tag_create(self, ctx: Context, name: str, *, content: commands.Range[str, None, MessageLimit.CONTENT.value]):
+    async def tag_create(
+        self,
+        ctx: Context,
+        name: commands.Range[str, None, 211],
+        *,
+        content: commands.Range[str, None, MessageLimit.CONTENT.value],
+    ):
         """Creates a tag with the given name and content"""
 
         # Check if the tag already exists
