@@ -243,8 +243,9 @@ class Admin(commands.Cog):
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
     @commands.max_concurrency(number=1, per=commands.BucketType.user, wait=False)
     @app_commands.guilds(887980840347398144)
-    async def test_cooldown_and_concurrency(self, ctx, sleep_time: int = 20):
+    async def test_cooldown_and_concurrency(self, ctx: Context, sleep_time: int = 20):
         # or sleep_time = 4, test both cases of higher and lower than cooldown
+        await ctx.defer()
         await asyncio.sleep(sleep_time)
         await ctx.send(f"Successfully ran test_cooldown_and_concurrency")
 
