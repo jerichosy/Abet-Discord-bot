@@ -32,12 +32,6 @@ class QuotesManager(BaseDBManager):
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
 
-    async def find_if_quote_exists_by_id(self, quote_id: int) -> Quote | None:
-        async with self.SessionLocal() as session:
-            stmt = select(Quote).where(Quote.quote_by.ilike(str(quote_id)))
-            result = await session.execute(stmt)
-            return result.scalar_one_or_none()
-
     async def find_random_quote(self, member_id: int) -> Quote | None:
         async with self.SessionLocal() as session:
             stmt = select(Quote).where(Quote.quote_by.ilike(str(member_id))).order_by(func.random()).limit(1)
