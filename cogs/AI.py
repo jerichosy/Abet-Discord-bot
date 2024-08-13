@@ -67,8 +67,8 @@ class AI(commands.Cog):
         self.bot = bot
 
     @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat", "gpt"])
-    @commands.cooldown(rate=1, per=8, type=commands.BucketType.member)
-    @commands.max_concurrency(number=1, per=commands.BucketType.member, wait=False)
+    @commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
+    @commands.max_concurrency(number=1, per=commands.BucketType.user, wait=False)
     @app_commands.describe(prompt="Your question to ChatGPT")
     @app_commands.describe(text="Pass in your prompt as a text file if it's too long")
     @app_commands.describe(image="Use GPT-4 Vision model to allow images as input and answer questions about them")
@@ -317,8 +317,8 @@ class AI(commands.Cog):
                 )
 
     @app_commands.command()
-    @commands.cooldown(rate=1, per=8, type=commands.BucketType.member)
-    @commands.max_concurrency(number=1, per=commands.BucketType.member, wait=False)
+    @commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
+    @commands.max_concurrency(number=1, per=commands.BucketType.user, wait=False)
     @app_commands.describe(audio_file="Supports MP3, MP4, MPEG, MPGA, M4A, WAV, and WEBM. Limited to 25 MB.")
     async def speechtotext(self, interaction: discord.Interaction, audio_file: discord.Attachment):
         """Uses OpenAI's Whisper model to transcribe audio (speech) to text"""
