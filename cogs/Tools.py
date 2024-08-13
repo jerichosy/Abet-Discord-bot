@@ -462,6 +462,8 @@ class Tools(commands.Cog):
     async def tag(self, ctx: Context, name: str):
         """Finds a tag with the given name and displays its content"""
 
+        name = name.lower()
+
         # Find the tag by name
         tag = await self.tags_manager.find_tag_by_name(name)
 
@@ -485,6 +487,8 @@ class Tools(commands.Cog):
         content: commands.Range[str, None, MessageLimit.CONTENT.value],
     ):
         """Creates a tag with the given name and content"""
+
+        name = name.lower()
 
         # Check if the tag already exists
         if await self.tags_manager.find_tag_by_name(name):
@@ -525,6 +529,8 @@ class Tools(commands.Cog):
     @app_commands.describe(name="The name of the tag to delete")
     async def tag_delete(self, ctx: Context, name: str):
         """Deletes a tag with the given name"""
+
+        name = name.lower()
 
         # Find the tag by name
         tag = await self.tags_manager.find_tag_by_name(name)
