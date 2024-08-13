@@ -24,7 +24,8 @@ from dotenv import load_dotenv
 
 from cogs.utils import responses_random
 from cogs.utils.context import Context
-from models.db import QuotesDB
+from models.db import BaseDBManager
+from models.engine import EngineSingleton
 
 initial_extensions = (
     "cogs.Fun",
@@ -77,7 +78,7 @@ class AbetBot(commands.Bot):
         )  # , description=
 
         # --- BOT SYSTEM ATTRIBUTES
-        self.DATABASE = QuotesDB(os.getenv("DB_URI", ""))
+        self.db_engine = EngineSingleton.get_engine(os.getenv("DB_URI", ""))
         self.executor = ThreadPoolExecutor(max_workers=4)
 
         # --- GUILD CONSTANTS ---
@@ -110,7 +111,8 @@ class AbetBot(commands.Bot):
         # synced = await self.tree.sync(guild=self.TEST_GUILD)
         # print(f"Copied {len(synced)} global commands to guild {self.TEST_GUILD.id}.")
 
-        await self.DATABASE._create_tables()
+        base_db_manager = BaseDBManager(self.db_engine)
+        await base_db_manager._create_tables()
 
     async def on_ready(self):
         # Do not make API calls here as this can be triggered multiple times

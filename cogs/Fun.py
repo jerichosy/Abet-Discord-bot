@@ -15,6 +15,8 @@ from discord import app_commands
 from discord.app_commands import Group
 from discord.ext import commands
 
+from models.db import QuotesManager
+
 from .utils.character_limits import MessageLimit, truncate
 from .utils.context import Context
 
@@ -85,9 +87,10 @@ class QuoteListView(discord.ui.View):
 
 
 class Fun(commands.Cog):
-    def __init__(self, bot, waifu_im_tags):
+    def __init__(self, bot, waifu_im_tags, quotes_manager: QuotesManager):
         self.bot = bot
         self.waifu_im_tags = waifu_im_tags
+        self.quotes_manager = quotes_manager
 
     # Don't make this into an embed
     @commands.hybrid_command(aliases=["fuckcarl"])
@@ -117,11 +120,11 @@ class Fun(commands.Cog):
         await ctx.send(quote)
 
     async def get_random_quote(self, member: discord.Member):
-        result = await self.bot.DATABASE.find_random_quote(member.id)
+        result = await self.quotes_manager.find_random_quote(member.id)
         return result.quote if result else None
 
     async def get_quotes_list(self, member: discord.Member, page: int = 1, per_page: int = 20):
-        return await self.bot.DATABASE.find_quotes_by_member_id(member.id, page, per_page)
+        return await self.quotes_manager.find_quotes_by_member_id(member.id, page, per_page)
 
     async def create_quotes_embed(self, member: discord.Member, quotes: Sequence) -> discord.Embed:
         if not quotes:
@@ -185,11 +188,11 @@ class Fun(commands.Cog):
     ):
         """Adds a new quote to the collection."""
 
-        if await self.bot.DATABASE.find_if_quote_exists_by_quote(quote, member.id):
+        if await self.quotes_manager.find_if_quote_exists_by_quote(quote, member.id):
             await ctx.send("🛑 That quote already exists!")
             return
 
-        quote_id = await self.bot.DATABASE.insert_quote(quote, member.id, ctx.author.id)
+        quote_id = await self.quotes_manager.insert_quote(quote, member.id, ctx.author.id)
 
         await ctx.send(
             # Truncate `quote` only as member.display_name is bounded to a limit of 32 chars.
@@ -248,7 +251,7 @@ class Fun(commands.Cog):
     async def quote_delete(self, ctx: Context, quote_id: int):
         """Deletes a quote by its ID."""
 
-        quote = await self.bot.DATABASE.find_quote_by_id(quote_id)
+        quote = await self.quotes_manager.find_quote_by_id(quote_id)
 
         if quote is None:
             await ctx.send("⚠️ Quote not found.")
@@ -257,7 +260,7 @@ class Fun(commands.Cog):
         member = await ctx.guild.fetch_member(quote.quote_by)
 
         if ctx.author.id == int(quote.added_by) or ctx.author.id in self.bot.owner_ids:
-            await self.bot.DATABASE.delete_quote_by_id(quote_id)
+            await self.quotes_manager.delete_quote_by_id(quote_id)
             await ctx.send(
                 # Truncate whole sent string as quote_id length is unbounded
                 truncate(
@@ -451,4 +454,7 @@ async def setup(bot):
             if r.status == 200:
                 waifu_im_tags = await r.json()
 
-    await bot.add_cog(Fun(bot, waifu_im_tags))
+    engine = bot.db_engine
+    quotes_manager = QuotesManager(engine)
+
+    await bot.add_cog(Fun(bot, waifu_im_tags, quotes_manager))
