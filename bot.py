@@ -244,8 +244,8 @@ async def on_message(message):
                 if resp.status == 200:
                     resp_json = await resp.json()
                     # This can also be sent instead and it will embed although it is very long
-                    dl_link = resp_json["formats"][3]["url"]
-                    file_format = resp_json["formats"][3]["ext"]
+                    dl_link = resp_json["formats"][2]["url"]
+                    file_format = resp_json["formats"][2]["ext"]
                     desc = resp_json["description"]
                     print(dl_link)
 
