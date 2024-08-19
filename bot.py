@@ -364,25 +364,27 @@ async def on_presence_update(before, after):
 
 def get_event_color(event_type):
     color_map = {
-        "join": discord.Color.green(),
-        "leave": discord.Color.red(),
-        "move": discord.Color.blue(),
-        "mute": discord.Color.light_gray(),
-        "unmute": discord.Color.dark_gray(),
-        "deafen": discord.Color.dark_orange(),
-        "undeafen": discord.Color.orange(),
-        "stream_start": discord.Color.purple(),
-        "stream_stop": discord.Color.dark_purple(),
+        "joined": discord.Color.green(),
+        "left": discord.Color.red(),
+        "changed": discord.Color.blue(),
+        # "mute": discord.Color.light_gray(),
+        # "unmute": discord.Color.dark_gray(),
+        # "deafen": discord.Color.dark_orange(),
+        # "undeafen": discord.Color.orange(),
+        # "stream_start": discord.Color.purple(),
+        # "stream_stop": discord.Color.dark_purple(),
     }
     return color_map.get(event_type, discord.Color.default())
 
 
-def create_voice_log_embed(member, event_type, details=None):
-    embed = discord.Embed(title="Voice Event Log", color=get_event_color(event_type), timestamp=datetime.utcnow())
+def create_voice_log_embed(member, event_type, details):
+    embed = discord.Embed(
+        title=f"Member {event_type} voice channel",
+        description=f"**{member.name}** {event_type} {details}" if event_type != "changed" else details,
+        color=get_event_color(event_type),
+        timestamp=datetime.utcnow(),
+    )
     embed.set_author(name=member.name, icon_url=member.avatar.url if member.avatar else member.default_avatar.url)
-    embed.add_field(name="Event", value=event_type.capitalize(), inline=False)
-    if details:
-        embed.add_field(name="Details", value=details, inline=False)
     embed.set_footer(text=f"User ID: {member.id}")
     return embed
 
@@ -402,11 +404,13 @@ async def on_voice_state_update(member, before, after):
 
     if before.channel != after.channel:
         if before.channel is None:
-            embed = create_voice_log_embed(member, "join", f"Channel: {after.channel.name}")
+            embed = create_voice_log_embed(member, "joined", f"🔊 {after.channel.name}")
         elif after.channel is None:
-            embed = create_voice_log_embed(member, "leave", f"Channel: {before.channel.name}")
+            embed = create_voice_log_embed(member, "left", f"🔊 {before.channel.name}")
         else:
-            embed = create_voice_log_embed(member, "move", f"From: {before.channel.name}\nTo: {after.channel.name}")
+            embed = create_voice_log_embed(
+                member, "changed", f"**Before:** 🔊 {before.channel.name}\n**+After:** 🔊 {after.channel.name}"
+            )
         await log_channel.send(embed=embed)
 
     if before.self_mute != after.self_mute:
