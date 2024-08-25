@@ -16,9 +16,8 @@ WAIFU_IM_API_HEADERS = {"Accept-Version": "v6"}
 
 
 class Fun(commands.Cog):
-    def __init__(self, bot, waifu_im_tags):
+    def __init__(self, bot):
         self.bot = bot
-        self.waifu_im_tags = waifu_im_tags
 
     # Don't make this into an embed
     @commands.hybrid_command(aliases=["fuckcarl"])
@@ -218,8 +217,18 @@ class Fun(commands.Cog):
             ephemeral=True if is_ephemeral == "Yes" else False,
         )
 
+    async def refresh_waifu_im_tags(self):
+        # Populate the waifu_im_tags list (for waifu slash cmd)
+        async with self.bot.session.get("https://api.waifu.im/tags", headers=WAIFU_IM_API_HEADERS) as r:
+            print(f"Waifu.im tags query status code: {r.status}")
+            if r.status == 200:
+                return await r.json()
+
     @sfw.autocomplete("tag")
     async def sfw_autocomplete(self, interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+        if not hasattr(self, "waifu_im_tags"):
+            self.waifu_im_tags = await self.refresh_waifu_im_tags()
+
         return [
             app_commands.Choice(name=waifu_im_tag, value=waifu_im_tag)
             for waifu_im_tag in self.waifu_im_tags["versatile"]
@@ -228,6 +237,9 @@ class Fun(commands.Cog):
 
     @nsfw.autocomplete("tag")
     async def nsfw_autocomplete(self, interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+        if not hasattr(self, "waifu_im_tags"):
+            self.waifu_im_tags = await self.refresh_waifu_im_tags()
+
         return [
             app_commands.Choice(name=waifu_im_tag, value=waifu_im_tag)
             for waifu_im_tag in self.waifu_im_tags["nsfw"]
@@ -236,10 +248,4 @@ class Fun(commands.Cog):
 
 
 async def setup(bot):
-    # Populate the waifu_im_tags list (for waifu slash cmd)
-    async with bot.session.get("https://api.waifu.im/tags", headers=WAIFU_IM_API_HEADERS) as r:
-        print(f"Waifu.im tags query status code: {r.status}\n")
-        if r.status == 200:
-            waifu_im_tags = await r.json()
-
-    await bot.add_cog(Fun(bot, waifu_im_tags))
+    await bot.add_cog(Fun(bot))
