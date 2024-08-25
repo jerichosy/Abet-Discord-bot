@@ -97,6 +97,9 @@ class AbetBot(commands.Bot):
         self.INVITE_LINK = "https://discord.com/api/oauth2/authorize?client_id=954284775210893344&permissions=48900991348288&scope=bot+applications.commands"
 
     async def setup_hook(self) -> None:
+        print("\n\n---------------------------------------------------------------------------------")
+        print("\033[1;33m***** Now in `setup_hook()` *****\033[0m")
+
         self.session = aiohttp.ClientSession()
 
         # Load cogs
@@ -116,6 +119,8 @@ class AbetBot(commands.Bot):
         await base_db_manager._create_tables()
 
     async def on_ready(self):
+        print("\n\033[1;32m***** READY *****\033[0m")
+
         # Do not make API calls here as this can be triggered multiple times
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print("Invite URL:", self.INVITE_LINK)
@@ -123,6 +128,11 @@ class AbetBot(commands.Bot):
 
     async def get_context(self, origin: Union[discord.Interaction, discord.Message], /, *, cls=Context) -> Context:
         return await super().get_context(origin, cls=cls)
+
+    # TODO: See if we can use this
+    # @property
+    # def owner(self) -> discord.User:
+    #     return self.bot_app_info.owner
 
 
 bot = AbetBot()
