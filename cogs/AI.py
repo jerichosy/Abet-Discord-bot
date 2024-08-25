@@ -16,10 +16,6 @@ from openai import AsyncOpenAI
 from cogs.utils.character_limits import EmbedLimit, MessageLimit, truncate
 from cogs.utils.ExchangeRateUSDPHP import ExchangeRateUSDPHP
 
-load_dotenv()
-
-client = AsyncOpenAI()
-
 
 class ConfirmPrompt(discord.ui.View):
     def __init__(self, user):
@@ -66,6 +62,14 @@ class AI(commands.Cog):
     def __init__(self, bot, currency_USD_PHP: ExchangeRateUSDPHP):
         self.bot = bot
         self.currency_USD_PHP = currency_USD_PHP
+
+    @property
+    def client(self):
+        if not hasattr(self, "_client"):
+            # print("Creating AsyncOpenAI")
+            self._client = AsyncOpenAI()
+        # print("Returning AsyncOpenAI")
+        return self._client
 
     @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat", "gpt"])
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
@@ -154,7 +158,7 @@ class AI(commands.Cog):
                     # else:
                     #     raise RateLimitError
                     # else:
-                    completion = await client.chat.completions.create(**kwargs)
+                    completion = await self.client.chat.completions.create(**kwargs)
 
                     if sent:
                         await sent.delete()
@@ -346,7 +350,7 @@ class AI(commands.Cog):
         try:
             # Transcribe
             with open(temp_filename, "rb") as f:  # Open the file in binary read mode
-                transcript = await client.audio.transcriptions.create(
+                transcript = await self.client.audio.transcriptions.create(
                     model="whisper-1",
                     file=f,  # Pass the file object directly
                 )
