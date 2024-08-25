@@ -12,6 +12,8 @@ from discord.ext import commands
 
 from .utils.context import Context
 
+WAIFU_IM_API_HEADERS = {"Accept-Version": "v6"}
+
 
 class Fun(commands.Cog):
     def __init__(self, bot, waifu_im_tags):
@@ -141,9 +143,8 @@ class Fun(commands.Cog):
     async def get_waifu_im_embed(self, type, category):
         type = "false" if type == "sfw" else "true"
         url_string = f"https://api.waifu.im/search/?included_tags={category}&is_nsfw={type}"
-        headers = {"Accept-Version": "v6"}
 
-        async with self.bot.session.get(url_string, headers=headers) as resp:
+        async with self.bot.session.get(url_string, headers=WAIFU_IM_API_HEADERS) as resp:
             print(f"Waifu.im: {resp.status}")
             json_data = await resp.json()
             if resp.status in {200, 201}:
@@ -236,8 +237,7 @@ class Fun(commands.Cog):
 
 async def setup(bot):
     # Populate the waifu_im_tags list (for waifu slash cmd)
-    headers = {"Accept-Version": "v6"}
-    async with bot.session.get("https://api.waifu.im/tags", headers=headers) as r:
+    async with bot.session.get("https://api.waifu.im/tags", headers=WAIFU_IM_API_HEADERS) as r:
         print(f"Waifu.im tags query status code: {r.status}\n")
         if r.status == 200:
             waifu_im_tags = await r.json()
