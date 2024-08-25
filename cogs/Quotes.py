@@ -116,7 +116,7 @@ class Quotes(commands.Cog):
             )
         return embed
 
-    @commands.hybrid_command(aliases=["wai", "waikeili", "waikei"])
+    @commands.hybrid_command()
     @app_commands.describe(member="The member you want a random quote from")
     async def quote(self, ctx: Context, member: discord.Member = None):
         """random quotes (formerly Waikei as a Service)"""

@@ -1,4 +1,5 @@
 import asyncio
+import os
 import random
 from io import BytesIO
 from typing import List, Literal
@@ -119,6 +120,26 @@ class Fun(commands.Cog):
             await ctx.send("You are right!")
         else:
             await ctx.send(f"Oops. It is actually {answer}.")
+
+    # TODO: aliases=["wai", "waikeili", "waikei"]
+    # TODO: make this work as hybrid cmds
+    waikei_group = Group(name="waikei", description="Waikei commands")
+
+    @waikei_group.command(name="stop-generating")
+    async def stop_generating(self, interaction):
+        async with aiohttp.ClientSession() as session:
+            async with session.post(f"{os.getenv('YT_DLP_MICROSERVICE')}/waikei-pretrained/stop-generating") as resp:
+                # Print status line
+                msg = [f"HTTP/{resp.version.major}.{resp.version.minor} {resp.status} {resp.reason}"]
+
+                # Print headers
+                for key, value in resp.headers.items():
+                    msg.append(f"{key}: {value}")
+
+                # Print content
+                msg.append(f"\n{await resp.text()}")
+
+                await interaction.response.send_message("\n".join(msg))
 
     @staticmethod
     async def get_waifu_im_embed(type, category):

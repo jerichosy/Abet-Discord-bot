@@ -178,10 +178,10 @@ async def on_message(message):
     print("IG Reel match:", ig_reel_url)
     if ig_reel_url:
         async with message.channel.typing():
-            async with bot.session.get(f"{os.getenv('YT_DLP_MICROSERVICE')}{ig_reel_url[0][0]}") as resp:
+            async with bot.session.get(f"{os.getenv('YT_DLP_MICROSERVICE')}/extract?url={ig_reel_url[0][0]}") as resp:
                 print(resp.status)
+                resp_json = await resp.json()
                 if resp.status == 200:
-                    resp_json = await resp.json()
                     # This can also be sent instead and it will embed although it is very long
                     # Not sure but this specifically may be simplified to ["url"]
                     dl_link = resp_json["formats"][-1]["url"]
@@ -230,19 +230,21 @@ async def on_message(message):
                             else:
                                 await message.edit(suppress=True)
                         else:
-                            print("Did not return 200 status code")
+                            print("Did not return 200 status code from downlading video")
                 else:
-                    print("Did not return 200 status code")
+                    print("Did not return 200 status code from yt-dlp microservice")
+                    print(resp_json["detail"])
 
+    # Test url: https://www.facebook.com/reel/307664589035540
     FB_REEL_REGEX = r"(https?:\/\/(?:[\w-]+\.)?facebook\.com\/reel\/(?P<id>\d+))"
     fb_reel_url = re.findall(FB_REEL_REGEX, message.content)
     print("FB Reel match:", fb_reel_url)
     if fb_reel_url:
         async with message.channel.typing():
-            async with bot.session.get(f"{os.getenv('YT_DLP_MICROSERVICE')}{fb_reel_url[0][0]}") as resp:
+            async with bot.session.get(f"{os.getenv('YT_DLP_MICROSERVICE')}/extract?url={fb_reel_url[0][0]}") as resp:
                 print(resp.status)
+                resp_json = await resp.json()
                 if resp.status == 200:
-                    resp_json = await resp.json()
                     # This can also be sent instead and it will embed although it is very long
                     dl_link = resp_json["formats"][2]["url"]
                     file_format = resp_json["formats"][2]["ext"]
@@ -267,9 +269,10 @@ async def on_message(message):
                             else:
                                 await message.edit(suppress=True)
                         else:
-                            print("Did not return 200 status code")
+                            print("Did not return 200 status code from downlading video")
                 else:
-                    print("Did not return 200 status code")
+                    print("Did not return 200 status code from yt-dlp microservice")
+                    print(resp_json["detail"])
 
     # --- REPOSTERS END ---
 
