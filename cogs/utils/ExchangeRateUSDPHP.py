@@ -7,7 +7,8 @@ UPDATE_INTERVAL = 86400  # 24 hours
 
 
 class ExchangeRateUSDPHP:
-    def __init__(self):
+    def __init__(self, session):
+        self._session = session
         self._exchange_rate = None
         self._last_updated = time.time()
         self._loop = asyncio.get_event_loop()
@@ -15,13 +16,12 @@ class ExchangeRateUSDPHP:
 
     async def _update(self):
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json"
-                ) as resp:
-                    resp.raise_for_status()
-                    self._exchange_rate = (await resp.json())["usd"]["php"]
-                    self._last_updated = time.time()
+            async with self._session.get(
+                "https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json"
+            ) as resp:
+                resp.raise_for_status()
+                self._exchange_rate = (await resp.json())["usd"]["php"]
+                self._last_updated = time.time()
         except Exception as e:
             print(f"Failed to update exchange rate: {e}")
             raise e
