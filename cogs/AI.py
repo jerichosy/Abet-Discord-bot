@@ -63,8 +63,9 @@ class ConfirmPrompt(discord.ui.View):
 # - Rate limiting
 # - Not allowing users to use expensive models or prompts
 class AI(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot, currency_USD_PHP: ExchangeRateUSDPHP):
         self.bot = bot
+        self.currency_USD_PHP = currency_USD_PHP
 
     @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat", "gpt"])
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
@@ -238,7 +239,7 @@ class AI(commands.Cog):
                 pricing_completion = 0.015
             cost_in_USD = ((token_prompt * pricing_prompt) / 1000) + ((token_completion * pricing_completion) / 1000)
             try:
-                cost_in_PHP = cost_in_USD * await currency_USD_PHP.latest_exchange_rate()
+                cost_in_PHP = cost_in_USD * await self.currency_USD_PHP.latest_exchange_rate()
                 print(cost_in_USD, cost_in_PHP)
                 footer_cost_text = f"Cost: ₱{round(cost_in_PHP, 3)} | "
             except Exception as e:
@@ -362,7 +363,6 @@ class AI(commands.Cog):
 
 async def setup(bot):
     # Get USD to PHP exchange rate for use in calculating token cost
-    global currency_USD_PHP
     currency_USD_PHP = ExchangeRateUSDPHP(bot.session)
 
-    await bot.add_cog(AI(bot))
+    await bot.add_cog(AI(bot, currency_USD_PHP))
