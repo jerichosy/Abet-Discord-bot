@@ -8,11 +8,10 @@ class Roleplay(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @staticmethod
-    async def get_roleplay_embed(author_name, user_mentioned, type, category, action):
+    async def get_roleplay_embed(self, author_name, user_mentioned, type, category, action):
         title = f"{author_name} {action} {user_mentioned.name if user_mentioned else ''}"
         embed = discord.Embed(title=title, color=0xEE615B)
-        embed.set_image(url=await get_waifu(type, category))
+        embed.set_image(url=await get_waifu(type, category, self.bot.session))
         return embed
 
     @commands.command()

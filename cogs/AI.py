@@ -363,6 +363,6 @@ class AI(commands.Cog):
 async def setup(bot):
     # Get USD to PHP exchange rate for use in calculating token cost
     global currency_USD_PHP
-    currency_USD_PHP = ExchangeRateUSDPHP()
+    currency_USD_PHP = ExchangeRateUSDPHP(bot.session)
 
     await bot.add_cog(AI(bot))

@@ -24,11 +24,9 @@ class Fun(commands.Cog):
         """Dish Carl"""
         await ctx.send("https://cdn.discordapp.com/attachments/731542246951747594/905830644607758416/abet_bot.png")
 
-    @staticmethod
-    async def get_json_quote(url):
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                json_data = await resp.json()
+    async def get_json_quote(self, url):
+        async with self.bot.session.get(url) as resp:
+            json_data = await resp.json()
         return json_data
 
     @commands.hybrid_command(aliases=["inspo", "inspiration"])
@@ -127,47 +125,44 @@ class Fun(commands.Cog):
 
     @waikei_group.command(name="stop-generating")
     async def stop_generating(self, interaction):
-        async with aiohttp.ClientSession() as session:
-            async with session.post(f"{os.getenv('YT_DLP_MICROSERVICE')}/waikei-pretrained/stop-generating") as resp:
-                # Print status line
-                msg = [f"HTTP/{resp.version.major}.{resp.version.minor} {resp.status} {resp.reason}"]
+        async with self.bot.session.post(f"{os.getenv('YT_DLP_MICROSERVICE')}/waikei-pretrained/stop-generating") as resp:
+            # Print status line
+            msg = [f"HTTP/{resp.version.major}.{resp.version.minor} {resp.status} {resp.reason}"]
 
-                # Print headers
-                for key, value in resp.headers.items():
-                    msg.append(f"{key}: {value}")
+            # Print headers
+            for key, value in resp.headers.items():
+                msg.append(f"{key}: {value}")
 
-                # Print content
-                msg.append(f"\n{await resp.text()}")
+            # Print content
+            msg.append(f"\n{await resp.text()}")
 
-                await interaction.response.send_message("\n".join(msg))
+            await interaction.response.send_message("\n".join(msg))
 
-    @staticmethod
-    async def get_waifu_im_embed(type, category):
+    async def get_waifu_im_embed(self, type, category):
         type = "false" if type == "sfw" else "true"
         url_string = f"https://api.waifu.im/search/?included_tags={category}&is_nsfw={type}"
         headers = {"Accept-Version": "v6"}
 
-        async with aiohttp.ClientSession(headers=headers) as session:
-            async with session.get(url_string) as resp:
-                print(f"Waifu.im: {resp.status}")
-                json_data = await resp.json()
-                if resp.status in {200, 201}:
-                    # embed = discord.Embed(color=0xffc0cb)
-                    embed = discord.Embed(
-                        color=int(
-                            f"0x{json_data['images'][0]['dominant_color'].lstrip('#')}",
-                            0,
-                        )
+        async with self.bot.session.get(url_string, headers=headers) as resp:
+            print(f"Waifu.im: {resp.status}")
+            json_data = await resp.json()
+            if resp.status in {200, 201}:
+                # embed = discord.Embed(color=0xffc0cb)
+                embed = discord.Embed(
+                    color=int(
+                        f"0x{json_data['images'][0]['dominant_color'].lstrip('#')}",
+                        0,
                     )
-                    embed.set_image(url=json_data["images"][0]["url"])
+                )
+                embed.set_image(url=json_data["images"][0]["url"])
 
-                    source = json_data["images"][0]["source"]
+                source = json_data["images"][0]["source"]
 
-                    # print(json_data)
+                # print(json_data)
 
-                else:
-                    # Print error
-                    print(json_data["message"])
+            else:
+                # Print error
+                print(json_data["message"])
 
         return source, embed
 
@@ -242,10 +237,9 @@ class Fun(commands.Cog):
 async def setup(bot):
     # Populate the waifu_im_tags list (for waifu slash cmd)
     headers = {"Accept-Version": "v6"}
-    async with aiohttp.ClientSession(headers=headers) as cs:
-        async with cs.get("https://api.waifu.im/tags") as r:
-            print(f"Waifu.im tags query status code: {r.status}\n")
-            if r.status == 200:
-                waifu_im_tags = await r.json()
+    async with bot.session.get("https://api.waifu.im/tags", headers=headers) as r:
+        print(f"Waifu.im tags query status code: {r.status}\n")
+        if r.status == 200:
+            waifu_im_tags = await r.json()
 
     await bot.add_cog(Fun(bot, waifu_im_tags))
