@@ -18,9 +18,9 @@ from .utils.context import Context
 
 
 class QuoteButtonView(discord.ui.View):
-    def __init__(self, fun_instance, member):
+    def __init__(self, quotes_instance, member):
         super().__init__()
-        self.fun_instance = fun_instance
+        self.quotes_instance = quotes_instance
         self.member = member
 
     async def on_timeout(self) -> None:
@@ -33,7 +33,7 @@ class QuoteButtonView(discord.ui.View):
     async def quote_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         # Get a random quote and send an interaction response using the same view
         # FIXME: Would be better to invoke the command than to call the function directly
-        quote = await self.fun_instance.get_random_quote(self.member)
+        quote = await self.quotes_instance.get_random_quote(self.member)
         if quote:
             await Quotes.quote_sender(interaction.response.send_message, quote, self.member, view=self)
             self.message = await interaction.original_response()
@@ -49,14 +49,14 @@ class QuoteButtonView(discord.ui.View):
 class QuoteListView(discord.ui.View):
     def __init__(
         self,
-        fun_instance,
+        quotes_instance,
         member: discord.Member,
         page: int,
         per_page: int,
         timeout: Optional[float] = 180,
     ):
         super().__init__(timeout=timeout)
-        self.fun_instance = fun_instance
+        self.quotes_instance = quotes_instance
         self.member = member
         self.page = page
         self.per_page = per_page
@@ -70,14 +70,14 @@ class QuoteListView(discord.ui.View):
     @discord.ui.button(emoji="◀️")
     async def prev_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page = max(1, self.page - 1)
-        quotes = await self.fun_instance.get_quotes_list(self.member, self.page, self.per_page)
+        quotes = await self.quotes_instance.get_quotes_list(self.member, self.page, self.per_page)
         embed = await Quotes.create_quotes_embed(self.member, quotes)
         await interaction.response.edit_message(content=f"> Page {self.page}", embed=embed, view=self)
 
     @discord.ui.button(emoji="▶️")
     async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page = self.page + 1
-        quotes = await self.fun_instance.get_quotes_list(self.member, self.page, self.per_page)
+        quotes = await self.quotes_instance.get_quotes_list(self.member, self.page, self.per_page)
         embed = await Quotes.create_quotes_embed(self.member, quotes)
         await interaction.response.edit_message(content=f"> Page {self.page}", embed=embed, view=self)
 
