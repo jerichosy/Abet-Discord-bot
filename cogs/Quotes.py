@@ -34,7 +34,7 @@ class QuoteButtonView(discord.ui.View):
         # FIXME: Would be better to invoke the command than to call the function directly
         quote = await self.fun_instance.get_random_quote(self.member)
         if quote:
-            await interaction.response.send_message(content=f"{quote} -{self.member.display_name}", view=self)
+            await Quotes.quote_sender(interaction.response.send_message, quote, self.member.display_name, view=self)
             self.message = await interaction.original_response()
         else:
             # If no quotes found, send a notice without the buttons
@@ -116,6 +116,14 @@ class Quotes(commands.Cog):
             )
         return embed
 
+    # ? Maybe this could be even more generalized
+    @staticmethod
+    async def quote_sender(sender_cb, quote, author: str, view):
+        if len(quote) > 1966:
+            raise NotImplementedError
+        else:
+            return await sender_cb(f"{quote} -{author}", view=view)
+
     @commands.hybrid_command()
     @app_commands.describe(member="The member you want a random quote from")
     async def quote(self, ctx: Context, member: discord.Member = None):
@@ -145,7 +153,7 @@ class Quotes(commands.Cog):
             #     await ctx.send(f"{quote}")
             # else:
             #     await ctx.send(f"{quote} -Waikei Li")
-            view.message = await ctx.send(f"{quote} -{member.display_name}", view=view)
+            view.message = await self.quote_sender(ctx.send, quote, member.display_name, view)
         else:
             # If no quotes found, send a notice without the buttons
             await ctx.send(f"No quotes found for {member.display_name}.")
