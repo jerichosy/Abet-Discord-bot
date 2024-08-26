@@ -192,7 +192,7 @@ class Admin(commands.Cog):
 
     @commands.command(aliases=["message", "send_message", "test_msg", "msg", "send_msg"])
     @commands.is_owner()
-    async def test_message(self, ctx, length: int = 5000):
+    async def test_message(self, ctx, length: int = 3000):
         content = "a" * length
         await ctx.send(content=content)
 
