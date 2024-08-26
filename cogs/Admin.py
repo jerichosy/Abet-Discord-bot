@@ -50,7 +50,6 @@ class Admin(commands.Cog):
     @commands.is_owner()
     async def shutdown(self, ctx):
         await ctx.send("🛑 Shutting down!")
-        await self.bot.DATABASE.close()  # FIXME: This doesn't shutdown DB connection gracefully
         await self.bot.close()
 
     # TODO: Store current status to db or file so it persists upon restart

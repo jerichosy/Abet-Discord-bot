@@ -64,6 +64,7 @@ class AbetBot(commands.Bot):
     # Technically, other event listeners can go in here.
     # However, prefer current approach with only those ones related to startup inside, like so:
 
+    # Some of these instance vars including DB can be class vars. But our bot is not sharded anyway so this isn't an issue.
     def __init__(self):
         # --- BOT DISCORD ATTRIBUTES ---
         # Other fields/attrs of bot: https://discordpy.readthedocs.io/en/stable/ext/commands/api.html?highlight=bot#bot
@@ -80,6 +81,7 @@ class AbetBot(commands.Bot):
 
         # --- BOT SYSTEM ATTRIBUTES
         self.db_engine = EngineSingleton.get_engine(os.getenv("DB_URI", ""))
+        self.__base_db_manager = BaseDBManager(self.db_engine)
         self.executor = ThreadPoolExecutor(max_workers=4)
 
         # --- GUILD CONSTANTS ---
@@ -115,8 +117,8 @@ class AbetBot(commands.Bot):
         # synced = await self.tree.sync(guild=self.TEST_GUILD)
         # print(f"Copied {len(synced)} global commands to guild {self.TEST_GUILD.id}.")
 
-        base_db_manager = BaseDBManager(self.db_engine)
-        await base_db_manager._create_tables()
+        # This can take a while so do it after cogs are loaded
+        await self.__base_db_manager._create_tables()
 
     async def on_ready(self):
         print("\n\033[1;32m***** READY *****\033[0m")
@@ -125,6 +127,15 @@ class AbetBot(commands.Bot):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print("Invite URL:", self.INVITE_LINK)
         print("------")
+
+    # FIXME: Has errors
+    # await self.__base_db_manager.close()  # FIXME: This doesn't shutdown DB connection gracefully
+    async def close(self) -> None:
+        try:
+            await super().close()
+            await self.session.close()
+        except:
+            traceback.print_exc()
 
     async def get_context(self, origin: Union[discord.Interaction, discord.Message], /, *, cls=Context) -> Context:
         return await super().get_context(origin, cls=cls)
@@ -456,6 +467,8 @@ if __name__ == "__main__":
     # https://docs.python.org/3/library/asyncio-task.html
     async def main():
         await bot.load_extension("jishaku")
+
+        # RoboDanny puts the DB pool here like `bot.pool`, but we will stick to instance vars.
 
         await bot.start(os.getenv("BOT_TOKEN"))
 
