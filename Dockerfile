@@ -1,6 +1,8 @@
 FROM python:3.10-slim-bookworm AS builder
 
 # Prevents Python from writing pyc files.
+# ? Will this only be effective for the builder and not runtime?
+# ? Seems like it's scoped per build stage: https://github.com/moby/moby/issues/37345#issuecomment-400245466
 ENV PYTHONDONTWRITEBYTECODE=1
 
 RUN apt update && apt install -y --no-install-recommends \
