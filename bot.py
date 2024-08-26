@@ -183,6 +183,7 @@ async def on_message(message):
     # TODO: Solution is probably to make it a class
     # FIXME: checking is only arbitrarily implemented
 
+    # Test url: https://www.instagram.com/reel/C-RJokDy9xd
     IG_REEL_REGEX = r"(?P<url>https?:\/\/(?:www\.)?instagram\.com(?:\/[^\/]+)?\/(?:reel)\/(?P<id>[^\/?#&]+))"
     ig_reel_url = re.findall(IG_REEL_REGEX, message.content)
     print("IG Reel match:", ig_reel_url)
