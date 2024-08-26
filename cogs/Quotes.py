@@ -4,6 +4,7 @@
 # All of the aforementioned are collectively owned by Samir Corp
 
 
+from io import BytesIO
 from typing import Optional, Sequence
 
 import discord
@@ -34,7 +35,7 @@ class QuoteButtonView(discord.ui.View):
         # FIXME: Would be better to invoke the command than to call the function directly
         quote = await self.fun_instance.get_random_quote(self.member)
         if quote:
-            await Quotes.quote_sender(interaction.response.send_message, quote, self.member.display_name, view=self)
+            await Quotes.quote_sender(interaction.response.send_message, quote, self.member, view=self)
             self.message = await interaction.original_response()
         else:
             # If no quotes found, send a notice without the buttons
@@ -97,7 +98,7 @@ class Quotes(commands.Cog):
 
     async def get_random_quote(self, member: discord.Member):
         result = await self.quotes_manager.find_random_quote(member.id)
-        return result.quote if result else None
+        return result if result else None
 
     async def get_quotes_list(self, member: discord.Member, page: int = 1, per_page: int = 20):
         return await self.quotes_manager.find_quotes_by_member_id(member.id, page, per_page)
@@ -119,11 +120,14 @@ class Quotes(commands.Cog):
 
     # ? Maybe this could be even more generalized
     @staticmethod
-    async def quote_sender(sender_cb, quote, author: str, view):
-        if len(quote) > 1966:
-            raise NotImplementedError
+    async def quote_sender(sender_cb, quote, member: str, view):
+        if len(quote.quote) > 1966:
+            file = discord.File(
+                BytesIO(quote.quote.encode()), filename=f"Quote by {member.global_name} (ID: {quote.id}).txt"
+            )
+            return await sender_cb(f"-{member.display_name}", view=view, file=file)
         else:
-            return await sender_cb(f"{quote} -{author}", view=view)
+            return await sender_cb(f"{quote.quote} -{member.display_name}", view=view)
 
     @commands.hybrid_command()
     @app_commands.describe(member="The member you want a random quote from")
@@ -154,7 +158,7 @@ class Quotes(commands.Cog):
             #     await ctx.send(f"{quote}")
             # else:
             #     await ctx.send(f"{quote} -Waikei Li")
-            view.message = await self.quote_sender(ctx.send, quote, member.display_name, view)
+            view.message = await self.quote_sender(ctx.send, quote, member, view)
         else:
             # If no quotes found, send a notice without the buttons
             await ctx.send(f"No quotes found for {member.display_name}.")
@@ -169,7 +173,7 @@ class Quotes(commands.Cog):
         ctx: Context,
         member: discord.Member,
         *,
-        quote: commands.Range[str, None, 1966],
+        quote: str,
     ):
         """Adds a new quote to the collection."""
 
