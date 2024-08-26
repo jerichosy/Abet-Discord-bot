@@ -19,7 +19,7 @@ charset-normalizer==3.3.2
 click==8.1.7
 coloredlogs==15.0.1
 discord-ext-listening @ git+https://github.com/Sheppsu/discord-ext-listening@807ef488f8010bd2ce8d15801b98dfa87a402575
-discord.py==2.3.2
+discord.py==2.4.0
 distro==1.9.0
 exceptiongroup==1.2.1
 flatbuffers==24.3.25
