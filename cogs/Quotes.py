@@ -70,14 +70,14 @@ class QuoteListView(discord.ui.View):
     async def prev_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page = max(1, self.page - 1)
         quotes = await self.fun_instance.get_quotes_list(self.member, self.page, self.per_page)
-        embed = await self.fun_instance.create_quotes_embed(self.member, quotes)
+        embed = await Quotes.create_quotes_embed(self.member, quotes)
         await interaction.response.edit_message(content=f"> Page {self.page}", embed=embed, view=self)
 
     @discord.ui.button(emoji="▶️")
     async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page = self.page + 1
         quotes = await self.fun_instance.get_quotes_list(self.member, self.page, self.per_page)
-        embed = await self.fun_instance.create_quotes_embed(self.member, quotes)
+        embed = await Quotes.create_quotes_embed(self.member, quotes)
         await interaction.response.edit_message(content=f"> Page {self.page}", embed=embed, view=self)
 
 
@@ -102,7 +102,8 @@ class Quotes(commands.Cog):
     async def get_quotes_list(self, member: discord.Member, page: int = 1, per_page: int = 20):
         return await self.quotes_manager.find_quotes_by_member_id(member.id, page, per_page)
 
-    async def create_quotes_embed(self, member: discord.Member, quotes: Sequence) -> discord.Embed:
+    @staticmethod
+    async def create_quotes_embed(member: discord.Member, quotes: Sequence) -> discord.Embed:
         if not quotes:
             return discord.Embed(description="⚠️ No quotes found.")
 
