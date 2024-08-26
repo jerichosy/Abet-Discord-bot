@@ -12,6 +12,8 @@ process_pool = listening.AudioProcessPool(1)
 
 FILE_FORMATS = {"mp3": listening.MP3AudioFile, "wav": listening.WaveAudioFile}
 
+# FIXME: Sheppsu/discord-ext-listening @ 807ef48 has issues with the rewritten voice in d.py 2.4.0
+
 
 class VoiceListen(commands.GroupCog, name="voicelisten"):
     def __init__(self, bot):
