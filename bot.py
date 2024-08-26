@@ -37,7 +37,7 @@ initial_extensions = (
     "cogs.Genshin",
     "cogs.AI",
     "cogs.Math",
-    "cogs.VoiceListen",
+    # "cogs.VoiceListen",  # FIXME: Sheppsu/discord-ext-listening @ 807ef48 has issues with the rewritten voice in d.py 2.4.0
     "cogs.Quotes",
 )
 
