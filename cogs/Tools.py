@@ -429,7 +429,7 @@ class Tools(commands.Cog):
 
     @app_commands.command()
     @app_commands.describe(url="The direct link to the file")
-    async def repost(self, interaction: discord.Interaction, url: str):
+    async def repost(self, interaction: discord.Interaction, url: str, filename: str = None):
         """Reposts the file located at the given URL (subject to 25MB non-boosted server limitation)"""
 
         await interaction.response.defer()
@@ -438,7 +438,7 @@ class Tools(commands.Cog):
             print(f"Reposter HTTP status: {resp.status}, Content length: {resp.content_length}")
             if resp.status == 200:
                 file_bytes = BytesIO(await resp.read())
-                filename = os.path.basename(urlparse(url).path)
+                filename = filename or os.path.basename(urlparse(url).path)
                 print("Reposter filename:", filename)
                 if not filename:
                     # if no filename, the upload will fail raising discord.HTTPException
