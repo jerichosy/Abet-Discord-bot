@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
 from cogs.utils.character_limits import EmbedLimit, MessageLimit, truncate
+from cogs.utils.checks import owner_only
 from cogs.utils.ExchangeRateUSDPHP import ExchangeRateUSDPHP
 
 
@@ -325,7 +326,8 @@ class AI(commands.Cog):
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
     @commands.max_concurrency(number=1, per=commands.BucketType.user, wait=False)
     @app_commands.describe(audio_file="Supports MP3, MP4, MPEG, MPGA, M4A, WAV, and WEBM. Limited to 25 MB.")
-    @commands.is_owner()  # If we allow everyone, in OpenAI API Platform, set up a proj in the default org with its own API key so we can track costs specific to Abet bot's OpenAI API usage
+    # If we allow everyone, in OpenAI API Platform, set up a proj in the default org with its own API key so we can track costs specific to Abet bot's OpenAI API usage
+    @app_commands.check(owner_only)
     async def whisper(self, interaction: discord.Interaction, audio_file: discord.Attachment):
         """Uses OpenAI's Whisper model to transcribe audio (speech) to text"""
 
