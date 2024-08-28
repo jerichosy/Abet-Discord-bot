@@ -106,7 +106,7 @@ class Fun(commands.Cog):
         await ctx.send("Guess a number between 1 and 10.")
 
         def is_correct(m):
-            return m.author == ctx.author and m.content.isdigit()
+            return m.channel == ctx.channel and m.author == ctx.author and m.content.isdigit()
 
         answer = random.randint(1, 10)
 
