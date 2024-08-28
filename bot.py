@@ -19,6 +19,7 @@ from typing import Union
 
 import aiohttp
 import discord
+from discord import Interaction, app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -353,6 +354,29 @@ async def on_command_error(ctx, error):
     print("Ignoring exception in command {}:".format(ctx.command), file=sys.stderr)
     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
     # ? Flesh out more: https://gist.github.com/EvieePy/7822af90858ef65012ea500bcecf1612
+
+
+@bot.tree.error
+async def on_app_command_error(interaction: Interaction, error: app_commands.AppCommandError):
+    # print(error)
+    # print(type(error))
+
+    # # Errors that don't require my attention
+    if isinstance(error, app_commands.CheckFailure):
+        return await interaction.response.send_message(
+            f"{error} Probably this command is restricted only to the bot's owner.", ephemeral=False
+        )
+
+    # Errors that reached here require my attention
+    # FIXME: The mention here will not work for users who haven't met me in Discord. But for those that will see me, it's fine even if I'm not actually pinged.
+    # FIXME: For those that will not see me, find a way to let them be able to reach out to me.
+    await interaction.response.send_message(
+        f"**Uh oh, looks like <@298454523624554501> needs to take a look at this:**\n```{error}```",
+        suppress_embeds=True,
+        ephemeral=False,
+    )
+    print("Ignoring exception in slash command {}:".format(interaction.command), file=sys.stderr)
+    traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 
 @bot.event
