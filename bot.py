@@ -407,7 +407,7 @@ def create_voice_log_embed(member, event_type, details):
         title=f"Member {event_type} voice channel",
         description=f"**{member.name}** {event_type} {details}" if event_type != "changed" else details,
         color=get_event_color(event_type),
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(),
     )
     embed.set_author(name=member.name, icon_url=member.avatar.url if member.avatar else member.default_avatar.url)
     embed.set_footer(text=f"User ID: {member.id}")
@@ -440,27 +440,27 @@ async def on_voice_state_update(member, before, after):
 
     if before.self_mute != after.self_mute:
         status = "muted" if after.self_mute else "unmuted"
-        await log_channel.send(f"<t:{datetime.utcnow().timestamp():.0f}:f> {member.name} {status} themselves")
+        await log_channel.send(f"<t:{datetime.now().timestamp():.0f}:f> {member.name} {status} themselves")
 
     if before.self_deaf != after.self_deaf:
         status = "deafened" if after.self_deaf else "undeafened"
-        await log_channel.send(f"<t:{datetime.utcnow().timestamp():.0f}:f> {member.name} {status} themselves")
+        await log_channel.send(f"<t:{datetime.now().timestamp():.0f}:f> {member.name} {status} themselves")
 
     if before.mute != after.mute:
         status = "server muted" if after.mute else "server unmuted"
-        await log_channel.send(f"<t:{datetime.utcnow().timestamp():.0f}:f> {member.name} {status}")
+        await log_channel.send(f"<t:{datetime.now().timestamp():.0f}:f> {member.name} {status}")
 
     if before.deaf != after.deaf:
         status = "server deafened" if after.deaf else "server undeafened"
-        await log_channel.send(f"<t:{datetime.utcnow().timestamp():.0f}:f> {member.name} {status}")
+        await log_channel.send(f"<t:{datetime.now().timestamp():.0f}:f> {member.name} {status}")
 
     if before.self_stream != after.self_stream:
         status = "started streaming" if after.self_stream else "stopped streaming"
-        await log_channel.send(f"<t:{datetime.utcnow().timestamp():.0f}:f> {member.name} {status}")
+        await log_channel.send(f"<t:{datetime.now().timestamp():.0f}:f> {member.name} {status}")
 
     if before.self_video != after.self_video:
         status = "turned on their camera" if after.self_video else "turned off their camera"
-        await log_channel.send(f"<t:{datetime.utcnow().timestamp():.0f}:f> {member.name} {status}")
+        await log_channel.send(f"<t:{datetime.now().timestamp():.0f}:f> {member.name} {status}")
 
 
 if __name__ == "__main__":
