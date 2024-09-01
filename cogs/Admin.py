@@ -253,6 +253,14 @@ class Admin(commands.Cog):
         await asyncio.sleep(sleep_time)
         await ctx.send(f"Successfully ran test_cooldown_and_concurrency")
 
+    @commands.hybrid_command()
+    @commands.is_owner()
+    @app_commands.guilds(887980840347398144)
+    async def test_invoke(self, ctx: Context):
+        print("Invoking...")
+        await ctx.invoke(self.bot.get_command("guess"))
+        print("Done")
+
 
 async def setup(bot):
     await bot.add_cog(Admin(bot))
