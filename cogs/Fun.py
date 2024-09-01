@@ -122,8 +122,9 @@ class Fun(commands.Cog):
             await ctx.send((await r.json())["text"])
 
     # Lifted from https://github.com/Rapptz/discord.py/blob/master/examples/guessing_game.py
-    @commands.command(aliases=["game"])
+    @commands.hybrid_command(aliases=["game"])
     async def guess(self, ctx):
+        """Play a game to guess the randon number"""
         await ctx.send("Guess a number between 1 and 10.")
 
         def is_correct(m):
