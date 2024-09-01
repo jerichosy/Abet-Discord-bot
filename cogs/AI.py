@@ -81,6 +81,7 @@ class AI(commands.Cog):
     @app_commands.describe(model="Defaults to GPT-4 (ChatGPT Plus) but can be specified to use GPT-3.5 (ChatGPT)")
     @app_commands.describe(response='Defaults to "Embed" but can be changed to "Message" for easy copying on mobile')
     @commands.is_owner()  # If we allow everyone again, in OpenAI API Platform, set up a proj in the default org with its own API key so we can track costs specific to Abet bot's OpenAI API usage
+    # For some reason, this `is_owner()` check also works with the slash cmd, but only for a hybrid cmd
     async def chatgpt(
         self,
         ctx,
