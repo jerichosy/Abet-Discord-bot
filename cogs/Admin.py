@@ -182,7 +182,10 @@ class Admin(commands.Cog):
 
         # Send the role list
         role_list_str = "\n".join(role_list)
-        await ctx.send(f"**__Here are the member counts for each role:__**\n{role_list_str}")
+        await ctx.send(
+            f"**__Here are the member counts for each role:__**\n{role_list_str}",
+            allowed_mentions=discord.AllowedMentions(everyone=False),
+        )
 
     @commands.command(aliases=["error", "send_error"])
     @commands.is_owner()
@@ -225,23 +228,25 @@ class Admin(commands.Cog):
 
     @app_commands.command()
     @app_commands.guilds(887980840347398144)
-    @commands.is_owner()
     async def test_interaction_input_member(self, interaction: discord.Interaction, member: discord.Member):
         await interaction.response.send_message(f"Member: {member.mention}")
 
     @commands.hybrid_group(fallback="get")
+    @commands.is_owner()
     @app_commands.guilds(887980840347398144)
     async def test(self, ctx, name):
         await ctx.send(f"Showing test: {name}")
 
     @test.command()
+    @commands.is_owner()
     async def run(self, ctx, name):
         await ctx.send(f"Run test: {name}")
 
     @commands.hybrid_command()
+    @commands.is_owner()  # Yes we will bypass what's being tested here, but just disable the bypass since we have to anyway for the interaction part (no jsk exec equiv.)
+    @app_commands.guilds(887980840347398144)
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
     @commands.max_concurrency(number=1, per=commands.BucketType.user, wait=False)
-    @app_commands.guilds(887980840347398144)
     async def test_cooldown_and_concurrency(self, ctx: Context, sleep_time: int = 20):
         # or sleep_time = 4, test both cases of higher and lower than cooldown
         await ctx.defer()
