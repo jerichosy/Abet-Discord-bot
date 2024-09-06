@@ -93,7 +93,7 @@ SQLAlchemy==2.0.29
 sympy==1.12
 tifffile==2024.4.24
 tomli==2.0.1
-tqdm==4.66.2
+tqdm==4.66.3
 typing_extensions==4.11.0
 uritemplate==4.1.1
 urllib3==2.2.2
