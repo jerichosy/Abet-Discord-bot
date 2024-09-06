@@ -19,6 +19,7 @@ from typing import Union
 
 import aiohttp
 import discord
+import yarl
 from discord import Interaction, app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -218,6 +219,7 @@ async def on_message(message):
                     author_url = f"https://www.instagram.com/{author}/"
                     print(dl_link)
 
+                    dl_link = yarl.URL(dl_link, encoded=True)  # So far, we don't do this anywhere else.
                     async with bot.session.get(dl_link) as resp:
                         print(resp.status)
                         if resp.status == 200:
