@@ -24,7 +24,7 @@ from models.db import TagsManager
 
 
 class PDFFlags(commands.FlagConverter, prefix="--", delimiter=""):
-    url: Optional[str]
+    url: Optional[str] = commands.flag(aliases=["link"])
     selection: Optional[str] = commands.flag(aliases=["sel", "page"])
 
 
