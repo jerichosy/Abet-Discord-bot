@@ -326,11 +326,15 @@ class Tools(commands.Cog):
             return await loop.run_in_executor(self.bot.executor, convert_from_bytes, data)
 
         async with ctx.typing():
+            # Note: Some links have dynamic granular security measures: https://caap.gov.ph/wp-content/uploads/2024/05/MC-010-2024-Amendment-to-Civil-Aviation-Regulations-Parts-1-and-11-RE-Aerial-Works-and-Remotely-Piloted-Aircraft-Systems-Certification.pdf
+            # For example, this link sometimes doesn't serve an application/pdf on the first try, but instead text/html w/ cookies, and the request must be retried with cookies so we get the application/pdf.
+            # But other times, it does serve the application/pdf on the first try even without cookies in the request. Furthermore, it sometimes cares about the User-Agent header. Other times, it doesn't.
+            # In this case, do not code to handle it as it may just waste our time. ¯\_(ツ)_/¯
             async with ctx.session.get(url) as resp:
                 print(resp.headers.get("Content-Type"))
                 if resp.headers.get("Content-Type") not in (
                     "application/pdf",
-                    "application/octet-stream",
+                    "application/octet-stream",  # example: https://docs.congress.hrep.online/legisdocs/basic_19/HB09867.pdf
                 ):
                     return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
 
@@ -345,10 +349,11 @@ class Tools(commands.Cog):
                     image_list.append(discord.File(image_bytes, f"{uuid.uuid4()}.jpg"))
 
                 if flags.selection:
-                    # FIXME: Move the parsing of the selected pages higher before any web request and subsequent conversion is made.
-                    # Because, currently, the bot will download the entire PDF file and convert it to images before parsing the selected pages.
+                    # Note: Currently, the bot will download the entire PDF file and convert it to images before parsing the selected pages.
                     # If there's an error in the selection range, the bot will have wasted resources downloading and converting the entire PDF file,
                     # since the command terminates after the error is detected and the bot will not send any images.
+                    # BUT, part of the check is to ensure that the selected pages are within the range of the total number of pages in the PDF file.
+                    # So, we can't just check the selection range before downloading the PDF file. We could split the check into two parts but nah.
                     try:
                         selected_pages = parse_selected_pages(flags.selection, len(image_list))
                         print(selected_pages)
