@@ -82,7 +82,7 @@ pyparsing==3.1.2
 python-dotenv==1.0.1
 referencing==0.35.1
 rembg==2.0.56
-requests==2.31.0
+requests==2.32.2
 rpds-py==0.18.0
 rsa==4.9
 scikit-image==0.23.2
