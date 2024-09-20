@@ -185,7 +185,7 @@ class Quotes(commands.Cog):
 
         await ctx.send(
             # Truncate `quote` only as member.display_name is bounded to a limit of 32 chars.
-            f"✨ {member.display_name} quote (ID: {quote_id}) **added**!\n\n>>> {truncate(quote, 1943)}"
+            f"✨ {member.display_name} quote (ID: {quote_id}) **added**!\n>>> {truncate(quote, 1943)}"
         )
 
     @commands.hybrid_command(
@@ -253,7 +253,7 @@ class Quotes(commands.Cog):
             await ctx.send(
                 # Truncate whole sent string as quote_id length is unbounded
                 truncate(
-                    f"🗑️ Quote ID {quote_id} by {member.display_name} has been **deleted**.\n\n>>> {quote.quote}",
+                    f"🗑️ Quote ID {quote_id} by {member.display_name} has been **deleted**.\n>>> {quote.quote}",
                     MessageLimit.CONTENT.value,
                 )
             )
