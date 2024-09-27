@@ -199,12 +199,13 @@ async def on_message(message):
     # Test urls: Note how the format we're after is on different indices in the formats array
     # - https://www.instagram.com/reel/C-RJokDy9xd/
     # - https://www.instagram.com/reel/C57JZ4yxXGa/
-    IG_REEL_REGEX = r"(?P<url>https?:\/\/(?:www\.)?instagram\.com(?:\/[^\/]+)?\/(?:reel)\/(?P<id>[^\/?#&]+))"
-    ig_reel_url = re.findall(IG_REEL_REGEX, message.content)
-    print("IG Reel match:", ig_reel_url)
-    if ig_reel_url:
+    # - https://www.instagram.com/p/DAFJPYCvkQw/ (similar link structure non-video posts but should fail silently)
+    IG_VIDEO_REGEX = r"(?P<url>https?:\/\/(?:www\.)?instagram\.com(?:\/[^\/]+)?\/(?:p|reel)\/(?P<id>[^\/?#&]+))"
+    ig_video_url = re.findall(IG_VIDEO_REGEX, message.content)
+    print("IG Video match:", ig_video_url)
+    if ig_video_url:
         async with message.channel.typing():
-            async with bot.session.get(f"{os.getenv('YT_DLP_MICROSERVICE')}/extract?url={ig_reel_url[0][0]}") as resp:
+            async with bot.session.get(f"{os.getenv('YT_DLP_MICROSERVICE')}/extract?url={ig_video_url[0][0]}") as resp:
                 print(resp.status)
                 resp_json = await resp.json()
                 if resp.status == 200:
@@ -236,9 +237,9 @@ async def on_message(message):
                                 video_bytes = BytesIO(await resp.read())
                                 print("format:", file_format)
                                 embed = discord.Embed(
-                                    description=f"[{desc if desc else '*Link*'}]({ig_reel_url[0][0]})",  # No truncation but IG captions are limited to 2200 char and so unlikely to reach 4096 embed desc limit.
+                                    description=f"[{desc if desc else '*Link*'}]({ig_video_url[0][0]})",  # No truncation but IG captions are limited to 2200 char and so unlikely to reach 4096 embed desc limit.
                                     timestamp=datetime.fromtimestamp(timestamp),
-                                    url=ig_reel_url[0][0],
+                                    url=ig_video_url[0][0],
                                     color=0xCE0071,
                                 )
                                 embed.set_author(
@@ -246,7 +247,7 @@ async def on_message(message):
                                     url=author_url,
                                 )
                                 embed.set_footer(
-                                    text="Instagram Reels",
+                                    text="Instagram",
                                     icon_url="https://cdn.discordapp.com/attachments/998571531934376006/1010817764203712572/68d99ba29cc8.png",
                                 )
                                 embed.add_field(name="Likes", value=likes)
@@ -257,11 +258,11 @@ async def on_message(message):
                                         mention_author=False,
                                         file=discord.File(
                                             video_bytes,
-                                            f"{author}-{ig_reel_url[0][1]}.{file_format}",
+                                            f"{author}-{ig_video_url[0][1]}.{file_format}",
                                         ),
                                     )
                                 except discord.HTTPException:
-                                    print("IG Reel Reposter send error: Likely too big")
+                                    print("IG Reposter send error: Likely too big")
                                 else:
                                     await message.edit(suppress=True)
                             else:
