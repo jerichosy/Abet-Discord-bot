@@ -196,7 +196,9 @@ async def on_message(message):
     # TODO: Solution is probably to make it a class
     # FIXME: checking is only arbitrarily implemented
 
-    # Test url: https://www.instagram.com/reel/C-RJokDy9xd
+    # Test urls: Note how the format we're after is on different indices in the formats array
+    # - https://www.instagram.com/reel/C-RJokDy9xd/
+    # - https://www.instagram.com/reel/C57JZ4yxXGa/
     IG_REEL_REGEX = r"(?P<url>https?:\/\/(?:www\.)?instagram\.com(?:\/[^\/]+)?\/(?:reel)\/(?P<id>[^\/?#&]+))"
     ig_reel_url = re.findall(IG_REEL_REGEX, message.content)
     print("IG Reel match:", ig_reel_url)
@@ -206,56 +208,66 @@ async def on_message(message):
                 print(resp.status)
                 resp_json = await resp.json()
                 if resp.status == 200:
-                    # This can also be sent instead and it will embed although it is very long
-                    # Not sure but this specifically may be simplified to ["url"]
-                    dl_link = resp_json["formats"][-1]["url"]
-                    file_format = resp_json["formats"][-1]["ext"]
-                    desc = resp_json["description"]
-                    timestamp = resp_json["timestamp"]
-                    likes = resp_json["like_count"]
-                    comments = resp_json["comment_count"]
-                    author = resp_json["channel"]
-                    author_display_name = resp_json["uploader"]
-                    author_url = f"https://www.instagram.com/{author}/"
-                    print(dl_link)
+                    valid_formats = [
+                        fmt
+                        for fmt in resp_json["formats"]
+                        if fmt.get("tbr") is None  # only the format we want has no tbr
+                        and fmt.get("acodec") != "none"  # technically not needed
+                    ]
+                    best_format = valid_formats[0] if valid_formats else None
+                    if best_format:
+                        # This can also be sent instead and it will embed although it is very long
+                        # Not sure but this specifically may be simplified to ["url"]
+                        dl_link = best_format["url"]
+                        file_format = best_format["ext"]
+                        desc = resp_json["description"]
+                        timestamp = resp_json["timestamp"]
+                        likes = resp_json["like_count"]
+                        comments = resp_json["comment_count"]
+                        author = resp_json["channel"]
+                        author_display_name = resp_json["uploader"]
+                        author_url = f"https://www.instagram.com/{author}/"
+                        print(dl_link)
 
-                    dl_link = yarl.URL(dl_link, encoded=True)  # So far, we don't do this anywhere else.
-                    async with bot.session.get(dl_link) as resp:
-                        print(resp.status)
-                        if resp.status == 200:
-                            video_bytes = BytesIO(await resp.read())
-                            print("format:", file_format)
-                            embed = discord.Embed(
-                                description=f"[{desc if desc else '*Link*'}]({ig_reel_url[0][0]})",  # No truncation but IG captions are limited to 2200 char and so unlikely to reach 4096 embed desc limit.
-                                timestamp=datetime.fromtimestamp(timestamp),
-                                url=ig_reel_url[0][0],
-                                color=0xCE0071,
-                            )
-                            embed.set_author(
-                                name=f"{author_display_name} (@{author})",
-                                url=author_url,
-                            )
-                            embed.set_footer(
-                                text="Instagram Reels",
-                                icon_url="https://cdn.discordapp.com/attachments/998571531934376006/1010817764203712572/68d99ba29cc8.png",
-                            )
-                            embed.add_field(name="Likes", value=likes)
-                            embed.add_field(name="Comments", value=comments)
-                            try:
-                                await message.reply(
-                                    embed=(message.embeds[0] if message.embeds else embed),
-                                    mention_author=False,
-                                    file=discord.File(
-                                        video_bytes,
-                                        f"{author}-{ig_reel_url[0][1]}.{file_format}",
-                                    ),
+                        dl_link = yarl.URL(dl_link, encoded=True)  # So far, we don't do this anywhere else.
+                        async with bot.session.get(dl_link) as resp:
+                            print(resp.status)
+                            if resp.status == 200:
+                                video_bytes = BytesIO(await resp.read())
+                                print("format:", file_format)
+                                embed = discord.Embed(
+                                    description=f"[{desc if desc else '*Link*'}]({ig_reel_url[0][0]})",  # No truncation but IG captions are limited to 2200 char and so unlikely to reach 4096 embed desc limit.
+                                    timestamp=datetime.fromtimestamp(timestamp),
+                                    url=ig_reel_url[0][0],
+                                    color=0xCE0071,
                                 )
-                            except discord.HTTPException:
-                                print("IG Reel Reposter send error: Likely too big")
+                                embed.set_author(
+                                    name=f"{author_display_name} (@{author})",
+                                    url=author_url,
+                                )
+                                embed.set_footer(
+                                    text="Instagram Reels",
+                                    icon_url="https://cdn.discordapp.com/attachments/998571531934376006/1010817764203712572/68d99ba29cc8.png",
+                                )
+                                embed.add_field(name="Likes", value=likes)
+                                embed.add_field(name="Comments", value=comments)
+                                try:
+                                    await message.reply(
+                                        embed=(message.embeds[0] if message.embeds else embed),
+                                        mention_author=False,
+                                        file=discord.File(
+                                            video_bytes,
+                                            f"{author}-{ig_reel_url[0][1]}.{file_format}",
+                                        ),
+                                    )
+                                except discord.HTTPException:
+                                    print("IG Reel Reposter send error: Likely too big")
+                                else:
+                                    await message.edit(suppress=True)
                             else:
-                                await message.edit(suppress=True)
-                        else:
-                            print("Did not return 200 status code from downlading video")
+                                print("Did not return 200 status code from downlading video")
+                    else:
+                        print("Did not find a valid format")
                 else:
                     print("Did not return 200 status code from yt-dlp microservice")
                     print(resp_json["detail"])
