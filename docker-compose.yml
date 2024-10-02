@@ -1,7 +1,7 @@
 services:
   bot:
     build: .
-    restart: always
+    restart: on-failure
     develop:
       watch:
         - action: sync+restart
