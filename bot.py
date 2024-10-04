@@ -407,23 +407,23 @@ async def on_presence_update(before, after):
     logger.info(f"on_presence_update() {after} | {after.guild}")
     logger.info(f"on_presence_update()   BEFORE: {before.activity}")
     logger.info(f"on_presence_update()   AFTER:  {after.activity}")
-    if after.activity is not None:
+    # if after.activity is not None:
 
-        def check_offending(member, offending):
-            for activity in member.activities:
-                if activity.name == offending:
-                    return True
-            return False
+    #     def check_offending(member, offending):
+    #         for activity in member.activities:
+    #             if activity.name == offending:
+    #                 return True
+    #         return False
 
-        async def send_alert(member, offending):
-            channel = bot.get_channel(867811644322611202)  # sala
-            # channel = bot.get_channel(870095545992101958)  #bot-spam
-            await channel.send(
-                f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {member.mention}'s footsteps and playing {offending}!** 🚩"
-            )
+    #     async def send_alert(member, offending):
+    #         channel = bot.get_channel(867811644322611202)  # sala
+    #         # channel = bot.get_channel(870095545992101958)  #bot-spam
+    #         await channel.send(
+    #             f"@here\nIt's a fine {datetime.today().strftime('%A')}. **Ruin it by following {member.mention}'s footsteps and playing {offending}!** 🚩"
+    #         )
 
-        if check_offending(after, "VALORANT") and not check_offending(before, "VALORANT"):
-            await send_alert(after, "VALORANT")
+    #     if check_offending(after, "VALORANT") and not check_offending(before, "VALORANT"):
+    #         await send_alert(after, "VALORANT")
 
 
 def get_event_color(event_type):
