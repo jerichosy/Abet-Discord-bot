@@ -426,8 +426,10 @@ class Tools(commands.Cog):
         async with ctx.typing():
             timeout = aiohttp.ClientTimeout(total=5)
             async with ctx.session.get(f"https://wttr.in/{location}?0T", timeout=timeout) as resp:
+                resp.raise_for_status()
                 text = await resp.text()
-                if text == "" or text == "Follow @igor_chubin for wttr.in updates":
+                print(f"{resp.status}, {len(text)=}, {text=}")
+                if text == "" or text == "\n" or text == "Follow @igor_chubin for wttr.in updates":
                     return await ctx.send("The weather service is having problems. Please try again later.")
                 # print(text)
                 await ctx.send(f"```{text}```")
