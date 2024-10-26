@@ -7,5 +7,5 @@ class EngineSingleton:
     @classmethod
     def get_engine(cls, uri: str) -> AsyncEngine:
         if cls._engine is None:
-            cls._engine = create_async_engine(uri, echo=True)
+            cls._engine = create_async_engine(uri, echo=True, pool_pre_ping=True)
         return cls._engine
