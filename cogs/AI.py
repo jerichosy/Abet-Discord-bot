@@ -68,7 +68,9 @@ class AI(commands.Cog):
     def client(self):
         if not hasattr(self, "_client"):
             # print("Creating AsyncOpenAI")
-            self._client = AsyncOpenAI()
+            account_id = os.getenv("CF_ACCOUNT_ID")
+            gateway_id = os.getenv("CF_AI_GATEWAY_ID")
+            self._client = AsyncOpenAI(base_url=f"https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/openai")
         # print("Returning AsyncOpenAI")
         return self._client
 
