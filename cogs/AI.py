@@ -65,14 +65,27 @@ class AI(commands.Cog):
         self.currency_USD_PHP = currency_USD_PHP
 
     @property
-    def client(self):
-        if not hasattr(self, "_client"):
+    def client_openai(self):
+        if not hasattr(self, "_client_openai"):
             # print("Creating AsyncOpenAI")
             account_id = os.getenv("CF_ACCOUNT_ID")
             gateway_id = os.getenv("CF_AI_GATEWAY_ID")
-            self._client = AsyncOpenAI(base_url=f"https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/openai")
+            self._client_openai = AsyncOpenAI(
+                base_url=f"https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/openai"
+            )
         # print("Returning AsyncOpenAI")
-        return self._client
+        return self._client_openai
+
+    @property
+    def client_grok(self):
+        if not hasattr(self, "_client_grok"):
+            account_id = os.getenv("CF_ACCOUNT_ID")
+            gateway_id = os.getenv("CF_AI_GATEWAY_ID")
+            self._client_grok = AsyncOpenAI(
+                base_url=f"https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/grok",
+                api_key=os.getenv("GROK_API_KEY"),
+            )
+        return self._client_grok
 
     @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat", "gpt"])
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
@@ -162,7 +175,7 @@ class AI(commands.Cog):
                     # else:
                     #     raise RateLimitError
                     # else:
-                    completion = await self.client.chat.completions.create(**kwargs)
+                    completion = await self.client_openai.chat.completions.create(**kwargs)
 
                     if sent:
                         await sent.delete()
@@ -228,7 +241,7 @@ class AI(commands.Cog):
 
             # print(completion)
             answer = completion.choices[0].message.content
-            print("Length:", len(answer))
+            print("OpenAI completion length:", len(answer))
 
             # Calculate token cost  (Note: Using floats here instead of decimal.Decimal acceptible enough for this use case)
             # gpt-3.5-turbo	    $0.002 / 1K tokens
@@ -287,6 +300,60 @@ class AI(commands.Cog):
             await ctx.reply(content=content, embed=embed, mention_author=False)
 
             # print(completion)
+
+    @commands.hybrid_command()
+    @app_commands.describe(prompt="Your question to Elon Musk?")
+    async def grok(self, ctx, *, prompt: str):
+        """Ask Grok! Powered by Elon Musk's xAI."""
+
+        model = "grok-beta"
+
+        async with ctx.typing():
+            params = {
+                "model": model,
+                "messages": [
+                    # {"role": "system", "content": SYSTEM},
+                    {"role": "user", "content": prompt},
+                ],
+            }
+            completion = await self.client_grok.chat.completions.create(**params)
+            answer = completion.choices[0].message.content
+            print("Grok completion length:", len(answer))
+
+            print(completion.usage)
+            token_prompt = completion.usage.prompt_tokens
+            token_completion = completion.usage.completion_tokens
+            print(completion.model)
+            if model == "grok-beta":
+                pricing_prompt = 5
+                pricing_completion = 15
+            cost_in_USD = ((token_prompt * pricing_prompt) / 1_000_000) + (
+                (token_completion * pricing_completion) / 1_000_000
+            )
+            try:
+                cost_in_PHP = cost_in_USD * await self.currency_USD_PHP.latest_exchange_rate()
+                print(cost_in_USD, cost_in_PHP)
+                footer_cost_text = f"Cost: ₱{round(cost_in_PHP, 3)} | "
+            except Exception as e:
+                print(e)
+                footer_cost_text = ""
+
+            # Send response
+            answer_ellipsis = f" ... (truncated due to {EmbedLimit.DESCRIPTION.value} character limit)"
+            embed = discord.Embed(
+                description=truncate(answer, EmbedLimit.DESCRIPTION.value, answer_ellipsis), color=0x0A0A0A
+            )
+            embed.set_footer(
+                text=f"Model: {model} | {footer_cost_text}Prompt tokens: {token_prompt}, Completion tokens: {token_completion}",
+                icon_url="https://i.imgur.com/eTPBvvB.png",
+            )
+
+            # Add prompt as title in embed if ctx.interaction. Without it, it seems no-context.
+            if ctx.interaction:
+                title_ellipsis = " ..."
+                embed.title = truncate(prompt, EmbedLimit.TITLE.value, title_ellipsis)
+
+            await ctx.reply(embed=embed, mention_author=False)
 
     # TODO: Add system prompt but first check its reliability at the current state (possibly w/ history)
     # This doesn't have rate limiting as it's free
@@ -356,7 +423,7 @@ class AI(commands.Cog):
         try:
             # Transcribe
             with open(temp_filename, "rb") as f:  # Open the file in binary read mode
-                transcript = await self.client.audio.transcriptions.create(
+                transcript = await self.client_openai.audio.transcriptions.create(
                     model="whisper-1",
                     file=f,  # Pass the file object directly
                 )
