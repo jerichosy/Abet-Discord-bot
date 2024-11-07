@@ -105,7 +105,6 @@ class AI(commands.Cog):
         text: discord.Attachment = None,
         image: discord.Attachment = None,
         model: Literal["gpt-4o", "gpt-4-turbo", "gpt-4o-mini"] = "gpt-4o",
-        response: Literal["Embed", "Message"] = "Embed",
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4 model."""
 
@@ -286,18 +285,13 @@ class AI(commands.Cog):
                 title_ellipsis = " ..."
                 embed.title = truncate(prompt, EmbedLimit.TITLE.value, title_ellipsis)
 
-            content = None
-            if response == "Embed":
-                # If answer is long, truncate it and inform in embed
-                answer_ellipsis = f" ... (truncated due to {EmbedLimit.DESCRIPTION.value} character limit)"
-                embed.description = truncate(answer, EmbedLimit.DESCRIPTION.value, answer_ellipsis)
-            else:
-                answer_ellipsis = f" ... (truncated due to {MessageLimit.CONTENT.value} character limit)"
-                content = truncate(answer, MessageLimit.CONTENT.value, answer_ellipsis)
+            # If answer is long, truncate it and inform in embed
+            answer_ellipsis = f" ... (truncated due to {EmbedLimit.DESCRIPTION.value} character limit)"
+            embed.description = truncate(answer, EmbedLimit.DESCRIPTION.value, answer_ellipsis)
 
             # print("Truncated length: ", len(answer))
 
-            await ctx.reply(content=content, embed=embed, mention_author=False)
+            await ctx.reply(embed=embed, mention_author=False)
 
             # print(completion)
 
