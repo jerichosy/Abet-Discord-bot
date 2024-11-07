@@ -226,18 +226,15 @@ class AI(commands.Cog):
             print(completion.usage)
             token_prompt = completion.usage.prompt_tokens
             token_completion = completion.usage.completion_tokens
-            print(completion.model)
-            if model == "gpt-4o-mini":
-                pricing_prompt = 0.000150
-                pricing_completion = 0.000600
-            elif model == "gpt-4-turbo":
-                pricing_prompt = 0.01
-                pricing_completion = 0.03
-            elif model == "gpt-4o":
-                pricing_prompt = 0.005
-                pricing_completion = 0.015
-            cost_in_USD = ((token_prompt * pricing_prompt) / 1000) + ((token_completion * pricing_completion) / 1000)
             try:
+                print(completion.model)
+                if completion.model == "gpt-4o-mini-2024-07-18":
+                    pricing_prompt = 0.000150
+                    pricing_completion = 0.000600
+                elif completion.model == "gpt-4o-2024-08-06":
+                    pricing_prompt = 0.00250
+                    pricing_completion = 0.01000
+                cost_in_USD = ((token_prompt * pricing_prompt) / 1000) + ((token_completion * pricing_completion) / 1000)
                 cost_in_PHP = cost_in_USD * await self.currency_USD_PHP.latest_exchange_rate()
                 print(cost_in_USD, cost_in_PHP)
                 footer_cost_text = f"Cost: ₱{round(cost_in_PHP, 3)} | "
