@@ -101,8 +101,7 @@ class AI(commands.Cog):
         self,
         ctx,
         *,
-        prompt: str = None,
-        text: discord.Attachment = None,
+        prompt: str,
         image: discord.Attachment = None,
         model: Literal["gpt-4o", "gpt-4-turbo", "gpt-4o-mini"] = "gpt-4o",
     ):
@@ -120,24 +119,6 @@ class AI(commands.Cog):
         #     return await ctx.send(
         #         "ChatGPT, a mind so vast, \nCosts ascended, now amassed. \nService sleeps, its free days passed."
         #     )
-
-        # TODO: Audit every check logic
-        # We know that either prompt or text must be present, with image being optional
-        # But it's complicated by the fact that we assume prompt/text can be a message attachment in traditional cmd invokation
-        # and so on...
-
-        if not prompt and not text and not ctx.message.attachments:
-            return await ctx.reply("Please input your prompt")
-
-        if (text or ctx.message.attachments) and not image:
-            if text:
-                # when prompt is in an attached text file via slash
-                prompt_text = (await text.read()).decode()
-            elif ctx.message.attachments:
-                # when prompt is in an attached text file via traditional
-                prompt_text = (await ctx.message.attachments[0].read()).decode()
-
-            prompt = prompt_text if not prompt else f"{prompt}\n\n{prompt_text}"
 
         # FIXME: This logic is borked when this cmd is invoked thru slash
         if not ctx.interaction:
