@@ -203,7 +203,7 @@ class AI(commands.Cog):
                                 {"type": "text", "text": prompt},
                                 {
                                     "type": "image_url",
-                                    "image_url": image.url,
+                                    "image_url": {"url": image.url},
                                 },
                             ],
                         },
