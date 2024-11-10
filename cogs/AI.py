@@ -1,3 +1,6 @@
+# Conventions in this file:
+# - If error, do mention author
+
 import asyncio
 import os
 import uuid
@@ -118,6 +121,18 @@ class AI(commands.Cog):
         #         "ChatGPT, a mind so vast, \nCosts ascended, now amassed. \nService sleeps, its free days passed."
         #     )
 
+        # Do this instead of `image = image or ctx.message.attachments[0] if ctx.message.attachments else None` as the latter is wrong
+        # in a sense that it'l cause problems if we have another arg in the future that is an attachment.
+        # Meaning that if that attachment is set, the image will also be set to the same, which we don't want.
+        if not ctx.interaction:
+            # image can never be set outside interaction (i.e., thru traditional cmds), so no need to check it
+            # TODO: In the future, we may consider allowing multiple images
+            image = ctx.message.attachments[0] if ctx.message.attachments else None
+        if image:
+            print(image.content_type)
+            if not image.content_type.startswith("image"):
+                return await ctx.reply("🛑 Only image attachment is supported.")
+
         # FIXME: This logic is borked when this cmd is invoked thru slash
         if not ctx.interaction:
             trigger_words_translate = ["translate", "translation"]
@@ -136,18 +151,6 @@ class AI(commands.Cog):
                 else:
                     await ctx.message.delete()
                     return print("Cancelled...")
-
-        # Do this instead of `image = image or ctx.message.attachments[0] if ctx.message.attachments else None` as the latter is wrong
-        # in a sense that it'l cause problems if we have another arg in the future that is an attachment.
-        # Meaning that if that attachment is set, the image will also be set to the same, which we don't want.
-        if not ctx.interaction:
-            # image can never be set outside interaction (i.e., thru traditional cmds), so no need to check it
-            # TODO: In the future, we may consider allowing multiple images
-            image = ctx.message.attachments[0] if ctx.message.attachments else None
-        if image:
-            print(image.content_type)
-            if not image.content_type.startswith("image"):
-                return await ctx.reply("🛑 The attachment is not an image.")
 
         async def chat_completion_with_backoff(**kwargs):
             """This creates an OpenAI Chat Completion with a manual exponential backoff strategy in case of no responses."""
