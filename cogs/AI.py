@@ -137,6 +137,18 @@ class AI(commands.Cog):
                     await ctx.message.delete()
                     return print("Cancelled...")
 
+        # Do this instead of `image = image or ctx.message.attachments[0] if ctx.message.attachments else None` as the latter is wrong
+        # in a sense that it'l cause problems if we have another arg in the future that is an attachment.
+        # Meaning that if that attachment is set, the image will also be set to the same, which we don't want.
+        if not ctx.interaction:
+            # image can never be set outside interaction (i.e., thru traditional cmds), so no need to check it
+            # TODO: In the future, we may consider allowing multiple images
+            image = ctx.message.attachments[0] if ctx.message.attachments else None
+        if image:
+            print(image.content_type)
+            if not image.content_type.startswith("image"):
+                return await ctx.reply("🛑 The attachment is not an image.")
+
         async def chat_completion_with_backoff(**kwargs):
             """This creates an OpenAI Chat Completion with a manual exponential backoff strategy in case of no responses."""
             max_retries = 5
@@ -228,6 +240,8 @@ class AI(commands.Cog):
             token_completion = completion.usage.completion_tokens
             try:
                 print(completion.model)
+                # TODO: Determine if we actually hit cache on some of our requests
+                # TODO: If so, factor that into the pricing
                 if completion.model == "gpt-4o-mini-2024-07-18":
                     pricing_prompt = 0.000150
                     pricing_completion = 0.000600
