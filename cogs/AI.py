@@ -262,7 +262,7 @@ class AI(commands.Cog):
             # Send response
             embed = discord.Embed(color=0x74AA9C)
             embed.set_footer(
-                text=f"Model: {model} | {footer_cost_text}Prompt tokens: {token_prompt}, Completion tokens: {token_completion}",
+                text=f"Model: {completion.model} | {footer_cost_text}Prompt tokens: {token_prompt}, Completion tokens: {token_completion}",
                 icon_url="https://cdn.oaistatic.com/_next/static/media/favicon-32x32.be48395e.png",
             )
             # If we decide that we want the author of the prompt to be shown in the embed, uncomment the ff:
