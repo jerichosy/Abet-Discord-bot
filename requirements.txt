@@ -98,5 +98,5 @@ typing_extensions==4.11.0
 uritemplate==4.1.1
 urllib3==2.2.2
 websockets==12.0
-yarl==1.9.4
+yarl<2.0
 yt-dlp==2024.7.7
