@@ -104,7 +104,7 @@ class AI(commands.Cog):
         *,
         prompt: str,
         image: discord.Attachment = None,
-        model: Literal["gpt-4o", "gpt-4o-mini"] = "gpt-4o",
+        model: Literal["gpt-4o-2024-11-20", "gpt-4o", "gpt-4o-mini"] = "gpt-4o-2024-11-20",
     ):
         """Ask ChatGPT! Now powered by OpenAI's newest GPT-4o model."""
 
@@ -248,7 +248,7 @@ class AI(commands.Cog):
                 if completion.model == "gpt-4o-mini-2024-07-18":
                     pricing_prompt = 0.000150
                     pricing_completion = 0.000600
-                elif completion.model == "gpt-4o-2024-08-06":
+                elif completion.model in ["gpt-4o-2024-08-06", "gpt-4o-2024-11-20"]:
                     pricing_prompt = 0.00250
                     pricing_completion = 0.01000
                 cost_in_USD = ((token_prompt * pricing_prompt) / 1000) + ((token_completion * pricing_completion) / 1000)
