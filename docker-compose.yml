@@ -20,6 +20,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ./audio-output:/app/audio-ouput
       - ./discord.log:/app/discord.log
+      - ./.env:/app/.env:ro
     mem_limit: 2304m
 
   dev-db:
