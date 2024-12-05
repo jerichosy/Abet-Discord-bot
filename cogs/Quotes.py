@@ -53,6 +53,7 @@ class QuoteListView(discord.ui.View):
         member: discord.Member,
         page: int,
         per_page: int,
+        has_next_page: bool,
         timeout: Optional[float] = 180,
     ):
         super().__init__(timeout=timeout)
@@ -60,6 +61,7 @@ class QuoteListView(discord.ui.View):
         self.member = member
         self.page = page
         self.per_page = per_page
+        self.next_page.disabled = not has_next_page
 
     async def on_timeout(self) -> None:
         for item in self.children:
@@ -67,19 +69,25 @@ class QuoteListView(discord.ui.View):
 
         await self.message.edit(view=self)
 
-    @discord.ui.button(emoji="◀️")
+    @discord.ui.button(emoji="◀️", disabled=True)
     async def prev_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page = max(1, self.page - 1)
-        quotes = await self.quotes_instance.get_quotes_list(self.member, self.page, self.per_page)
-        embed = await Quotes.create_quotes_embed(self.member, quotes)
-        await interaction.response.edit_message(content=f"> Page {self.page}", embed=embed, view=self)
+        quotes, _ = await self.quotes_instance.get_quotes_list(self.member, self.page, self.per_page)
+        embed = await Quotes.create_quotes_embed(self.member, quotes, self.page)
+        if self.page == 1:
+            self.prev_page.disabled = True
+        self.next_page.disabled = False
+        await interaction.response.edit_message(embed=embed, view=self)
 
     @discord.ui.button(emoji="▶️")
     async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page = self.page + 1
-        quotes = await self.quotes_instance.get_quotes_list(self.member, self.page, self.per_page)
-        embed = await Quotes.create_quotes_embed(self.member, quotes)
-        await interaction.response.edit_message(content=f"> Page {self.page}", embed=embed, view=self)
+        quotes, has_next_page = await self.quotes_instance.get_quotes_list(self.member, self.page, self.per_page)
+        embed = await Quotes.create_quotes_embed(self.member, quotes, self.page)
+        self.prev_page.disabled = False
+        if not has_next_page:
+            self.next_page.disabled = True
+        await interaction.response.edit_message(embed=embed, view=self)
 
 
 # TODO: Turn some stuff here into groups
@@ -101,14 +109,17 @@ class Quotes(commands.Cog):
         return result if result else None
 
     async def get_quotes_list(self, member: discord.Member, page: int = 1, per_page: int = 20):
-        return await self.quotes_manager.find_quotes_by_member_id(member.id, page, per_page)
+        quote_list = await self.quotes_manager.find_quotes_by_member_id(member.id, page, per_page)
+        has_next_page = bool(await self.quotes_manager.find_quotes_by_member_id(member.id, page + 1, per_page))
+        return quote_list, has_next_page
 
     @staticmethod
-    async def create_quotes_embed(member: discord.Member, quotes: Sequence) -> discord.Embed:
+    async def create_quotes_embed(member: discord.Member, quotes: Sequence, page) -> discord.Embed:
         if not quotes:
-            return discord.Embed(description="⚠️ No quotes found.")
+            return discord.Embed(title="⚠️ No quotes found.")
 
-        embed = discord.Embed(description=f"**{member.mention} quotes:**\n")
+        embed = discord.Embed(title=f"**Page {page}**")
+        embed.set_author(name=f"{member.display_name}'s quotes", icon_url=member.avatar.url)
         for quote in quotes:
             embed.add_field(
                 name="",
@@ -204,17 +215,16 @@ class Quotes(commands.Cog):
         if not member:
             return await ctx.send("Please specify a member.")
 
-        quotes = await self.get_quotes_list(member, 1, 20)
+        quotes, has_next_page = await self.get_quotes_list(member, 1, 20)
 
         if not quotes:
-            await ctx.send(embed=discord.Embed(description="⚠️ No quotes found."))
+            await ctx.send(embed=discord.Embed(title="⚠️ No quotes found."))
             return
 
-        view = QuoteListView(self, member, 1, 20)
-        embed = await self.create_quotes_embed(member, quotes)
+        view = QuoteListView(self, member, 1, 20, has_next_page)
+        embed = await self.create_quotes_embed(member, quotes, 1)
 
         view.message = await ctx.send(
-            content="> Page 1",
             embed=embed,
             allowed_mentions=discord.AllowedMentions(users=False),
             view=view,
