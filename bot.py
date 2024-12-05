@@ -90,6 +90,7 @@ class AbetBot(commands.Bot):
         self.HOME_GUILD = discord.Object(id=867811644322611200)  # Inocencio server
         self.OTHER_GUILD = discord.Object(id=749880698436976661)  # IV of Spades
         self.TEST_GUILD = discord.Object(id=887980840347398144)  # kbp
+        self.JDS_GUILD = discord.Object(id=1178014260266283178)  # JDS
         self.ABANGERS_PREMIUM_GUILD = discord.Object(id=909626375374245938)  # abangers
         self.ABANGERS_DELUXE_GUILD = discord.Object(id=448025150101913602)  # deluxe man
 
