@@ -196,10 +196,7 @@ class Quotes(commands.Cog):
         """Lists all quotes with their IDs."""
 
         # If we're in CS-ST Friends and Co or Bored, default to waikei and get his discord.Member object
-        if ctx.guild.id in (
-            self.bot.ABANGERS_PREMIUM_GUILD.id,
-            self.bot.ABANGERS_DELUXE_GUILD.id,
-        ):
+        if ctx.guild.id in (self.bot.ABANGERS_PREMIUM_GUILD.id, self.bot.ABANGERS_DELUXE_GUILD.id, self.bot.JDS_GUILD.id):
             # But if the user specified a member, use that instead
             member = member if member else await ctx.guild.fetch_member(self.bot.WAIKEI_USER.id)
 
