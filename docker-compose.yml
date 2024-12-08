@@ -14,11 +14,11 @@ services:
           path: ./requirements.txt
     networks:
       - default
-      - zen-zone
+      # - zen-zone
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ./audio-output:/app/audio-ouput
+      - ./audio-output:/app/audio-output
       - ./discord.log:/app/discord.log
       - ./.env:/app/.env:ro
     mem_limit: 2304m
@@ -40,6 +40,6 @@ services:
     profiles:
       - dev
 
-networks:
-  zen-zone:
-    external: true
+# networks:
+#   zen-zone:
+#     external: true
