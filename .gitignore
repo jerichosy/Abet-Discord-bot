@@ -123,7 +123,7 @@ celerybeat.pid
 .env
 .venv
 env/
-venv/
+venv*/
 ENV/
 env.bak/
 venv.bak/
@@ -160,10 +160,8 @@ cython_debug/
 #.idea/
 
 
-venv*/
 nohup.out
 temp/
-db/
 database/*.txt
 database/*.db
 audio-output/
