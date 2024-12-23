@@ -14,9 +14,6 @@ services:
             - ./.git
         - action: rebuild
           path: ./requirements.txt
-    networks:
-      - default
-      # - zen-zone
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -41,7 +38,3 @@ services:
       - 8080:8080
     profiles:
       - dev
-
-# networks:
-#   zen-zone:
-#     external: true
