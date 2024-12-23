@@ -10,6 +10,7 @@
 **/venv*
 **/.classpath
 **/.dockerignore
+**/.env*
 **/.git
 **/.gitignore
 **/.project
@@ -25,7 +26,7 @@
 **/bin
 **/charts
 **/docker-compose*
-**/compose*
+**/compose.y*ml
 **/Dockerfile*
 **/node_modules
 **/npm-debug.log
@@ -37,9 +38,7 @@ README.md
 CONTRIBUTING.md
 
 **/scripts
-**/database
 **/temp
 **/audio-output
 **/*.log
-**/.env*
 **/*.out
