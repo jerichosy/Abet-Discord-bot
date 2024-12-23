@@ -42,3 +42,4 @@ CONTRIBUTING.md
 **/audio-output
 **/*.log
 **/*.out
+**/.devcontainer
