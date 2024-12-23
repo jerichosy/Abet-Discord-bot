@@ -1,6 +1,8 @@
 services:
   bot:
-    build: .
+    build:
+      context: .
+      target: prod
     restart: on-failure
     develop:
       watch:
