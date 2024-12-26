@@ -1,5 +1,8 @@
 # CONTRIBUTING
 
+## Dev container intricacies:
+- Since the production service 'bot' in the [docker-compose.yml](docker-compose.yml) is [extended by the dev container](.devcontainer/devcontainer.json) and [just overrides it for dev purposes](.devcontainer/docker-compose.yml), opening the dev container while a production service 'bot' is running will shut prod down and attempt to recreate the same 'bot' service supposedly with dev overrides but failing as the image needs to be rebuilt (and vice versa). In other words, both prod and dev container uses the same image and only one (1) environment can exist at a time. But, developing in prod is desirable here since it is easier (no need to sync slash commands twice), no users are usually affected (no one really uses the bot), and in-line with traditions on how the bot was always developed even before being Dockerized and set up with dev containers. So the intricacy of prod being killed to spin up the devcontainer (and vice versa) is actually desirable. Just know that when switching environments, the image has to be rebuilt.
+
 ## Conventions:
 - When receiving user input that is too long, explicitly reject it. Do not truncate it as that is only meant for output (display).
 - When specifying URL variables, do not include the trailing slash (`/`) as part of the hostname. Instead, it should be the prefix of the URL path as it is clearer and is in-line with how routes are declared in web frameworks (e.g. Express, FastAPI).
