@@ -434,20 +434,27 @@ class Tools(commands.Cog):
                 # print(text)
                 await ctx.send(f"```{text}```")
 
-    # TODO: input validation, explore JSON data
+    # TODO: explore JSON data
     @commands.command()
     async def metar(self, ctx, airport_code: str = "RPLL"):
+        # NOTE: API accepts ICAO, IATA, GPS code, or coord pair. Ex: KJFK, LHR, or "12.34,-12.34"
+        #       Invalid ones result in 400 Bad Request (e.g., KSFA), but some valid ones result in 204 No Content (e.g., RPNS/IAO).
         async with ctx.typing():
             query_url = f"https://avwx.rest/api/metar/{airport_code}"
             async with ctx.session.get(
                 query_url, headers={"Authorization": "BEARER " + os.getenv("METAR_TOKEN")}
             ) as response:
                 print(response.status)
-                response.raise_for_status()
+                if response.status == 204:
+                    return await ctx.send(f"HTTP `204 No Content` response from {query_url}")
                 json_data = await response.json()
                 print(json_data)
-                if response.status == 204:
-                    return await ctx.send(f"Unexpected HTTP `204 No Content` response from {query_url}")
+                if "error" in json_data:
+                    msg = f"Error: {json_data['error']}"
+                    if "help" in json_data:
+                        msg += f"\nAccepts: {json_data['help']}"
+                    return await ctx.send(msg)
+                response.raise_for_status()
                 await ctx.send(json_data["raw"])
 
     @app_commands.command()
