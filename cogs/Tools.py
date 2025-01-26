@@ -434,6 +434,22 @@ class Tools(commands.Cog):
                 # print(text)
                 await ctx.send(f"```{text}```")
 
+    # TODO: input validation, explore JSON data
+    @commands.command()
+    async def metar(self, ctx, airport_code: str = "RPLL"):
+        async with ctx.typing():
+            query_url = f"https://avwx.rest/api/metar/{airport_code}"
+            async with ctx.session.get(
+                query_url, headers={"Authorization": "BEARER " + os.getenv("METAR_TOKEN")}
+            ) as response:
+                print(response.status)
+                response.raise_for_status()
+                json_data = await response.json()
+                print(json_data)
+                if response.status == 204:
+                    return await ctx.send(f"Unexpected HTTP `204 No Content` response from {query_url}")
+                await ctx.send(json_data["raw"])
+
     @app_commands.command()
     @app_commands.describe(url="The direct link to the file")
     async def repost(self, interaction: discord.Interaction, url: str, filename: str = None):
