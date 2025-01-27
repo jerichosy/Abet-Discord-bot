@@ -20,6 +20,7 @@ services:
       - ./audio-output:/app/audio-output
       - ./discord.log:/app/discord.log
       - ./.env:/app/.env:ro
+      - ./config.py:/app/config.py:ro
     mem_limit: 2304m
 
   dev-db:
