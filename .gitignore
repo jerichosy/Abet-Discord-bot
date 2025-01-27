@@ -165,3 +165,4 @@ temp/
 database/*.txt
 database/*.db
 audio-output/
+config.py

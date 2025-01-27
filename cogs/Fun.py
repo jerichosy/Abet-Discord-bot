@@ -14,8 +14,29 @@ from discord.app_commands import Group
 from discord.ext import commands
 
 from .utils.context import Context
+from config import SHIT_CED_SAYS
 
 WAIFU_IM_API_HEADERS = {"Accept-Version": "v6"}
+
+
+def get_shitcedsays_message(author: discord.User):
+    return f"{author.mention}, tara bili tayo {random.choice(SHIT_CED_SAYS)} -Ced"
+
+class CedButtonView(discord.ui.View):
+    def __init__(self):
+        super().__init__()
+
+    async def on_timeout(self):
+        for item in self.children:
+            item.disabled = True
+
+        await self.message.edit(view=self)
+
+    @discord.ui.button(label="Another Shit Ced Says", emoji="👉")
+    async def shitcedsays_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_message(get_shitcedsays_message(interaction.user), view=self)
+        self.message = await interaction.original_response()
+        await interaction.followup.edit_message(interaction.message.id, view=None)
 
 
 class Fun(commands.Cog):
@@ -349,6 +370,11 @@ class Fun(commands.Cog):
             for i in range(1, len(timestamps)):
                 elapsed_time = timestamps[i] - timestamps[i - 1]
                 print(f"Time elapsed for challenge {i}: {elapsed_time} seconds")
+
+    @commands.hybrid_command()
+    async def shitcedsays(self, ctx: Context):
+        view: discord.ui.View = CedButtonView()
+        view.message = await ctx.send(get_shitcedsays_message(ctx.author), view=view)
 
     async def get_waifu_im_embed(self, type, category):
         type = "false" if type == "sfw" else "true"
