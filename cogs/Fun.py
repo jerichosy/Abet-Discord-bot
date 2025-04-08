@@ -373,6 +373,7 @@ class Fun(commands.Cog):
 
     @commands.hybrid_command()
     async def shitcedsays(self, ctx: Context):
+        """Basically Cedric Impact. HAPPY ROLLING!"""
         view: discord.ui.View = CedButtonView()
         view.message = await ctx.send(get_shitcedsays_message(ctx.author), view=view)
 
