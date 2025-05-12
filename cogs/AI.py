@@ -6,6 +6,7 @@ import os
 import uuid
 from datetime import datetime
 from io import BytesIO
+from pathlib import Path
 from typing import Literal
 
 import discord
@@ -402,13 +403,13 @@ class AI(commands.Cog):
         audio_filename_split = os.path.splitext(os.path.basename(audio_file.filename))
 
         # Save the attached file to a temporary location with its original name
-        # FIXME: Saving the temp audio file may not as intended if the temp folder doesn't exist
-        # FIXME: Find a way to create this if it doesn't exist already
+        Path("./temp").mkdir(parents=False, exist_ok=True)
         temp_filename = f"./temp/{uuid.uuid4()}{audio_filename_split[-1]}"  # Make sure the './temp/' directory exists or choose a suitable temp directory
         await audio_file.save(temp_filename)
 
         try:
             # Transcribe
+            # FIXME: This doesn't seem to work with CF's AI Gateway
             with open(temp_filename, "rb") as f:  # Open the file in binary read mode
                 transcript = await self.client_openai.audio.transcriptions.create(
                     model="whisper-1",

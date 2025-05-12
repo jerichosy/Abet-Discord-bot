@@ -55,23 +55,11 @@ RUN apt update && apt install -y --no-install-recommends \
 	ffmpeg \
 	&& rm -rf /var/lib/apt/lists/*
 
-# -- dev stage --------------------------------------------------------------------------------------
-
-FROM runtime AS dev
-
-# Create a directory to temporarily store speechtotext cmd input audio files
-# NOTE: directory to store voicelisten cmd output audio files is mounted instead
-RUN mkdir /temp
-
 # -- prod stage -------------------------------------------------------------------------------------
 
 FROM runtime AS prod
 
 WORKDIR /app
-
-# Create a directory to temporarily store speechtotext cmd input audio files
-# NOTE: directory to store voicelisten cmd output audio files is mounted instead
-RUN mkdir /app/temp
 
 # Copy the source code into the container.
 COPY . .
