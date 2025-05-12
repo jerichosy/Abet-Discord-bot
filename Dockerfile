@@ -1,8 +1,8 @@
-ARG PYTHON_VERSION=3.10
+ARG IMAGE=ghcr.io/astral-sh/uv:python3.10-bookworm-slim
 
 # -- 1st stage --------------------------------------------------------------------------------------
 
-FROM python:${PYTHON_VERSION}-slim AS builder
+FROM ${IMAGE} AS builder
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -18,20 +18,23 @@ RUN apt update && apt install -y --no-install-recommends \
 	&& rm -rf /var/lib/apt/lists/*
 
 # Got the multi-stage venv technique from https://pythonspeed.com/articles/multi-stage-docker-python/
-RUN python -m venv /opt/venv
+RUN uv venv /opt/venv
+# Use the virtual environment automatically
+ENV VIRTUAL_ENV=/opt/venv
+# Place entry points in the environment at the front of the path
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
 # Leverage a bind mount to requirements.txt to avoid having to copy them into
 # into this layer.
-RUN --mount=type=cache,target=/root/.cache/pip \
+RUN --mount=type=cache,target=/root/.cache/uv \
 	--mount=type=bind,source=requirements.txt,target=requirements.txt \
-	python -m pip install -r requirements.txt
+	uv pip install -r requirements.txt
 
 # -- 2nd stage --------------------------------------------------------------------------------------
 
-FROM python:${PYTHON_VERSION}-slim AS runtime
+FROM ${IMAGE} AS runtime
 
 # Prevents Python from writing pyc files.
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -40,6 +43,9 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 COPY --from=builder /opt/venv /opt/venv
+# Use the virtual environment automatically
+ENV VIRTUAL_ENV=/opt/venv
+# Place entry points in the environment at the front of the path
 ENV PATH="/opt/venv/bin:$PATH"
 
 # NOTE: poppler-utils needed by pdf2image, libopus0 needed to join vc, ffmpeg needed by jsk vc yt cmd
