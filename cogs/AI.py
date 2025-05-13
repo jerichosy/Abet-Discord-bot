@@ -190,7 +190,7 @@ class AI(commands.Cog):
         print(f"Prompt: {prompt}\nModel: {model}")
         async with ctx.typing():  # Manipulated into ctx.interaction.response.defer() if ctx.interaction
             SYSTEM = (
-                f"Today is {datetime.now().strftime('%-m/%-d/%Y')}.\n"
+                f"Today is {datetime.now().strftime('%-m/%-d/%Y %-I:%M %p')}.\n"
                 "\n"
                 "Users Info:\n"
                 "Your users are primarily based in Metro Manila, Philippines. They are students ranging from SHS to college, some of whom have already graduated.\n"
