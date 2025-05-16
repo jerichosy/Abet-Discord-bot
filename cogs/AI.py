@@ -81,6 +81,14 @@ class AI(commands.Cog):
         return self._client_openai
 
     @property
+    def client_openai_direct(self):
+        if not hasattr(self, "_client_openai_direct"):
+            # print("Creating AsyncOpenAI")
+            self._client_openai_direct = AsyncOpenAI()
+        # print("Returning AsyncOpenAI")
+        return self._client_openai_direct
+
+    @property
     def client_grok(self):
         if not hasattr(self, "_client_grok"):
             account_id = os.getenv("CF_ACCOUNT_ID")
@@ -411,7 +419,7 @@ class AI(commands.Cog):
             # Transcribe
             # FIXME: This doesn't seem to work with CF's AI Gateway
             with open(temp_filename, "rb") as f:  # Open the file in binary read mode
-                transcript = await self.client_openai.audio.transcriptions.create(
+                transcript = await self.client_openai_direct.audio.transcriptions.create(
                     model="whisper-1",
                     file=f,  # Pass the file object directly
                 )
