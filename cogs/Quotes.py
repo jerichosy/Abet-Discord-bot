@@ -140,18 +140,22 @@ class Quotes(commands.Cog):
         else:
             return await sender_cb(f"{quote.quote} -{member.display_name}", view=view)
 
+    async def determine_default_quote_member(self, ctx: Context, member: discord.Member) -> discord.Member:
+        # If we're in CS-ST Friends and Co or Bored, default to waikei and get his discord.Member object
+        if ctx.guild.id in (
+            self.bot.ABANGERS_PREMIUM_GUILD.id,
+            self.bot.ABANGERS_DELUXE_GUILD.id,
+            self.bot.JDS_GUILD.id,
+        ):
+            # But if the user specified a member, use that instead
+            return member if member else await ctx.guild.fetch_member(self.bot.WAIKEI_USER.id)
+
     @commands.hybrid_command()
     @app_commands.describe(member="The member you want a random quote from")
     async def quote(self, ctx: Context, member: discord.Member = None):
         """random quotes (formerly Waikei as a Service)"""
 
-        # If we're in CS-ST Friends and Co or Bored, default to waikei and get his discord.Member object
-        if ctx.guild.id in (
-            self.bot.ABANGERS_PREMIUM_GUILD.id,
-            self.bot.ABANGERS_DELUXE_GUILD.id,
-        ):
-            # But if the user specified a member, use that instead
-            member = member if member else await ctx.guild.fetch_member(self.bot.WAIKEI_USER.id)
+        member = await self.determine_default_quote_member(ctx, member)
 
         # If the user didn't specify a member (happens outside CS-ST Friends and Co), return
         if not member:
@@ -206,10 +210,8 @@ class Quotes(commands.Cog):
     async def quote_list(self, ctx: Context, member: discord.Member = None):
         """Lists all quotes with their IDs."""
 
-        # If we're in CS-ST Friends and Co or Bored, default to waikei and get his discord.Member object
-        if ctx.guild.id in (self.bot.ABANGERS_PREMIUM_GUILD.id, self.bot.ABANGERS_DELUXE_GUILD.id, self.bot.JDS_GUILD.id):
-            # But if the user specified a member, use that instead
-            member = member if member else await ctx.guild.fetch_member(self.bot.WAIKEI_USER.id)
+        member = await self.determine_default_quote_member(ctx, member)
+        # print(f"Member: {member}")
 
         # If the user didn't specify a member (happens outside CS-ST Friends and Co), return
         if not member:
