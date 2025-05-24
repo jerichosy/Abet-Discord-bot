@@ -15,6 +15,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from pdf2image import convert_from_bytes
+from pdf2image.pdf2image import pdfinfo_from_bytes
 from rembg import remove
 
 from cogs.utils import responses_abet
@@ -321,9 +322,30 @@ class Tools(commands.Cog):
             # Sort, then return
             return sorted(pages)
 
-        async def convert_pdf_to_images(data):
+        # Efficiently convert only the selected pages using pdf2image's first_page/last_page
+        # Parse selection and group into contiguous ranges
+        def group_contiguous(pages):
+            # TODO: Function not checked for unnecessary operations & optimizations.
+            if not pages:
+                return []
+            pages = sorted(pages)
+            ranges = []
+            start = prev = pages[0]
+            for page in pages[1:]:
+                if page == prev + 1:
+                    prev = page
+                else:
+                    ranges.append((start, prev))
+                    start = prev = page
+            ranges.append((start, prev))
+            return ranges
+
+        async def convert_pdf_to_images(data, first_page=None, last_page=None):
             loop = asyncio.get_event_loop()
-            return await loop.run_in_executor(self.bot.executor, convert_from_bytes, data)
+            return await loop.run_in_executor(
+                self.bot.executor,
+                lambda: convert_from_bytes(data, first_page=first_page, last_page=last_page)
+            )
 
         async with ctx.typing():
             # Note: Some links have dynamic granular security measures: https://caap.gov.ph/wp-content/uploads/2024/05/MC-010-2024-Amendment-to-Civil-Aviation-Regulations-Parts-1-and-11-RE-Aerial-Works-and-Remotely-Piloted-Aircraft-Systems-Certification.pdf
@@ -339,40 +361,44 @@ class Tools(commands.Cog):
                     return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
 
                 pdf_bytes = await resp.read()
-                images = await convert_pdf_to_images(pdf_bytes)
-
-                image_list = []
-                for image in images:
-                    image_bytes = BytesIO()
-                    image.save(image_bytes, "JPEG")
-                    image_bytes.seek(0)
-                    image_list.append(discord.File(image_bytes, f"{uuid.uuid4()}.jpg"))
 
                 if flags.selection:
-                    # Note: Currently, the bot will download the entire PDF file and convert it to images before parsing the selected pages.
-                    # If there's an error in the selection range, the bot will have wasted resources downloading and converting the entire PDF file,
-                    # since the command terminates after the error is detected and the bot will not send any images.
-                    # BUT, part of the check is to ensure that the selected pages are within the range of the total number of pages in the PDF file.
-                    # So, we can't just check the selection range before downloading the PDF file. We could split the check into two parts but nah.
+                    # First, get total page count by converting just the first page and using pdfinfo
                     try:
-                        selected_pages = parse_selected_pages(flags.selection, len(image_list))
+                        info = pdfinfo_from_bytes(pdf_bytes)
+                        total_pages = info["Pages"]
+                    except Exception:
+                        return await ctx.reply("🛑 Could not determine total number of pages in PDF")
+
+                    try:
+                        selected_pages = parse_selected_pages(flags.selection, total_pages)
                         print(selected_pages)
                     except ValueError:
                         return await ctx.reply("🛑 Error parsing selection range")
                     if not selected_pages:
                         return await ctx.reply("🛑 Invalid selection range")
 
-                    # FIXME: We should instead be using the library's built-in page selection feature to avoid converting the entire PDF file,
-                    # instead of converting the whole thing and then manually selecting pages from the resulting output (list) of images.
-                    # This will save resources and time, especially for large PDF files. But, this might be difficult if the library only specifies
-                    # a start and end page selection argument, and not free-form page selection like we have in this cmd arguments.
-                    # See: https://github.com/Belval/pdf2image
-                    # Get selected pages
-                    image_list = [
-                        # image_list[min(max(i, 1) - 1, len(image_list) - 1)]
-                        image_list[i - 1]
-                        for i in selected_pages
-                    ]
+                    ranges = group_contiguous(selected_pages)
+                    print(ranges)
+                    image_list = []
+                    for start, end in ranges:
+                        print("calling convert_pdf_to_images()")
+                        images = await convert_pdf_to_images(pdf_bytes, first_page=start, last_page=end)
+                        for idx, image in enumerate(images, start=start):
+                            image_bytes = BytesIO()
+                            image.save(image_bytes, "JPEG")
+                            image_bytes.seek(0)
+                            image_list.append((idx, discord.File(image_bytes, f"{uuid.uuid4()}.jpg")))
+                    image_list.sort(key=lambda x: x[0])  # Sort by page number, # TODO: this may not be necessary
+                    image_list = [f for _, f in image_list]
+                else:
+                    images = await convert_pdf_to_images(pdf_bytes)
+                    image_list = []
+                    for image in images:
+                        image_bytes = BytesIO()
+                        image.save(image_bytes, "JPEG")
+                        image_bytes.seek(0)
+                        image_list.append(discord.File(image_bytes, f"{uuid.uuid4()}.jpg"))
 
                 chunks = [image_list[x : x + 10] for x in range(0, len(image_list), 10)]
 
