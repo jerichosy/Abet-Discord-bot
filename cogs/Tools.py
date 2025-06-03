@@ -325,10 +325,9 @@ class Tools(commands.Cog):
         # Efficiently convert only the selected pages using pdf2image's first_page/last_page
         # Parse selection and group into contiguous ranges
         def group_contiguous(pages):
-            # TODO: Function not checked for unnecessary operations & optimizations.
-            if not pages:
-                return []
-            pages = sorted(pages)
+            # if not pages:  # group_contiguous() will never be called with empty pages, so this is unnecessary
+            #     return []
+            # pages = sorted(pages)  # Already sorted by parse_selected_pages()
             ranges = []
             start = prev = pages[0]
             for page in pages[1:]:
@@ -346,6 +345,13 @@ class Tools(commands.Cog):
                 self.bot.executor,
                 lambda: convert_from_bytes(data, first_page=first_page, last_page=last_page)
             )
+
+        def append_images_to_list(images, image_list):
+            for image in images:
+                image_bytes = BytesIO()
+                image.save(image_bytes, "JPEG")
+                image_bytes.seek(0)
+                image_list.append(discord.File(image_bytes, f"{uuid.uuid4()}.jpg"))
 
         async with ctx.typing():
             # Note: Some links have dynamic granular security measures: https://caap.gov.ph/wp-content/uploads/2024/05/MC-010-2024-Amendment-to-Civil-Aviation-Regulations-Parts-1-and-11-RE-Aerial-Works-and-Remotely-Piloted-Aircraft-Systems-Certification.pdf
@@ -384,21 +390,11 @@ class Tools(commands.Cog):
                     for start, end in ranges:
                         print("calling convert_pdf_to_images()")
                         images = await convert_pdf_to_images(pdf_bytes, first_page=start, last_page=end)
-                        for idx, image in enumerate(images, start=start):
-                            image_bytes = BytesIO()
-                            image.save(image_bytes, "JPEG")
-                            image_bytes.seek(0)
-                            image_list.append((idx, discord.File(image_bytes, f"{uuid.uuid4()}.jpg")))
-                    image_list.sort(key=lambda x: x[0])  # Sort by page number, # TODO: this may not be necessary
-                    image_list = [f for _, f in image_list]
+                        append_images_to_list(images, image_list)
                 else:
                     images = await convert_pdf_to_images(pdf_bytes)
                     image_list = []
-                    for image in images:
-                        image_bytes = BytesIO()
-                        image.save(image_bytes, "JPEG")
-                        image_bytes.seek(0)
-                        image_list.append(discord.File(image_bytes, f"{uuid.uuid4()}.jpg"))
+                    append_images_to_list(images, image_list)
 
                 chunks = [image_list[x : x + 10] for x in range(0, len(image_list), 10)]
 
