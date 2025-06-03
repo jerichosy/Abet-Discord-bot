@@ -346,12 +346,13 @@ class Tools(commands.Cog):
                 lambda: convert_from_bytes(data, first_page=first_page, last_page=last_page)
             )
 
-        def append_images_to_list(images, image_list):
-            for image in images:
+        def append_images_to_list(images, image_list, image_filename, converted_start_page_no = 1, converted_last_page_no = None):
+            pad_width = len(str(converted_last_page_no or len(images)))
+            for idx, image in enumerate(images):
                 image_bytes = BytesIO()
                 image.save(image_bytes, "JPEG")
                 image_bytes.seek(0)
-                image_list.append(discord.File(image_bytes, f"{uuid.uuid4()}.jpg"))
+                image_list.append(discord.File(image_bytes, f"{image_filename}_page-{str(converted_start_page_no + idx).zfill(pad_width)}.jpg"))
 
         async with ctx.typing():
             # Note: Some links have dynamic granular security measures: https://caap.gov.ph/wp-content/uploads/2024/05/MC-010-2024-Amendment-to-Civil-Aviation-Regulations-Parts-1-and-11-RE-Aerial-Works-and-Remotely-Piloted-Aircraft-Systems-Certification.pdf
@@ -367,6 +368,7 @@ class Tools(commands.Cog):
                     return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
 
                 pdf_bytes = await resp.read()
+                image_filename = os.path.basename(urlparse(url).path) or uuid.uuid4()
 
                 if flags.selection:
                     # First, get total page count by converting just the first page and using pdfinfo
@@ -390,11 +392,11 @@ class Tools(commands.Cog):
                     for start, end in ranges:
                         print("calling convert_pdf_to_images()")
                         images = await convert_pdf_to_images(pdf_bytes, first_page=start, last_page=end)
-                        append_images_to_list(images, image_list)
+                        append_images_to_list(images, image_list, image_filename, start, ranges[-1][-1])
                 else:
                     images = await convert_pdf_to_images(pdf_bytes)
                     image_list = []
-                    append_images_to_list(images, image_list)
+                    append_images_to_list(images, image_list, image_filename)
 
                 chunks = [image_list[x : x + 10] for x in range(0, len(image_list), 10)]
 
