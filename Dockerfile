@@ -11,11 +11,13 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # NOTE: libpq-dev and build-essential is needed for psycopg2 to build (SQLAlchemy dependency)
-RUN apt update && apt install -y --no-install-recommends \
-	# git \
-	libpq-dev \
-	build-essential \
-	&& rm -rf /var/lib/apt/lists/*
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt update && apt install -y --no-install-recommends \
+    # git \
+    libpq-dev \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 # Got the multi-stage venv technique from https://pythonspeed.com/articles/multi-stage-docker-python/
 RUN uv venv /opt/venv
@@ -29,8 +31,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Leverage a bind mount to requirements.txt to avoid having to copy them into
 # into this layer.
 RUN --mount=type=cache,target=/root/.cache/uv \
-	--mount=type=bind,source=requirements.txt,target=requirements.txt \
-	uv pip install -r requirements.txt
+    --mount=type=bind,source=requirements.txt,target=requirements.txt \
+    uv pip install -r requirements.txt
 
 # -- 2nd stage --------------------------------------------------------------------------------------
 
@@ -49,11 +51,13 @@ ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # NOTE: poppler-utils needed by pdf2image, libopus0 needed to join vc, ffmpeg needed by jsk vc yt cmd
-RUN apt update && apt install -y --no-install-recommends \
-	poppler-utils \
-	libopus0 \
-	ffmpeg \
-	&& rm -rf /var/lib/apt/lists/*
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt update && apt install -y --no-install-recommends \
+    poppler-utils \
+    libopus0 \
+    ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
 
 # -- prod stage -------------------------------------------------------------------------------------
 
