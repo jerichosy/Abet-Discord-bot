@@ -14,10 +14,9 @@ import google.generativeai as genai
 import openai
 from discord import app_commands
 from discord.ext import commands
-from dotenv import load_dotenv
 from openai import AsyncOpenAI
 
-from cogs.utils.character_limits import EmbedLimit, MessageLimit, truncate
+from cogs.utils.character_limits import EmbedLimit, truncate
 from cogs.utils.checks import owner_only
 from cogs.utils.ExchangeRateUSDPHP import ExchangeRateUSDPHP
 

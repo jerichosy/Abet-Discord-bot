@@ -19,7 +19,7 @@ from pdf2image.pdf2image import pdfinfo_from_bytes
 from rembg import remove
 
 from cogs.utils import responses_abet
-from cogs.utils.character_limits import MessageLimit, truncate
+from cogs.utils.character_limits import MessageLimit
 from cogs.utils.context import Context
 from models.db import TagsManager
 
@@ -342,17 +342,22 @@ class Tools(commands.Cog):
         async def convert_pdf_to_images(data, first_page=None, last_page=None):
             loop = asyncio.get_event_loop()
             return await loop.run_in_executor(
-                self.bot.executor,
-                lambda: convert_from_bytes(data, first_page=first_page, last_page=last_page)
+                self.bot.executor, lambda: convert_from_bytes(data, first_page=first_page, last_page=last_page)
             )
 
-        def append_images_to_list(images, image_list, image_filename, converted_start_page_no = 1, converted_last_page_no = None):
+        def append_images_to_list(
+            images, image_list, image_filename, converted_start_page_no=1, converted_last_page_no=None
+        ):
             pad_width = len(str(converted_last_page_no or len(images)))
             for idx, image in enumerate(images):
                 image_bytes = BytesIO()
                 image.save(image_bytes, "JPEG")
                 image_bytes.seek(0)
-                image_list.append(discord.File(image_bytes, f"{image_filename}_page-{str(converted_start_page_no + idx).zfill(pad_width)}.jpg"))
+                image_list.append(
+                    discord.File(
+                        image_bytes, f"{image_filename}_page-{str(converted_start_page_no + idx).zfill(pad_width)}.jpg"
+                    )
+                )
 
         async with ctx.typing():
             # Note: Some links have dynamic granular security measures: https://caap.gov.ph/wp-content/uploads/2024/05/MC-010-2024-Amendment-to-Civil-Aviation-Regulations-Parts-1-and-11-RE-Aerial-Works-and-Remotely-Piloted-Aircraft-Systems-Certification.pdf

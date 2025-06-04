@@ -7,20 +7,21 @@ import time
 from io import BytesIO
 from typing import List, Literal
 
-import aiohttp
 import discord
 from discord import app_commands
 from discord.app_commands import Group
 from discord.ext import commands
 
-from .utils.context import Context
 from config import SHIT_CED_SAYS
+
+from .utils.context import Context
 
 WAIFU_IM_API_HEADERS = {"Accept-Version": "v6"}
 
 
 def get_shitcedsays_message(author: discord.User):
     return f"{author.mention}, tara bili tayo {random.choice(SHIT_CED_SAYS)} -Ced"
+
 
 class CedButtonView(discord.ui.View):
     def __init__(self):
