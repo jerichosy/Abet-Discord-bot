@@ -393,7 +393,9 @@ class AI(commands.Cog):
     @app_commands.describe(audio_file="Supports MP3, MP4, MPEG, MPGA, M4A, WAV, and WEBM. Limited to 25 MB.")
     # If we allow everyone, in OpenAI API Platform, set up a proj in the default org with its own API key so we can track costs specific to Abet bot's OpenAI API usage
     @app_commands.check(owner_only)
-    async def whisper(self, interaction: discord.Interaction, audio_file: discord.Attachment):
+    async def whisper(
+        self, interaction: discord.Interaction, audio_file: discord.Attachment, translate: Literal["No", "Yes"] = "No"
+    ):
         """Uses OpenAI's Whisper model to transcribe audio (speech) to text"""
 
         # Check if over 25 MB
@@ -415,10 +417,14 @@ class AI(commands.Cog):
         await audio_file.save(temp_filename)
 
         try:
-            # Transcribe
+            # Transcribe or translate
             # FIXME: This doesn't seem to work with CF's AI Gateway
             with open(temp_filename, "rb") as f:  # Open the file in binary read mode
-                transcript = await self.client_openai_direct.audio.transcriptions.create(
+                if translate == "Yes":
+                    transcript_func = self.client_openai_direct.audio.translations.create
+                else:
+                    transcript_func = self.client_openai_direct.audio.transcriptions.create
+                transcript = await transcript_func(
                     model="whisper-1",
                     file=f,  # Pass the file object directly
                 )
