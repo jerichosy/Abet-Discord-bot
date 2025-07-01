@@ -65,12 +65,12 @@ pillow==10.3.0
 platformdirs==4.2.1
 pooch==1.8.1
 proto-plus==1.23.0
-protobuf==4.25.3
+protobuf==4.25.8
 psutil==5.9.8
 psycopg2==2.9.9
 pyasn1==0.6.0
 pyasn1_modules==0.4.0
-pycares==4.4.0
+pycares==4.9.0
 pycparser==2.22
 pycryptodomex==3.20.0
 pydantic==2.7.1
@@ -97,7 +97,7 @@ tomli==2.0.1
 tqdm==4.66.3
 typing_extensions==4.11.0
 uritemplate==4.1.1
-urllib3==2.2.2
+urllib3==2.5.0
 websockets==12.0
 yarl<2.0
 yt-dlp>2024.7.7
