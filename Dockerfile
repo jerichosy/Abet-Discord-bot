@@ -11,13 +11,13 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # NOTE: libpq-dev and build-essential is needed for psycopg2 to build (SQLAlchemy dependency)
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt update && apt install -y --no-install-recommends \
     # git \
     libpq-dev \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+    build-essential
 
 # Got the multi-stage venv technique from https://pythonspeed.com/articles/multi-stage-docker-python/
 RUN uv venv /opt/venv
@@ -51,13 +51,13 @@ ENV VIRTUAL_ENV=/opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # NOTE: poppler-utils needed by pdf2image, libopus0 needed to join vc, ffmpeg needed by jsk vc yt cmd
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt update && apt install -y --no-install-recommends \
     poppler-utils \
     libopus0 \
-    ffmpeg \
-    && rm -rf /var/lib/apt/lists/*
+    ffmpeg
 
 # -- prod stage -------------------------------------------------------------------------------------
 
