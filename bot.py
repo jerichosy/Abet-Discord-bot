@@ -197,10 +197,8 @@ async def on_message(message):
     # TODO: Solution is probably to make it a class
     # FIXME: checking is only arbitrarily implemented
 
-    # Test urls: Note how the format we're after is on different indices in the formats array
-    # - https://www.instagram.com/reel/C-RJokDy9xd/
-    # - https://www.instagram.com/reel/C57JZ4yxXGa/
-    # - https://www.instagram.com/p/DAFJPYCvkQw/ (similar link structure non-video posts but should fail silently)
+    # Test urls: Should be at https://github.com/jerichosy/yt-dlp_info-extractor-api/blob/master/tests/test_yt_dlp_extraction.py
+
     IG_VIDEO_REGEX = r"(?P<url>https?:\/\/(?:www\.)?instagram\.com(?:\/[^\/]+)?\/(?:p|reel)\/(?P<id>[^\/?#&]+))"
     ig_video_url = re.findall(IG_VIDEO_REGEX, message.content)
     print("IG Video match:", ig_video_url)
@@ -274,7 +272,6 @@ async def on_message(message):
                     print("Did not return 200 status code from yt-dlp microservice")
                     print(resp_json["detail"])
 
-    # Test url: https://www.facebook.com/reel/307664589035540
     FB_REEL_REGEX = r"(https?:\/\/(?:[\w-]+\.)?facebook\.com\/reel\/(?P<id>\d+))"
     fb_reel_url = re.findall(FB_REEL_REGEX, message.content)
     print("FB Reel match:", fb_reel_url)
