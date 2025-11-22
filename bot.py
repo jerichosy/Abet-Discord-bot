@@ -196,7 +196,7 @@ async def on_message(message):
 
     # --- REPOSTERS START ---
     # Process message through repost manager using dependency injection
-    await self.repost_manager.process_message(message)
+    await bot.repost_manager.process_message(message)
     # --- REPOSTERS END ---
 
     await bot.process_commands(message)
@@ -403,6 +403,6 @@ if __name__ == "__main__":
 
         # RoboDanny puts the DB pool here like `bot.pool`, but we will stick to instance vars.
 
-        await bot.start(os.getenv("BOT_TOKEN"))
+        await bot.start(os.getenv("BOT_TOKEN"))  # type: ignore
 
     asyncio.run(main())
