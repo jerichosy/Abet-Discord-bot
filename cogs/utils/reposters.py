@@ -66,6 +66,13 @@ class BaseReposter(ABC):
         """
         pass
 
+    def build_filename(self, repost_data: BaseRepostData, resp_json: Dict[str, Any]) -> str:
+        """Default filename builder: <id>.<ext> or video.<ext>."""
+        ext = repost_data.file_format  # guaranteed non-None by process_repost
+        if repost_data.match_id:
+            return f"{repost_data.match_id}.{ext}"
+        return f"video.{ext}"
+
     def match_url(self, content: str) -> Optional[BaseRepostData]:
         """Check if content contains a URL that matches this reposter."""
         matches = re.findall(self.url_regex, content)
@@ -98,15 +105,16 @@ class BaseReposter(ABC):
 
                 # Extract platform-specific format information
                 dl_link, file_format = self.extract_format_info(resp_json)
-                if not dl_link:
+                if not dl_link or not file_format:
                     print(f"{self.platform_name}: No valid format found")
                     return False
 
                 repost_data.dl_link = dl_link
-                repost_data.file_format = file_format
-                repost_data.filename = (
-                    f"{repost_data.match_id}.{file_format}" if repost_data.match_id else f"video.{file_format}"
-                )
+                repost_data.file_format = file_format  # guaranteed non-None here
+                # repost_data.filename = (
+                #     f"{repost_data.match_id}.{file_format}" if repost_data.match_id else f"video.{file_format}"
+                # )
+                repost_data.filename = self.build_filename(repost_data, resp_json)
 
                 # Download the video
                 video_bytes = await self._download_video(dl_link)
@@ -219,6 +227,15 @@ class InstagramReposter(BaseReposter):
             embed.add_field(name="Comments", value=comments)
 
         return embed
+
+    def build_filename(self, repost_data: BaseRepostData, resp_json: Dict[str, Any]) -> str:
+        # Old behavior: f"{author}-{ig_video_url[0][1]}.{file_format}"
+        author = resp_json.get("channel") or "instagram"
+        ext = repost_data.file_format  # guaranteed non-None by process_repost
+
+        if repost_data.match_id:
+            return f"{author}-{repost_data.match_id}.{ext}"
+        return f"{author}.{ext}"
 
 
 class FacebookReposter(BaseReposter):
