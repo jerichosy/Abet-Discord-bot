@@ -8,7 +8,7 @@ import re
 from abc import ABC, abstractmethod
 from datetime import datetime
 from io import BytesIO
-from typing import Optional, Dict, Any, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import aiohttp
 import discord
@@ -47,9 +47,7 @@ class BaseReposter(ABC):
         pass
 
     @abstractmethod
-    def extract_format_info(
-        self, resp_json: Dict[str, Any]
-    ) -> Tuple[Optional[str], Optional[str]]:
+    def extract_format_info(self, resp_json: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]:
         """Extract download link and format from yt-dlp response.
 
         Returns:
@@ -58,9 +56,7 @@ class BaseReposter(ABC):
         pass
 
     @abstractmethod
-    def create_embed(
-        self, repost_data: BaseRepostData, resp_json: Dict[str, Any]
-    ) -> Optional[discord.Embed]:
+    def create_embed(self, repost_data: BaseRepostData, resp_json: Dict[str, Any]) -> Optional[discord.Embed]:
         """Create platform-specific Discord embed.
 
         Returns:
@@ -80,9 +76,7 @@ class BaseReposter(ABC):
             return BaseRepostData(url, match_id)
         return None
 
-    async def process_repost(
-        self, message: discord.Message, repost_data: BaseRepostData
-    ) -> bool:
+    async def process_repost(self, message: discord.Message, repost_data: BaseRepostData) -> bool:
         """Process a repost request.
 
         Returns:
@@ -91,15 +85,11 @@ class BaseReposter(ABC):
         async with message.channel.typing():
             try:
                 # Get metadata from yt-dlp microservice
-                async with self.session.get(
-                    f"{self.yt_dlp_url}/extract?url={repost_data.url}"
-                ) as resp:
+                async with self.session.get(f"{self.yt_dlp_url}/extract?url={repost_data.url}") as resp:
                     print(f"{self.platform_name} yt-dlp response: {resp.status}")
                     if resp.status != 200:
                         resp_json = await resp.json()
-                        print(
-                            f"yt-dlp error: {resp_json.get('detail', 'Unknown error')}"
-                        )
+                        print(f"yt-dlp error: {resp_json.get('detail', 'Unknown error')}")
                         return False
 
                     resp_json = await resp.json()
@@ -113,9 +103,7 @@ class BaseReposter(ABC):
                 repost_data.dl_link = dl_link
                 repost_data.file_format = file_format
                 repost_data.filename = (
-                    f"{repost_data.match_id}.{file_format}"
-                    if repost_data.match_id
-                    else f"video.{file_format}"
+                    f"{repost_data.match_id}.{file_format}" if repost_data.match_id else f"video.{file_format}"
                 )
 
                 # Download the video
@@ -128,9 +116,7 @@ class BaseReposter(ABC):
                 embed = self.create_embed(repost_data, resp_json)
 
                 # Send the repost
-                await self._send_repost(
-                    message, video_bytes, repost_data.filename, embed
-                )
+                await self._send_repost(message, video_bytes, repost_data.filename, embed)
                 return True
 
             except Exception as e:
@@ -184,9 +170,7 @@ class InstagramReposter(BaseReposter):
     def platform_name(self) -> str:
         return "Instagram"
 
-    def extract_format_info(
-        self, resp_json: Dict[str, Any]
-    ) -> Tuple[Optional[str], Optional[str]]:
+    def extract_format_info(self, resp_json: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]:
         """Extract Instagram video format - looks for format with no tbr and has audio."""
         valid_formats = [
             fmt
@@ -199,9 +183,7 @@ class InstagramReposter(BaseReposter):
             return best_format["url"], best_format["ext"]
         return None, None
 
-    def create_embed(
-        self, repost_data: BaseRepostData, resp_json: Dict[str, Any]
-    ) -> Optional[discord.Embed]:
+    def create_embed(self, repost_data: BaseRepostData, resp_json: Dict[str, Any]) -> Optional[discord.Embed]:
         """Create Instagram-specific embed with metadata."""
         desc = resp_json.get("description")
         timestamp = resp_json.get("timestamp")
@@ -248,9 +230,7 @@ class FacebookReposter(BaseReposter):
     def platform_name(self) -> str:
         return "Facebook"
 
-    def extract_format_info(
-        self, resp_json: Dict[str, Any]
-    ) -> Tuple[Optional[str], Optional[str]]:
+    def extract_format_info(self, resp_json: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]:
         """Extract Facebook video format - uses format index 2."""
         formats = resp_json.get("formats", [])
         if len(formats) > 2:
@@ -258,9 +238,7 @@ class FacebookReposter(BaseReposter):
             return format_info["url"], format_info["ext"]
         return None, None
 
-    def create_embed(
-        self, repost_data: BaseRepostData, resp_json: Dict[str, Any]
-    ) -> Optional[discord.Embed]:
+    def create_embed(self, repost_data: BaseRepostData, resp_json: Dict[str, Any]) -> Optional[discord.Embed]:
         """Facebook uses minimal embed - just description if available."""
         desc = resp_json.get("description")
         if desc:
