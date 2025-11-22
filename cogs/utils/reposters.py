@@ -242,10 +242,7 @@ class FacebookReposter(BaseReposter):
 
     def create_embed(self, repost_data: BaseRepostData, resp_json: Dict[str, Any]) -> Optional[discord.Embed]:
         """Facebook uses minimal embed - just description if available."""
-        desc = resp_json.get("description")
-        if desc:
-            # Could create a simple embed here, but current implementation sends no embed
-            pass
+        # Facebook does not use embeds; always return None.
         return None
 
 
