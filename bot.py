@@ -14,18 +14,17 @@ import time
 import traceback
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from io import BytesIO
 from typing import Union
 
 import aiohttp
 import discord
-import yarl
 from discord import Interaction, app_commands
 from discord.ext import commands
 from dotenv import load_dotenv
 
 from cogs.utils import responses_random
 from cogs.utils.context import Context
+from cogs.utils.reposters import RepostManager
 from models.db import BaseDBManager
 from models.engine import EngineSingleton
 
@@ -85,6 +84,7 @@ class AbetBot(commands.Bot):
         self.db_engine = EngineSingleton.get_engine(os.getenv("DB_URI", ""))
         self.__base_db_manager = BaseDBManager(self.db_engine)
         self.executor = ThreadPoolExecutor(max_workers=4)
+        self.repost_manager = None  # Will be initialized in setup_hook after session is created
 
         # --- GUILD CONSTANTS ---
         self.HOME_GUILD = discord.Object(id=867811644322611200)  # Inocencio server
@@ -106,6 +106,9 @@ class AbetBot(commands.Bot):
         print("\033[1;33m***** Now in `setup_hook()` *****\033[0m")
 
         self.session = aiohttp.ClientSession()
+
+        # Initialize repost manager with session
+        self.repost_manager = RepostManager(self.session)
 
         # Load cogs
         for extension in initial_extensions:
@@ -192,124 +195,8 @@ async def on_message(message):
                     break
 
     # --- REPOSTERS START ---
-    # ACTUALLY, CURRENT IMPLEMENTATION IS OKAY but we can still opt to resolve the non-issues
-    # TODO: Either try to make it consistent across or think of a better/flexible/DRY solution
-    # TODO: Solution is probably to make it a class
-    # FIXME: checking is only arbitrarily implemented
-
-    # Test urls: Should be at https://github.com/jerichosy/yt-dlp_info-extractor-api/blob/master/tests/test_yt_dlp_extraction.py
-
-    IG_VIDEO_REGEX = r"(?P<url>https?:\/\/(?:www\.)?instagram\.com(?:\/[^\/]+)?\/(?:p|reel)\/(?P<id>[^\/?#&]+))"
-    ig_video_url = re.findall(IG_VIDEO_REGEX, message.content)
-    print("IG Video match:", ig_video_url)
-    if ig_video_url:
-        async with message.channel.typing():
-            async with bot.session.get(f"{os.getenv('YT_DLP_MICROSERVICE')}/extract?url={ig_video_url[0][0]}") as resp:
-                print(resp.status)
-                resp_json = await resp.json()
-                if resp.status == 200:
-                    valid_formats = [
-                        fmt
-                        for fmt in resp_json["formats"]
-                        if fmt.get("tbr") is None  # only the format we want has no tbr
-                        and fmt.get("acodec") != "none"  # technically not needed
-                    ]
-                    best_format = valid_formats[0] if valid_formats else None
-                    if best_format:
-                        # This can also be sent instead and it will embed although it is very long
-                        # Not sure but this specifically may be simplified to ["url"]
-                        dl_link = best_format["url"]
-                        file_format = best_format["ext"]
-                        desc = resp_json["description"]
-                        timestamp = resp_json["timestamp"]
-                        likes = resp_json["like_count"]
-                        comments = resp_json["comment_count"]
-                        author = resp_json["channel"]
-                        author_display_name = resp_json["uploader"]
-                        author_url = f"https://www.instagram.com/{author}/"
-                        print(dl_link)
-
-                        dl_link = yarl.URL(dl_link, encoded=True)  # So far, we don't do this anywhere else.
-                        async with bot.session.get(dl_link) as resp:
-                            print(resp.status)
-                            if resp.status == 200:
-                                video_bytes = BytesIO(await resp.read())
-                                print("format:", file_format)
-                                embed = discord.Embed(
-                                    description=f"[{desc if desc else '*Link*'}]({ig_video_url[0][0]})",  # No truncation but IG captions are limited to 2200 char and so unlikely to reach 4096 embed desc limit.
-                                    timestamp=datetime.fromtimestamp(timestamp),
-                                    url=ig_video_url[0][0],
-                                    color=0xCE0071,
-                                )
-                                embed.set_author(
-                                    name=f"{author_display_name} (@{author})",
-                                    url=author_url,
-                                )
-                                embed.set_footer(
-                                    text="Instagram",
-                                    icon_url="https://cdn.discordapp.com/attachments/998571531934376006/1010817764203712572/68d99ba29cc8.png",
-                                )
-                                embed.add_field(name="Likes", value=likes)
-                                embed.add_field(name="Comments", value=comments)
-                                try:
-                                    await message.reply(
-                                        embed=(message.embeds[0] if message.embeds else embed),
-                                        mention_author=False,
-                                        file=discord.File(
-                                            video_bytes,
-                                            f"{author}-{ig_video_url[0][1]}.{file_format}",
-                                        ),
-                                    )
-                                except discord.HTTPException:
-                                    print("IG Reposter send error: Likely too big")
-                                else:
-                                    await message.edit(suppress=True)
-                            else:
-                                print("Did not return 200 status code from downlading video")
-                    else:
-                        print("Did not find a valid format")
-                else:
-                    print("Did not return 200 status code from yt-dlp microservice")
-                    print(resp_json["detail"])
-
-    FB_REEL_REGEX = r"(https?:\/\/(?:[\w-]+\.)?facebook\.com\/reel\/(?P<id>\d+))"
-    fb_reel_url = re.findall(FB_REEL_REGEX, message.content)
-    print("FB Reel match:", fb_reel_url)
-    if fb_reel_url:
-        async with message.channel.typing():
-            async with bot.session.get(f"{os.getenv('YT_DLP_MICROSERVICE')}/extract?url={fb_reel_url[0][0]}") as resp:
-                print(resp.status)
-                resp_json = await resp.json()
-                if resp.status == 200:
-                    # This can also be sent instead and it will embed although it is very long
-                    dl_link = resp_json["formats"][2]["url"]
-                    file_format = resp_json["formats"][2]["ext"]
-                    desc = resp_json["description"]
-                    print(dl_link)
-
-                    async with bot.session.get(dl_link) as resp:
-                        print(resp.status)
-                        if resp.status == 200:
-                            video_bytes = BytesIO(await resp.read())
-                            print("format:", file_format)
-                            try:
-                                await message.reply(
-                                    mention_author=False,
-                                    file=discord.File(
-                                        video_bytes,
-                                        f"{fb_reel_url[0][1]}.{file_format}",
-                                    ),
-                                )
-                            except discord.HTTPException:
-                                print("FB Reel Reposter send error: Likely too big")
-                            else:
-                                await message.edit(suppress=True)
-                        else:
-                            print("Did not return 200 status code from downlading video")
-                else:
-                    print("Did not return 200 status code from yt-dlp microservice")
-                    print(resp_json["detail"])
-
+    # Process message through repost manager using dependency injection
+    await bot.repost_manager.process_message(message)
     # --- REPOSTERS END ---
 
     await bot.process_commands(message)
@@ -377,7 +264,8 @@ async def on_app_command_error(interaction: Interaction, error: app_commands.App
     # # Errors that don't require my attention
     if isinstance(error, app_commands.CheckFailure):
         return await interaction.response.send_message(
-            f"{error} Probably this command is restricted only to the bot's owner.", ephemeral=False
+            f"{error} Probably this command is restricted only to the bot's owner.",
+            ephemeral=False,
         )
 
     # Errors that reached here require my attention
@@ -388,7 +276,10 @@ async def on_app_command_error(interaction: Interaction, error: app_commands.App
         suppress_embeds=True,
         ephemeral=False,
     )
-    print("Ignoring exception in slash command {}:".format(interaction.command), file=sys.stderr)
+    print(
+        "Ignoring exception in slash command {}:".format(interaction.command),
+        file=sys.stderr,
+    )
     traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
 
@@ -442,11 +333,14 @@ def get_event_color(event_type):
 def create_voice_log_embed(member, event_type, details):
     embed = discord.Embed(
         title=f"Member {event_type} voice channel",
-        description=f"**{member.name}** {event_type} {details}" if event_type != "changed" else details,
+        description=(f"**{member.name}** {event_type} {details}" if event_type != "changed" else details),
         color=get_event_color(event_type),
         timestamp=datetime.now(),
     )
-    embed.set_author(name=member.name, icon_url=member.avatar.url if member.avatar else member.default_avatar.url)
+    embed.set_author(
+        name=member.name,
+        icon_url=member.avatar.url if member.avatar else member.default_avatar.url,
+    )
     embed.set_footer(text=f"User ID: {member.id}")
     return embed
 
@@ -471,7 +365,9 @@ async def on_voice_state_update(member, before, after):
             embed = create_voice_log_embed(member, "left", f"🔊 {before.channel.name}")
         else:
             embed = create_voice_log_embed(
-                member, "changed", f"**Before:** 🔊 {before.channel.name}\n**+After:** 🔊 {after.channel.name}"
+                member,
+                "changed",
+                f"**Before:** 🔊 {before.channel.name}\n**+After:** 🔊 {after.channel.name}",
             )
         await log_channel.send(embed=embed)
 
@@ -507,6 +403,6 @@ if __name__ == "__main__":
 
         # RoboDanny puts the DB pool here like `bot.pool`, but we will stick to instance vars.
 
-        await bot.start(os.getenv("BOT_TOKEN"))
+        await bot.start(os.getenv("BOT_TOKEN"))  # type: ignore
 
     asyncio.run(main())
