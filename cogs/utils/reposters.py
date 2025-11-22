@@ -273,6 +273,7 @@ class RepostManager:
                     return True
         return False
 
-    def add_reposter(self, reposter: BaseReposter):
-        """Add a new reposter to the manager."""
-        self.reposters.append(reposter)
+    # NOT CALLED ANYWHERE
+    # def add_reposter(self, reposter: BaseReposter):
+    #     """Add a new reposter to the manager."""
+    #     self.reposters.append(reposter)
