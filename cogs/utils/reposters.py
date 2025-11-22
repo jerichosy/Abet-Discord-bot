@@ -33,6 +33,8 @@ class BaseReposter(ABC):
     def __init__(self, session: aiohttp.ClientSession):
         self.session = session
         self.yt_dlp_url = os.getenv("YT_DLP_MICROSERVICE")
+        if not self.yt_dlp_url:
+            raise RuntimeError("YT_DLP_MICROSERVICE is not configured")
 
     @property
     @abstractmethod
