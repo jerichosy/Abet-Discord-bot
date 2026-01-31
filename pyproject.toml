@@ -1,0 +1,23 @@
+[project]
+name = "abet-discord-bot"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "aiohttp>=3.13.3",
+    "asyncpg==0.29.0",
+    "discord-py>=2.4.0",
+    "google-generativeai==0.5.2",
+    "jishaku==2.6.0",
+    "openai>=1.25.0",
+    "pdf2image>=1.17.0",
+    "protobuf>=4.25.8",
+    "psutil>=5.9.8",
+    "pygit2>=1.14.1",
+    "python-dotenv>=1.0.1",
+    "rembg>=2.0.56",
+    "setuptools==80.4.0",
+    "sqlalchemy>=2.0.29",
+    "yarl>=1.22.0",
+]
