@@ -7,9 +7,9 @@ requires-python = ">=3.10"
 dependencies = [
     "aiohttp>=3.13.3",
     "asyncpg==0.29.0",
-    "discord-py>=2.4.0",
+    "discord-py[speed,voice]>=2.4.0",
     "google-generativeai==0.5.2",
-    "jishaku==2.6.0",
+    "jishaku[procinfo,voice]>=2.6.3",
     "openai>=1.25.0",
     "pdf2image>=1.17.0",
     "protobuf>=4.25.8",
