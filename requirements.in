@@ -1,0 +1,11 @@
+aiohttp
+discord.py
+openai
+pdf2image
+protobuf
+psutil
+pygit2
+python-dotenv
+rembg
+SQLAlchemy
+yarl
