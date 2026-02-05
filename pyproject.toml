@@ -1,7 +1,7 @@
 [project]
 name = "abet-discord-bot"
-version = "0.1.0"
-description = "Add your description here"
+version = "8.0.0"
+description = "kyoya1101's personal Discord bot"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
