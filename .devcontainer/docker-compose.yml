@@ -8,7 +8,9 @@ services:
     # array). The sample below assumes your primary file is in the root of your project.
     #
     build:
-      target: runtime
+      target: builder
+      args:
+        BUILD_MODE: dev
 
     volumes: !override
       # Update this to wherever you want VS Code to mount the folder of your project
@@ -19,6 +21,8 @@ services:
     restart: !reset []
 
     develop: !reset []
+
+    mem_limit: !reset []
 
     # Uncomment the next four lines if you will use a ptrace-based debugger like C++, Go, and Rust.
     # cap_add:

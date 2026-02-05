@@ -6,6 +6,9 @@
 
 **/.DS_Store
 **/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
 **/.venv
 **/venv*
 **/.devcontainer
@@ -44,3 +47,6 @@ CONTRIBUTING.md
 **/temp
 **/audio-output
 config.py
+**/*.txt
+**/*.db
+**/*.bak
