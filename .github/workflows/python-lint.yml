@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies and lint with a single version of Python
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
 
-name: Python application
+name: Python lint
 
 on:
   push:
@@ -12,9 +12,6 @@ on:
 permissions:
   contents: read
 
-env:
-  UV_SYSTEM_PYTHON: 1
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,18 +19,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: "Set up Python"
-        uses: actions/setup-python@v6
-        with:
-          python-version-file: ".python-version"
-
-      - name: Display Python version
-        run: python -c "import sys; print(sys.version)"
-
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
-      - name: Install the project
-        run: uv sync --locked --all-extras --dev
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          uvx flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          uvx flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
