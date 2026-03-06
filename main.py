@@ -105,7 +105,7 @@ class AbetBot(commands.Bot):
         print("\n\n---------------------------------------------------------------------------------")
         print("\033[1;33m***** Now in `setup_hook()` *****\033[0m")
 
-        self.session = aiohttp.ClientSession()
+        self.session: aiohttp.ClientSession = aiohttp.ClientSession()
 
         # Initialize repost manager with session
         self.repost_manager = RepostManager(self.session)

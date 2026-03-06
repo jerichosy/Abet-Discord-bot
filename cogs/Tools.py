@@ -288,7 +288,7 @@ class Tools(commands.Cog):
     # and to maintain compatibility with traditional cmd usage. But the arg. is necessary to indicate as a slash cmd arg. for the user
     async def pdf(
         self,
-        ctx,
+        ctx: Context,
         attachment: Optional[discord.Attachment],
         *,
         flags: PDFFlags,
@@ -300,6 +300,7 @@ class Tools(commands.Cog):
 
         url = ctx.message.attachments[0].url if ctx.message.attachments else flags.url
         print(url)
+        assert url is not None  # for type checker, but it should never be None due to the above check
 
         def parse_selected_pages(input_str, last_page):
             pages = []
@@ -364,12 +365,14 @@ class Tools(commands.Cog):
             # For example, this link sometimes doesn't serve an application/pdf on the first try, but instead text/html w/ cookies, and the request must be retried with cookies so we get the application/pdf.
             # But other times, it does serve the application/pdf on the first try even without cookies in the request. Furthermore, it sometimes cares about the User-Agent header. Other times, it doesn't.
             # In this case, do not code to handle it as it may just waste our time. ¯\_(ツ)_/¯
+            # This doesn't work as well: https://www.afsoc.af.mil/Portals/86/documents/history/AFD-051228-021.pdf
             async with ctx.session.get(url) as resp:
-                print(resp.headers.get("Content-Type"))
+                print(f'{resp.headers.get("Content-Type")=}')
                 if resp.headers.get("Content-Type") not in (
                     "application/pdf",
                     "application/octet-stream",  # example: https://docs.congress.hrep.online/legisdocs/basic_19/HB09867.pdf
                 ):
+                    print(f"{await resp.text()=}")
                     return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
 
                 pdf_bytes = await resp.read()
