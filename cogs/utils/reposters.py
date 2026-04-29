@@ -32,7 +32,7 @@ class BaseRepostData:
 class BaseReposter(ABC):
     """Abstract base class for social media reposters."""
 
-    _MICROSERVICE_DOWN_COOLDOWN_SECONDS = 300
+    MICROSERVICE_DOWN_COOLDOWN_SECONDS = 300
 
     def __init__(self, session: aiohttp.ClientSession, bot: discord.Client):
         self.session = session
@@ -87,7 +87,7 @@ class BaseReposter(ABC):
         async with downtime_lock:
             now = time.monotonic()
             last_notification = getattr(self.bot, "yt_dlp_down_last_notification", 0.0)
-            if (now - last_notification) < self._MICROSERVICE_DOWN_COOLDOWN_SECONDS:
+            if (now - last_notification) < self.MICROSERVICE_DOWN_COOLDOWN_SECONDS:
                 return
             self.bot.yt_dlp_down_last_notification = now
 
@@ -158,9 +158,13 @@ class BaseReposter(ABC):
                             resp_text = await resp.text()
                             print(f"yt-dlp error: {resp_text}")
                             return False
-                except (aiohttp.ClientConnectionError, asyncio.TimeoutError) as e:
+                except aiohttp.ClientConnectionError as e:
                     print(f"{self.platform_name} yt-dlp connection error: {e}")
                     await self._notify_microservice_down(e, "connection failure")
+                    return False
+                except asyncio.TimeoutError as e:
+                    print(f"{self.platform_name} yt-dlp timeout error: {e}")
+                    await self._notify_microservice_down(e, "request timed out")
                     return False
 
                 # Extract platform-specific format information
