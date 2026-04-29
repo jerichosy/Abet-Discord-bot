@@ -3,8 +3,10 @@ Reposters for various social media platforms using dependency injection pattern.
 Abstracts platform-specific implementation while sharing common yt-dlp processing.
 """
 
+import asyncio
 import os
 import re
+import time
 from abc import ABC, abstractmethod
 from datetime import datetime
 from io import BytesIO
@@ -29,6 +31,9 @@ class BaseRepostData:
 
 class BaseReposter(ABC):
     """Abstract base class for social media reposters."""
+
+    _MICROSERVICE_DOWN_COOLDOWN_SECONDS = 300
+    _last_downtime_notification = 0.0
 
     def __init__(self, session: aiohttp.ClientSession):
         self.session = session
@@ -73,6 +78,30 @@ class BaseReposter(ABC):
             return f"{repost_data.match_id}.{ext}"
         return f"video.{ext}"
 
+    async def _notify_microservice_down(self, message: discord.Message, error: Exception) -> None:
+        now = time.monotonic()
+        if (now - BaseReposter._last_downtime_notification) < self._MICROSERVICE_DOWN_COOLDOWN_SECONDS:
+            return
+
+        BaseReposter._last_downtime_notification = now
+        owner_ids = getattr(message.client, "owner_ids", set()) or set()
+        if not owner_ids:
+            print("No bot owners configured to notify about yt-dlp microservice downtime.")
+            return
+
+        for owner_id in owner_ids:
+            try:
+                owner = message.client.get_user(owner_id) or await message.client.fetch_user(owner_id)
+                await owner.send(
+                    "⚠️ The yt-dlp microservice appears down (failed to reach YT_DLP_MICROSERVICE). "
+                    "Please check the service."
+                )
+            except Exception as notify_error:
+                print(
+                    f"Failed to DM owner {owner_id} about yt-dlp microservice downtime: {notify_error}"
+                )
+        print(f"yt-dlp microservice downtime notification sent: {error}")
+
     def match_url(self, content: str) -> Optional[BaseRepostData]:
         """Check if content contains a URL that matches this reposter."""
         matches = re.findall(self.url_regex, content)
@@ -94,14 +123,30 @@ class BaseReposter(ABC):
         async with message.channel.typing():
             try:
                 # Get metadata from yt-dlp microservice
-                async with self.session.get(f"{self.yt_dlp_url}/extract?url={repost_data.url}") as resp:
-                    print(f"{self.platform_name} yt-dlp response: {resp.status}")
-                    if resp.status != 200:
-                        resp_json = await resp.json()
-                        print(f"yt-dlp error: {resp_json.get('detail', 'Unknown error')}")
-                        return False
+                try:
+                    async with self.session.get(f"{self.yt_dlp_url}/extract?url={repost_data.url}") as resp:
+                        print(f"{self.platform_name} yt-dlp response: {resp.status}")
+                        if resp.status != 200:
+                            if resp.status in {502, 503, 504}:
+                                await self._notify_microservice_down(
+                                    message,
+                                    RuntimeError(f"yt-dlp microservice returned {resp.status}"),
+                                )
+                            try:
+                                resp_json = await resp.json()
+                                print(
+                                    f"yt-dlp error: {resp_json.get('detail', 'Unknown error')}"
+                                )
+                            except aiohttp.ContentTypeError:
+                                resp_text = await resp.text()
+                                print(f"yt-dlp error: {resp_text}")
+                            return False
 
-                    resp_json = await resp.json()
+                        resp_json = await resp.json()
+                except (aiohttp.ClientConnectionError, asyncio.TimeoutError) as e:
+                    print(f"{self.platform_name} yt-dlp connection error: {e}")
+                    await self._notify_microservice_down(message, e)
+                    return False
 
                 # Extract platform-specific format information
                 dl_link, file_format = self.extract_format_info(resp_json)
