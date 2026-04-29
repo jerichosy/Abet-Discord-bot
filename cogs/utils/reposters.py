@@ -6,7 +6,6 @@ Abstracts platform-specific implementation while sharing common yt-dlp processin
 import asyncio
 import os
 import re
-import threading
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -34,9 +33,6 @@ class BaseReposter(ABC):
     """Abstract base class for social media reposters."""
 
     _MICROSERVICE_DOWN_COOLDOWN_SECONDS = 300
-    _last_downtime_notification = 0.0
-    _downtime_lock: Optional[asyncio.Lock] = None
-    _downtime_lock_init = threading.Lock()
 
     def __init__(self, session: aiohttp.ClientSession, bot: discord.Client):
         self.session = session
@@ -44,10 +40,6 @@ class BaseReposter(ABC):
         self.yt_dlp_url = os.getenv("YT_DLP_MICROSERVICE")
         if not self.yt_dlp_url:
             raise RuntimeError("YT_DLP_MICROSERVICE is not configured")
-        if BaseReposter._downtime_lock is None:
-            with BaseReposter._downtime_lock_init:
-                if BaseReposter._downtime_lock is None:
-                    BaseReposter._downtime_lock = asyncio.Lock()
 
     @property
     @abstractmethod
@@ -86,18 +78,24 @@ class BaseReposter(ABC):
             return f"{repost_data.match_id}.{ext}"
         return f"video.{ext}"
 
-    async def _notify_microservice_down(self, error: Exception) -> None:
-        if BaseReposter._downtime_lock is None:
+    async def _notify_microservice_down(self, error: Exception, reason: str) -> None:
+        downtime_lock = getattr(self.bot, "yt_dlp_down_lock", None)
+        if downtime_lock is None:
             print("yt-dlp downtime lock is not initialized.")
             return
 
-        async with BaseReposter._downtime_lock:
+        async with downtime_lock:
             now = time.monotonic()
-            if (now - BaseReposter._last_downtime_notification) < self._MICROSERVICE_DOWN_COOLDOWN_SECONDS:
+            last_notification = getattr(self.bot, "yt_dlp_down_last_notification", 0.0)
+            if (now - last_notification) < self._MICROSERVICE_DOWN_COOLDOWN_SECONDS:
                 return
-            BaseReposter._last_downtime_notification = now
+            self.bot.yt_dlp_down_last_notification = now
 
-        owner_ids = self.bot.owner_ids
+        owner_ids = set()
+        if getattr(self.bot, "owner_ids", None):
+            owner_ids.update(self.bot.owner_ids)
+        if getattr(self.bot, "owner_id", None):
+            owner_ids.add(self.bot.owner_id)
         if not owner_ids:
             print("No bot owners configured to notify about yt-dlp microservice downtime.")
             return
@@ -106,8 +104,7 @@ class BaseReposter(ABC):
             try:
                 owner = self.bot.get_user(owner_id) or await self.bot.fetch_user(owner_id)
                 await owner.send(
-                    "⚠️ The yt-dlp microservice appears down (failed to reach YT_DLP_MICROSERVICE). "
-                    "Please check the service."
+                    f"⚠️ The yt-dlp microservice appears down ({reason}). Please check the service."
                 )
             except Exception as notify_error:
                 print(
@@ -143,6 +140,7 @@ class BaseReposter(ABC):
                             if resp.status in {503, 504}:
                                 await self._notify_microservice_down(
                                     RuntimeError(f"yt-dlp microservice returned {resp.status}"),
+                                    f"HTTP {resp.status} from the microservice",
                                 )
                             try:
                                 resp_json = await resp.json()
@@ -162,7 +160,7 @@ class BaseReposter(ABC):
                             return False
                 except (aiohttp.ClientConnectionError, asyncio.TimeoutError) as e:
                     print(f"{self.platform_name} yt-dlp connection error: {e}")
-                    await self._notify_microservice_down(e)
+                    await self._notify_microservice_down(e, "connection failure")
                     return False
 
                 # Extract platform-specific format information

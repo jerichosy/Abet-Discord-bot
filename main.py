@@ -106,6 +106,8 @@ class AbetBot(commands.Bot):
         print("\033[1;33m***** Now in `setup_hook()` *****\033[0m")
 
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
+        self.yt_dlp_down_lock = asyncio.Lock()
+        self.yt_dlp_down_last_notification = 0.0
 
         # Initialize repost manager with session
         self.repost_manager = RepostManager(self.session, self)
