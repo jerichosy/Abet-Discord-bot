@@ -79,14 +79,11 @@ class BaseReposter(ABC):
         return f"video.{ext}"
 
     async def _notify_microservice_down(self, error: Exception, reason: str) -> None:
-        downtime_lock = getattr(self.bot, "yt_dlp_down_lock", None)
-        if downtime_lock is None:
-            print("yt-dlp downtime lock is not initialized.")
-            return
+        downtime_lock = self.bot.yt_dlp_down_lock
 
         async with downtime_lock:
             now = time.monotonic()
-            last_notification = getattr(self.bot, "yt_dlp_down_last_notification", 0.0)
+            last_notification = self.bot.yt_dlp_down_last_notification
             if (now - last_notification) < self.MICROSERVICE_DOWN_COOLDOWN_SECONDS:
                 return
             self.bot.yt_dlp_down_last_notification = now
@@ -158,13 +155,10 @@ class BaseReposter(ABC):
                             resp_text = await resp.text()
                             print(f"yt-dlp error: {resp_text}")
                             return False
-                except aiohttp.ClientConnectionError as e:
-                    print(f"{self.platform_name} yt-dlp connection error: {e}")
-                    await self._notify_microservice_down(e, "connection failure")
-                    return False
-                except asyncio.TimeoutError as e:
-                    print(f"{self.platform_name} yt-dlp timeout error: {e}")
-                    await self._notify_microservice_down(e, "request timed out")
+                except (aiohttp.ClientConnectionError, asyncio.TimeoutError) as e:
+                    reason = "request timed out" if isinstance(e, asyncio.TimeoutError) else "connection failure"
+                    print(f"{self.platform_name} yt-dlp error: {e}")
+                    await self._notify_microservice_down(e, reason)
                     return False
 
                 # Extract platform-specific format information
