@@ -84,7 +84,7 @@ class BaseReposter(ABC):
             return
 
         BaseReposter._last_downtime_notification = now
-        owner_ids = getattr(message.client, "owner_ids", set()) or set()
+        owner_ids = getattr(message.client, "owner_ids", set())
         if not owner_ids:
             print("No bot owners configured to notify about yt-dlp microservice downtime.")
             return
@@ -142,7 +142,12 @@ class BaseReposter(ABC):
                                 print(f"yt-dlp error: {resp_text}")
                             return False
 
-                        resp_json = await resp.json()
+                        try:
+                            resp_json = await resp.json()
+                        except aiohttp.ContentTypeError:
+                            resp_text = await resp.text()
+                            print(f"yt-dlp error: {resp_text}")
+                            return False
                 except (aiohttp.ClientConnectionError, asyncio.TimeoutError) as e:
                     print(f"{self.platform_name} yt-dlp connection error: {e}")
                     await self._notify_microservice_down(message, e)
