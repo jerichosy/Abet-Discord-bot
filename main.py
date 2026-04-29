@@ -108,7 +108,7 @@ class AbetBot(commands.Bot):
         self.session: aiohttp.ClientSession = aiohttp.ClientSession()
 
         # Initialize repost manager with session
-        self.repost_manager = RepostManager(self.session)
+        self.repost_manager = RepostManager(self.session, self)
 
         # Load cogs
         for extension in initial_extensions:

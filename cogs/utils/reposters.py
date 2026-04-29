@@ -6,6 +6,7 @@ Abstracts platform-specific implementation while sharing common yt-dlp processin
 import asyncio
 import os
 import re
+import threading
 import time
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -35,14 +36,18 @@ class BaseReposter(ABC):
     _MICROSERVICE_DOWN_COOLDOWN_SECONDS = 300
     _last_downtime_notification = 0.0
     _downtime_lock: Optional[asyncio.Lock] = None
+    _downtime_lock_init = threading.Lock()
 
-    def __init__(self, session: aiohttp.ClientSession):
+    def __init__(self, session: aiohttp.ClientSession, bot: discord.Client):
         self.session = session
+        self.bot = bot
         self.yt_dlp_url = os.getenv("YT_DLP_MICROSERVICE")
         if not self.yt_dlp_url:
             raise RuntimeError("YT_DLP_MICROSERVICE is not configured")
         if BaseReposter._downtime_lock is None:
-            BaseReposter._downtime_lock = asyncio.Lock()
+            with BaseReposter._downtime_lock_init:
+                if BaseReposter._downtime_lock is None:
+                    BaseReposter._downtime_lock = asyncio.Lock()
 
     @property
     @abstractmethod
@@ -81,9 +86,10 @@ class BaseReposter(ABC):
             return f"{repost_data.match_id}.{ext}"
         return f"video.{ext}"
 
-    async def _notify_microservice_down(self, message: discord.Message, error: Exception) -> None:
+    async def _notify_microservice_down(self, error: Exception) -> None:
         if BaseReposter._downtime_lock is None:
-            BaseReposter._downtime_lock = asyncio.Lock()
+            print("yt-dlp downtime lock is not initialized.")
+            return
 
         async with BaseReposter._downtime_lock:
             now = time.monotonic()
@@ -91,14 +97,14 @@ class BaseReposter(ABC):
                 return
             BaseReposter._last_downtime_notification = now
 
-        owner_ids = message.client.owner_ids
+        owner_ids = self.bot.owner_ids
         if not owner_ids:
             print("No bot owners configured to notify about yt-dlp microservice downtime.")
             return
 
         for owner_id in owner_ids:
             try:
-                owner = message.client.get_user(owner_id) or await message.client.fetch_user(owner_id)
+                owner = self.bot.get_user(owner_id) or await self.bot.fetch_user(owner_id)
                 await owner.send(
                     "⚠️ The yt-dlp microservice appears down (failed to reach YT_DLP_MICROSERVICE). "
                     "Please check the service."
@@ -136,7 +142,6 @@ class BaseReposter(ABC):
                         if resp.status != 200:
                             if resp.status in {503, 504}:
                                 await self._notify_microservice_down(
-                                    message,
                                     RuntimeError(f"yt-dlp microservice returned {resp.status}"),
                                 )
                             try:
@@ -157,7 +162,7 @@ class BaseReposter(ABC):
                             return False
                 except (aiohttp.ClientConnectionError, asyncio.TimeoutError) as e:
                     print(f"{self.platform_name} yt-dlp connection error: {e}")
-                    await self._notify_microservice_down(message, e)
+                    await self._notify_microservice_down(e)
                     return False
 
                 # Extract platform-specific format information
@@ -323,10 +328,10 @@ class FacebookReposter(BaseReposter):
 class RepostManager:
     """Manages multiple reposters using dependency injection."""
 
-    def __init__(self, session: aiohttp.ClientSession):
+    def __init__(self, session: aiohttp.ClientSession, bot: discord.Client):
         self.reposters: List[BaseReposter] = [
-            InstagramReposter(session),
-            FacebookReposter(session),
+            InstagramReposter(session, bot),
+            FacebookReposter(session, bot),
         ]
 
     async def process_message(self, message: discord.Message) -> bool:
