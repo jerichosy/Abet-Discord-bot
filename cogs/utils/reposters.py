@@ -34,12 +34,15 @@ class BaseReposter(ABC):
 
     _MICROSERVICE_DOWN_COOLDOWN_SECONDS = 300
     _last_downtime_notification = 0.0
+    _downtime_lock: Optional[asyncio.Lock] = None
 
     def __init__(self, session: aiohttp.ClientSession):
         self.session = session
         self.yt_dlp_url = os.getenv("YT_DLP_MICROSERVICE")
         if not self.yt_dlp_url:
             raise RuntimeError("YT_DLP_MICROSERVICE is not configured")
+        if BaseReposter._downtime_lock is None:
+            BaseReposter._downtime_lock = asyncio.Lock()
 
     @property
     @abstractmethod
@@ -79,12 +82,16 @@ class BaseReposter(ABC):
         return f"video.{ext}"
 
     async def _notify_microservice_down(self, message: discord.Message, error: Exception) -> None:
-        now = time.monotonic()
-        if (now - BaseReposter._last_downtime_notification) < self._MICROSERVICE_DOWN_COOLDOWN_SECONDS:
-            return
+        if BaseReposter._downtime_lock is None:
+            BaseReposter._downtime_lock = asyncio.Lock()
 
-        BaseReposter._last_downtime_notification = now
-        owner_ids = getattr(message.client, "owner_ids", set())
+        async with BaseReposter._downtime_lock:
+            now = time.monotonic()
+            if (now - BaseReposter._last_downtime_notification) < self._MICROSERVICE_DOWN_COOLDOWN_SECONDS:
+                return
+            BaseReposter._last_downtime_notification = now
+
+        owner_ids = message.client.owner_ids
         if not owner_ids:
             print("No bot owners configured to notify about yt-dlp microservice downtime.")
             return
@@ -127,7 +134,7 @@ class BaseReposter(ABC):
                     async with self.session.get(f"{self.yt_dlp_url}/extract?url={repost_data.url}") as resp:
                         print(f"{self.platform_name} yt-dlp response: {resp.status}")
                         if resp.status != 200:
-                            if resp.status in {502, 503, 504}:
+                            if resp.status in {503, 504}:
                                 await self._notify_microservice_down(
                                     message,
                                     RuntimeError(f"yt-dlp microservice returned {resp.status}"),
