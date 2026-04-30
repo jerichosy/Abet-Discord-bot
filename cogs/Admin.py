@@ -52,7 +52,6 @@ class Admin(commands.Cog):
         await ctx.send("🛑 Shutting down!")
         await self.bot.close()
 
-    # TODO: Store current status to db or file so it persists upon restart
     @app_commands.command()
     @app_commands.guilds(887980840347398144)
     async def changestatus(
@@ -65,14 +64,18 @@ class Admin(commands.Cog):
         # https://discordpy.readthedocs.io/en/master/api.html#discord.ActivityType
 
         if activity == "Playing":
-            await self.bot.change_presence(activity=discord.Game(name=status_msg))
+            activity_type = discord.ActivityType.playing
+            activity_obj = discord.Game(name=status_msg)
         else:
             if activity == "Listening to":
                 activity_type = discord.ActivityType.listening
             elif activity == "Watching":
                 activity_type = discord.ActivityType.watching
 
-            await self.bot.change_presence(activity=discord.Activity(name=status_msg, type=activity_type))
+            activity_obj = discord.Activity(name=status_msg, type=activity_type)
+
+        await self.bot.change_presence(activity=activity_obj)
+        await self.bot.status_manager.insert_status(activity_type.value, status_msg)
 
         await interaction.response.send_message(f'✅ My status is now "{activity} **{status_msg}**"')
 

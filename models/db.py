@@ -4,7 +4,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.ext.asyncio.session import async_sessionmaker
 
-from .schema import Base, Quote, Tag
+from .schema import Base, BotStatus, Quote, Tag
 
 
 class BaseDBManager:
@@ -94,3 +94,16 @@ class TagsManager(BaseDBManager):
             async with session.begin():
                 stmt = delete(Tag).where(Tag.name == name)
                 await session.execute(stmt)
+
+
+class BotStatusManager(BaseDBManager):
+    async def get_latest_status(self) -> BotStatus | None:
+        async with self.SessionLocal() as session:
+            stmt = select(BotStatus).order_by(BotStatus.id.desc()).limit(1)
+            result = await session.execute(stmt)
+            return result.scalar_one_or_none()
+
+    async def insert_status(self, activity_type: int, activity_name: str) -> int:
+        new_status = BotStatus(activity_type=activity_type, activity_name=activity_name)
+        await self._insert_objects([new_status])
+        return new_status.id

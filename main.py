@@ -25,7 +25,7 @@ from dotenv import load_dotenv
 from cogs.utils import responses_random
 from cogs.utils.context import Context
 from cogs.utils.reposters import RepostManager
-from models.db import BaseDBManager
+from models.db import BaseDBManager, BotStatusManager
 from models.engine import EngineSingleton
 
 initial_extensions = (
@@ -83,6 +83,7 @@ class AbetBot(commands.Bot):
         # --- BOT SYSTEM ATTRIBUTES
         self.db_engine = EngineSingleton.get_engine(os.getenv("DB_URI", ""))
         self.__base_db_manager = BaseDBManager(self.db_engine)
+        self.status_manager = BotStatusManager(self.db_engine)
         self.executor = ThreadPoolExecutor(max_workers=4)
         self.repost_manager = None  # Will be initialized in setup_hook after session is created
 
@@ -126,6 +127,23 @@ class AbetBot(commands.Bot):
         # This can take a while so do it after cogs are loaded
         await self.__base_db_manager._create_tables()
 
+    async def restore_status(self) -> None:
+        status = await self.status_manager.get_latest_status()
+        if not status:
+            return
+
+        try:
+            activity_type = discord.ActivityType(status.activity_type)
+        except ValueError:
+            return
+
+        if activity_type == discord.ActivityType.playing:
+            activity = discord.Game(name=status.activity_name)
+        else:
+            activity = discord.Activity(name=status.activity_name, type=activity_type)
+
+        await self.change_presence(activity=activity)
+
     async def on_ready(self):
         print("\n\033[1;32m***** READY *****\033[0m")
 
@@ -133,6 +151,7 @@ class AbetBot(commands.Bot):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print("Invite URL:", self.INVITE_LINK)
         print("------")
+        await self.restore_status()
 
     # FIXME: Has errors
     # await self.__base_db_manager.close()  # FIXME: This doesn't shutdown DB connection gracefully

@@ -31,3 +31,18 @@ class Tag(Base):
 
     def __repr__(self) -> str:
         return f"Tag(id={self.id!r}, name={self.name!r}, content={self.content!r}, owner={self.owner!r}, timestamp={self.timestamp!r})"
+
+
+class BotStatus(Base):
+    __tablename__ = "bot_status"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    activity_type: Mapped[int] = mapped_column()
+    activity_name: Mapped[str] = mapped_column()
+    timestamp: Mapped[datetime] = mapped_column(server_default=func.now())
+
+    def __repr__(self) -> str:
+        return (
+            "BotStatus("
+            f"id={self.id!r}, activity_type={self.activity_type!r}, activity_name={self.activity_name!r}, "
+            f"timestamp={self.timestamp!r})"
+        )
