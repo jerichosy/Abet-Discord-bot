@@ -63,11 +63,10 @@ class Admin(commands.Cog):
         """Change the status/activity of the bot"""
         # https://discordpy.readthedocs.io/en/master/api.html#discord.ActivityType
 
-        if activity == "Playing":
-            activity_type = discord.ActivityType.playing
-        elif activity == "Listening to":
+        activity_type = discord.ActivityType.playing
+        if activity == "Listening to":
             activity_type = discord.ActivityType.listening
-        else:
+        elif activity == "Watching":
             activity_type = discord.ActivityType.watching
 
         if activity_type == discord.ActivityType.playing:

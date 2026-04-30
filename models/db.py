@@ -20,6 +20,7 @@ class BaseDBManager:
         async with self.SessionLocal() as session:
             async with session.begin():
                 session.add_all(objects)
+                await session.flush()
 
     async def close(self) -> None:
         await self.engine.dispose()
