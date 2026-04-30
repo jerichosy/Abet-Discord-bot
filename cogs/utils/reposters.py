@@ -149,6 +149,7 @@ class BaseReposter(ABC):
                     async with self.session.get(
                         f"{self.yt_dlp_url}/extract",
                         params={"url": repost_data.url},
+                        timeout=aiohttp.ClientTimeout(total=10),
                     ) as resp:
                         print(f"{self.platform_name} yt-dlp response: {resp.status}")
                         if resp.status != 200:
