@@ -10,7 +10,7 @@ import time
 from abc import ABC, abstractmethod
 from datetime import datetime
 from io import BytesIO
-from typing import Any, Dict, List, Optional, Protocol, Tuple
+from typing import Any, Dict, List, Optional, Protocol, Set, Tuple
 
 import aiohttp
 import discord
@@ -33,7 +33,7 @@ class ReposterBot(Protocol):
     """Bot interface used by reposters (owner_ids preferred, owner_id fallback)."""
     yt_dlp_down_lock: asyncio.Lock
     yt_dlp_down_last_notification: float
-    owner_ids: Optional[set[int]]
+    owner_ids: Optional[Set[int]]
     owner_id: Optional[int]
 
     def get_user(self, user_id: int) -> Optional[discord.User]: ...
@@ -100,9 +100,9 @@ class BaseReposter(ABC):
                 return
             self.bot.yt_dlp_down_last_notification = now
 
-        owner_ids = set(getattr(self.bot, "owner_ids", None) or [])
+        owner_ids = set(self.bot.owner_ids or [])
         if not owner_ids:
-            owner_id = getattr(self.bot, "owner_id", None)
+            owner_id = self.bot.owner_id
             if owner_id:
                 owner_ids.add(owner_id)
         if not owner_ids:
