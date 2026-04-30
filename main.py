@@ -127,6 +127,12 @@ class AbetBot(commands.Bot):
         # This can take a while so do it after cogs are loaded
         await self.__base_db_manager._create_tables()
 
+    @staticmethod
+    def build_activity(activity_type: discord.ActivityType, status_msg: str) -> discord.BaseActivity:
+        if activity_type == discord.ActivityType.playing:
+            return discord.Game(name=status_msg)
+        return discord.Activity(name=status_msg, type=activity_type)
+
     async def restore_status(self) -> None:
         status = await self.status_manager.get_latest_status()
         if not status:
@@ -137,11 +143,7 @@ class AbetBot(commands.Bot):
         except ValueError:
             return
 
-        if activity_type == discord.ActivityType.playing:
-            activity = discord.Game(name=status.activity_name)
-        else:
-            activity = discord.Activity(name=status.activity_name, type=activity_type)
-
+        activity = self.build_activity(activity_type, status.activity_name)
         await self.change_presence(activity=activity)
 
     async def on_ready(self):

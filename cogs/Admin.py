@@ -69,11 +69,7 @@ class Admin(commands.Cog):
             "Watching": discord.ActivityType.watching,
         }
         activity_type = activity_type_map[activity]
-
-        if activity_type == discord.ActivityType.playing:
-            activity_obj = discord.Game(name=status_msg)
-        else:
-            activity_obj = discord.Activity(name=status_msg, type=activity_type)
+        activity_obj = self.bot.build_activity(activity_type, status_msg)
 
         await self.bot.change_presence(activity=activity_obj)
         await self.bot.status_manager.insert_status(activity_type.value, status_msg)
