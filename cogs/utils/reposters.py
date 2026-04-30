@@ -10,7 +10,7 @@ import time
 from abc import ABC, abstractmethod
 from datetime import datetime
 from io import BytesIO
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Protocol, Tuple
 
 import aiohttp
 import discord
@@ -29,12 +29,23 @@ class BaseRepostData:
         self.embed_data: Dict[str, Any] = {}
 
 
+class ReposterBot(Protocol):
+    yt_dlp_down_lock: asyncio.Lock
+    yt_dlp_down_last_notification: float
+    owner_ids: Optional[set[int]]
+    owner_id: Optional[int]
+
+    def get_user(self, user_id: int) -> Optional[discord.User]: ...
+
+    async def fetch_user(self, user_id: int) -> discord.User: ...
+
+
 class BaseReposter(ABC):
     """Abstract base class for social media reposters."""
 
     MICROSERVICE_DOWN_COOLDOWN_SECONDS = 300
 
-    def __init__(self, session: aiohttp.ClientSession, bot: discord.Client):
+    def __init__(self, session: aiohttp.ClientSession, bot: ReposterBot):
         self.session = session
         self.bot = bot
         self.yt_dlp_url = os.getenv("YT_DLP_MICROSERVICE")
@@ -324,7 +335,7 @@ class FacebookReposter(BaseReposter):
 class RepostManager:
     """Manages multiple reposters using dependency injection."""
 
-    def __init__(self, session: aiohttp.ClientSession, bot: discord.Client):
+    def __init__(self, session: aiohttp.ClientSession, bot: ReposterBot):
         self.reposters: List[BaseReposter] = [
             InstagramReposter(session, bot),
             FacebookReposter(session, bot),
