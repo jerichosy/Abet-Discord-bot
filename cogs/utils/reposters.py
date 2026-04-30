@@ -143,7 +143,10 @@ class BaseReposter(ABC):
             try:
                 # Get metadata from yt-dlp microservice
                 try:
-                    async with self.session.get(f"{self.yt_dlp_url}/extract?url={repost_data.url}") as resp:
+                    async with self.session.get(
+                        f"{self.yt_dlp_url}/extract",
+                        params={"url": repost_data.url},
+                    ) as resp:
                         print(f"{self.platform_name} yt-dlp response: {resp.status}")
                         if resp.status != 200:
                             if resp.status in {503, 504}:
