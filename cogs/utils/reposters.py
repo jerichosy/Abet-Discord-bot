@@ -34,6 +34,7 @@ class ReposterBot(Protocol):
 
     Expect yt_dlp_down_lock (asyncio.Lock()) and yt_dlp_down_last_notification (0.0)
     to be initialized in AbetBot.setup_hook (main.py) before reposters are created.
+    Missing initialization will raise AttributeError during downtime notifications.
     """
     yt_dlp_down_lock: asyncio.Lock
     yt_dlp_down_last_notification: float
@@ -104,9 +105,9 @@ class BaseReposter(ABC):
                 return
             self.bot.yt_dlp_down_last_notification = now
 
-        owner_ids = set(self.bot.owner_ids) if self.bot.owner_ids is not None else set()
-        if not owner_ids and self.bot.owner_id is not None:
-            owner_ids.add(self.bot.owner_id)
+        owner_ids = set(self.bot.owner_ids or []) | (
+            {self.bot.owner_id} if self.bot.owner_id is not None else set()
+        )
         if not owner_ids:
             print("No bot owners configured to notify about yt-dlp microservice downtime.")
             return
