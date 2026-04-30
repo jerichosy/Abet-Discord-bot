@@ -30,6 +30,7 @@ class BaseRepostData:
 
 
 class ReposterBot(Protocol):
+    """Bot interface used by reposters (owner_ids preferred, owner_id fallback)."""
     yt_dlp_down_lock: asyncio.Lock
     yt_dlp_down_last_notification: float
     owner_ids: Optional[set[int]]
@@ -99,11 +100,11 @@ class BaseReposter(ABC):
                 return
             self.bot.yt_dlp_down_last_notification = now
 
-        owner_ids = set()
-        if getattr(self.bot, "owner_ids", None):
-            owner_ids.update(self.bot.owner_ids)
-        if getattr(self.bot, "owner_id", None):
-            owner_ids.add(self.bot.owner_id)
+        owner_ids = set(getattr(self.bot, "owner_ids", None) or [])
+        if not owner_ids:
+            owner_id = getattr(self.bot, "owner_id", None)
+            if owner_id:
+                owner_ids.add(owner_id)
         if not owner_ids:
             print("No bot owners configured to notify about yt-dlp microservice downtime.")
             return
