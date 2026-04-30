@@ -104,10 +104,10 @@ class BaseReposter(ABC):
                 return
             self.bot.yt_dlp_down_last_notification = now
 
-        owner_ids = self.bot.owner_ids.copy() if self.bot.owner_ids is not None else set()
+        owner_ids = set(self.bot.owner_ids) if self.bot.owner_ids is not None else set()
         if not owner_ids:
             owner_id = self.bot.owner_id
-            if owner_id:
+            if owner_id is not None:
                 owner_ids.add(owner_id)
         if not owner_ids:
             print("No bot owners configured to notify about yt-dlp microservice downtime.")
