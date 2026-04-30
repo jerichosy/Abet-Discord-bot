@@ -63,12 +63,12 @@ class Admin(commands.Cog):
         """Change the status/activity of the bot"""
         # https://discordpy.readthedocs.io/en/master/api.html#discord.ActivityType
 
-        if activity == "Playing":
-            activity_type = discord.ActivityType.playing
-        elif activity == "Listening to":
-            activity_type = discord.ActivityType.listening
-        else:
-            activity_type = discord.ActivityType.watching
+        activity_type_map = {
+            "Playing": discord.ActivityType.playing,
+            "Listening to": discord.ActivityType.listening,
+            "Watching": discord.ActivityType.watching,
+        }
+        activity_type = activity_type_map[activity]
 
         if activity_type == discord.ActivityType.playing:
             activity_obj = discord.Game(name=status_msg)

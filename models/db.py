@@ -110,5 +110,4 @@ class BotStatusManager(BaseDBManager):
                 new_status = BotStatus(activity_type=activity_type, activity_name=activity_name)
                 session.add(new_status)
                 await session.flush()
-                status_id = new_status.id
-        return status_id
+                return new_status.id
