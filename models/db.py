@@ -99,7 +99,7 @@ class TagsManager(BaseDBManager):
 class BotStatusManager(BaseDBManager):
     async def get_latest_status(self) -> BotStatus | None:
         async with self.SessionLocal() as session:
-            stmt = select(BotStatus).order_by(BotStatus.id.desc()).limit(1)
+            stmt = select(BotStatus).order_by(BotStatus.timestamp.desc(), BotStatus.id.desc()).limit(1)
             result = await session.execute(stmt)
             return result.scalar_one_or_none()
 

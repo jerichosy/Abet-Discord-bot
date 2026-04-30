@@ -65,13 +65,14 @@ class Admin(commands.Cog):
 
         if activity == "Playing":
             activity_type = discord.ActivityType.playing
+        elif activity == "Listening to":
+            activity_type = discord.ActivityType.listening
+        else:
+            activity_type = discord.ActivityType.watching
+
+        if activity_type == discord.ActivityType.playing:
             activity_obj = discord.Game(name=status_msg)
         else:
-            if activity == "Listening to":
-                activity_type = discord.ActivityType.listening
-            elif activity == "Watching":
-                activity_type = discord.ActivityType.watching
-
             activity_obj = discord.Activity(name=status_msg, type=activity_type)
 
         await self.bot.change_presence(activity=activity_obj)
