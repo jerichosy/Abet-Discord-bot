@@ -30,7 +30,11 @@ class BaseRepostData:
 
 
 class ReposterBot(Protocol):
-    """Bot interface used by reposters (owner_ids preferred, owner_id fallback)."""
+    """Bot interface used by reposters (owner_ids preferred, owner_id fallback).
+
+    Expect yt_dlp_down_lock and yt_dlp_down_last_notification to be initialized
+    before reposters are created.
+    """
     yt_dlp_down_lock: asyncio.Lock
     yt_dlp_down_last_notification: float
     owner_ids: Optional[Set[int]]
@@ -100,7 +104,7 @@ class BaseReposter(ABC):
                 return
             self.bot.yt_dlp_down_last_notification = now
 
-        owner_ids = set(self.bot.owner_ids or [])
+        owner_ids = self.bot.owner_ids.copy() if self.bot.owner_ids else set()
         if not owner_ids:
             owner_id = self.bot.owner_id
             if owner_id:
