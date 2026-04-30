@@ -105,6 +105,10 @@ class BotStatusManager(BaseDBManager):
             return result.scalar_one_or_none()
 
     async def insert_status(self, activity_type: int, activity_name: str) -> int:
-        new_status = BotStatus(activity_type=activity_type, activity_name=activity_name)
-        await self._insert_objects([new_status])
-        return new_status.id
+        async with self.SessionLocal() as session:
+            async with session.begin():
+                new_status = BotStatus(activity_type=activity_type, activity_name=activity_name)
+                session.add(new_status)
+                await session.flush()
+                status_id = new_status.id
+        return status_id
