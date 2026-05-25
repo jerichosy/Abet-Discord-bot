@@ -384,7 +384,9 @@ class Tools(commands.Cog):
                     return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
 
                 parsed_filename = os.path.basename(urlparse(url).path)
-                image_filename = os.path.splitext(parsed_filename)[0] or str(uuid.uuid4())
+                image_filename = (
+                    os.path.splitext(parsed_filename)[0] if parsed_filename else str(uuid.uuid4())
+                )
 
                 if flags.selection:
                     # First, get total page count by converting just the first page and using pdfinfo
