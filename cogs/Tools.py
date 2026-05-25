@@ -447,7 +447,9 @@ class Tools(commands.Cog):
                 print(resp.headers.get("Content-Type"))
                 # I think PIL in rembg code should handle errors related to non-image urls
 
-                output = remove(await resp.read())
+                image_bytes = await resp.read()
+                loop = asyncio.get_running_loop()
+                output = await loop.run_in_executor(self.bot.executor, remove, image_bytes)
                 await ctx.send(file=discord.File(BytesIO(output), f"{uuid.uuid4()}.png"))
 
     @commands.hybrid_command()
@@ -499,6 +501,17 @@ class Tools(commands.Cog):
         async with self.bot.session.get(url) as resp:  # TODO: Currently does not validate URLs
             print(f"Reposter HTTP status: {resp.status}, Content length: {resp.content_length}")
             if resp.status == 200:
+                filesize = interaction.guild.filesize_limit if interaction.guild else 8388608
+                content_length = resp.headers.get("Content-Length")
+                if content_length is not None:
+                    try:
+                        if int(content_length) >= filesize:
+                            return await interaction.followup.send(
+                                content=f"File was too big to upload... See it here: {url} instead.",
+                                ephemeral=True,
+                            )
+                    except ValueError:
+                        pass
                 file_bytes = BytesIO(await resp.read())
                 filename = filename or os.path.basename(urlparse(url).path)
                 print("Reposter filename:", filename)

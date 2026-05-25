@@ -117,7 +117,8 @@ class BaseReposter(ABC):
                 repost_data.filename = self.build_filename(repost_data, resp_json)
 
                 # Download the video
-                video_bytes = await self._download_video(dl_link)
+                filesize = message.guild.filesize_limit if message.guild else 8388608
+                video_bytes = await self._download_video(dl_link, filesize)
                 if not video_bytes:
                     print(f"{self.platform_name}: Failed to download video")
                     return False
@@ -133,7 +134,7 @@ class BaseReposter(ABC):
                 print(f"{self.platform_name} reposter error: {e}")
                 return False
 
-    async def _download_video(self, dl_link: str) -> Optional[BytesIO]:
+    async def _download_video(self, dl_link: str, max_filesize: int) -> Optional[BytesIO]:
         """Download video from the given URL."""
         try:
             # Handle encoded URLs like Instagram uses
@@ -143,6 +144,14 @@ class BaseReposter(ABC):
             async with self.session.get(dl_link) as resp:
                 print(f"{self.platform_name} video download: {resp.status}")
                 if resp.status == 200:
+                    content_length = resp.headers.get("Content-Length")
+                    if content_length is not None:
+                        try:
+                            if int(content_length) >= max_filesize:
+                                print(f"{self.platform_name} download too large: {content_length} bytes")
+                                return None
+                        except ValueError:
+                            pass
                     return BytesIO(await resp.read())
                 return None
         except Exception as e:
