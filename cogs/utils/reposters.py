@@ -15,6 +15,7 @@ import discord
 import yarl
 
 DEFAULT_MAX_REPOST_SIZE_MB = 24
+REPOST_DOWNLOAD_TIMEOUT_SECONDS = 30
 REPOST_DOWNLOAD_CHUNK_SIZE = 1 << 14
 
 
@@ -157,7 +158,7 @@ class BaseReposter(ABC):
 
             async with self.session.get(
                 dl_link,
-                timeout=aiohttp.ClientTimeout(total=30),
+                timeout=aiohttp.ClientTimeout(total=REPOST_DOWNLOAD_TIMEOUT_SECONDS),
                 allow_redirects=True,
             ) as resp:
                 print(f"{self.platform_name} video download: {resp.status}")
@@ -178,12 +179,13 @@ class BaseReposter(ABC):
                     buf = BytesIO()
                     total = 0
                     async for chunk in resp.content.iter_chunked(REPOST_DOWNLOAD_CHUNK_SIZE):
-                        total += len(chunk)
-                        if total > max_bytes:
+                        next_total = total + len(chunk)
+                        if next_total > max_bytes:
                             print(
-                                f"{self.platform_name} download aborted mid-stream: {total}B > {max_bytes}B"
+                                f"{self.platform_name} download aborted mid-stream: {next_total}B > {max_bytes}B"
                             )
                             return None
+                        total = next_total
                         buf.write(chunk)
                     buf.seek(0)
                     return buf
