@@ -374,14 +374,19 @@ class Tools(commands.Cog):
                 content_type_value = content_type.split(";", 1)[0].strip().lower()
                 print(f"{content_type_value=}")
 
-                pdf_bytes = await resp.read()
-                is_pdf = content_type_value in (
+                is_pdf_type = content_type_value in (
                     "application/pdf",
                     "application/octet-stream",  # example: https://docs.congress.hrep.online/legisdocs/basic_19/HB09867.pdf
-                ) or b"%PDF-" in pdf_bytes[:1024]
-                if not is_pdf:
-                    print(f"{pdf_bytes[:200]=}")
-                    return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
+                )
+
+                if is_pdf_type:
+                    pdf_bytes = await resp.read()
+                else:
+                    header_bytes = await resp.content.read(1024)
+                    if b"%PDF-" not in header_bytes:
+                        print(f"{header_bytes[:200]=}")
+                        return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
+                    pdf_bytes = header_bytes + await resp.read()
 
                 parsed_filename = os.path.basename(urlparse(url).path)
                 image_filename = (
@@ -405,13 +410,13 @@ class Tools(commands.Cog):
                         return await ctx.reply("🛑 Invalid selection range")
 
                     ranges = group_contiguous(selected_pages)
-                    last_selected_page = ranges[-1][-1]
+                    max_selected_page = ranges[-1][-1]
                     print(ranges)
                     image_list = []
                     for start, end in ranges:
                         print("calling convert_pdf_to_images()")
                         images = await convert_pdf_to_images(pdf_bytes, first_page=start, last_page=end)
-                        append_images_to_list(images, image_list, image_filename, start, last_selected_page)
+                        append_images_to_list(images, image_list, image_filename, start, max_selected_page)
                 else:
                     images = await convert_pdf_to_images(pdf_bytes)
                     image_list = []
