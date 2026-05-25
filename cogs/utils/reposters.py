@@ -17,12 +17,7 @@ import yarl
 DEFAULT_MAX_REPOST_SIZE_MB = 24
 REPOST_DOWNLOAD_CONNECT_TIMEOUT_SECONDS = 10
 REPOST_DOWNLOAD_READ_TIMEOUT_SECONDS = 10
-REPOST_DOWNLOAD_TOTAL_BUFFER_SECONDS = 10
-REPOST_DOWNLOAD_TIMEOUT_SECONDS = (
-    REPOST_DOWNLOAD_CONNECT_TIMEOUT_SECONDS
-    + REPOST_DOWNLOAD_READ_TIMEOUT_SECONDS
-    + REPOST_DOWNLOAD_TOTAL_BUFFER_SECONDS
-)
+REPOST_DOWNLOAD_TIMEOUT_SECONDS = 30
 REPOST_DOWNLOAD_CHUNK_SIZE = 1 << 14  # 16KB
 
 
@@ -195,6 +190,7 @@ class BaseReposter(ABC):
                             print(
                                 f"{self.platform_name} download aborted mid-stream: {total + len(chunk)}B > {max_bytes}B"
                             )
+                            buf.close()
                             return None
                         total += len(chunk)
                         buf.write(chunk)
