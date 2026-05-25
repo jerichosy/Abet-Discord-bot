@@ -126,12 +126,17 @@ class AbetBot(commands.Bot):
 
         # This can take a while so do it after cogs are loaded
         await self.__base_db_manager._create_tables()
+        asyncio.create_task(self._restore_status_after_ready())
 
     @staticmethod
     def build_activity(activity_type: discord.ActivityType, status_msg: str) -> discord.BaseActivity:
         if activity_type == discord.ActivityType.playing:
             return discord.Game(name=status_msg)
         return discord.Activity(name=status_msg, type=activity_type)
+
+    async def _restore_status_after_ready(self) -> None:
+        await self.wait_until_ready()
+        await self.restore_status()
 
     async def restore_status(self) -> None:
         status = await self.status_manager.get_latest_status()
@@ -153,7 +158,6 @@ class AbetBot(commands.Bot):
         print(f"Logged in as {self.user} (ID: {self.user.id})")
         print("Invite URL:", self.INVITE_LINK)
         print("------")
-        await self.restore_status()
 
     # FIXME: Has errors
     # await self.__base_db_manager.close()  # FIXME: This doesn't shutdown DB connection gracefully
