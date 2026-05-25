@@ -140,10 +140,46 @@ class BaseReposter(ABC):
             if isinstance(dl_link, str):
                 dl_link = yarl.URL(dl_link, encoded=True)
 
-            async with self.session.get(dl_link) as resp:
+            async with self.session.get(
+                dl_link,
+                timeout=aiohttp.ClientTimeout(total=30),
+                allow_redirects=True,
+            ) as resp:
                 print(f"{self.platform_name} video download: {resp.status}")
                 if resp.status == 200:
-                    return BytesIO(await resp.read())
+                    max_mb_raw = os.getenv("MAX_REPOST_SIZE_MB", "24")
+                    try:
+                        max_mb = int(max_mb_raw)
+                    except ValueError:
+                        max_mb = 24
+                    if max_mb <= 0:
+                        max_mb = 24
+
+                    max_bytes = max_mb * 1024 * 1024
+                    content_length = None
+                    if resp.headers.get("Content-Length"):
+                        try:
+                            content_length = int(resp.headers["Content-Length"])
+                        except ValueError:
+                            content_length = None
+                    if content_length is not None and content_length > max_bytes:
+                        print(
+                            f"{self.platform_name} download aborted: {content_length}B > {max_bytes}B"
+                        )
+                        return None
+
+                    buf = BytesIO()
+                    total = 0
+                    async for chunk in resp.content.iter_chunked(1 << 14):
+                        total += len(chunk)
+                        if total > max_bytes:
+                            print(
+                                f"{self.platform_name} download aborted mid-stream: {total}B > {max_bytes}B"
+                            )
+                            return None
+                        buf.write(chunk)
+                    buf.seek(0)
+                    return buf
                 return None
         except Exception as e:
             print(f"{self.platform_name} download error: {e}")
