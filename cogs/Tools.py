@@ -378,13 +378,13 @@ class Tools(commands.Cog):
                 is_pdf = content_type_value in (
                     "application/pdf",
                     "application/octet-stream",  # example: https://docs.congress.hrep.online/legisdocs/basic_19/HB09867.pdf
-                ) or pdf_bytes[:1024].lstrip().startswith(b"%PDF-")
+                ) or b"%PDF-" in pdf_bytes[:1024]
                 if not is_pdf:
                     print(f"{pdf_bytes[:200]=}")
                     return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
 
                 parsed_filename = os.path.basename(urlparse(url).path)
-                image_filename = os.path.splitext(parsed_filename)[0] or uuid.uuid4()
+                image_filename = os.path.splitext(parsed_filename)[0] or str(uuid.uuid4())
 
                 if flags.selection:
                     # First, get total page count by converting just the first page and using pdfinfo
