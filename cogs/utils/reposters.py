@@ -14,6 +14,9 @@ import aiohttp
 import discord
 import yarl
 
+DEFAULT_MAX_REPOST_SIZE_MB = 24
+REPOST_DOWNLOAD_CHUNK_SIZE = 1 << 14
+
 
 class BaseRepostData:
     """Base data structure for repost information."""
@@ -35,6 +38,18 @@ class BaseReposter(ABC):
         self.yt_dlp_url = os.getenv("YT_DLP_MICROSERVICE")
         if not self.yt_dlp_url:
             raise RuntimeError("YT_DLP_MICROSERVICE is not configured")
+        self.max_repost_bytes = self._get_max_repost_bytes()
+
+    @staticmethod
+    def _get_max_repost_bytes() -> int:
+        max_mb_raw = os.getenv("MAX_REPOST_SIZE_MB", str(DEFAULT_MAX_REPOST_SIZE_MB))
+        try:
+            max_mb = int(max_mb_raw)
+        except ValueError:
+            max_mb = DEFAULT_MAX_REPOST_SIZE_MB
+        if max_mb <= 0:
+            max_mb = DEFAULT_MAX_REPOST_SIZE_MB
+        return max_mb * 1024 * 1024
 
     @property
     @abstractmethod
@@ -147,15 +162,7 @@ class BaseReposter(ABC):
             ) as resp:
                 print(f"{self.platform_name} video download: {resp.status}")
                 if resp.status == 200:
-                    max_mb_raw = os.getenv("MAX_REPOST_SIZE_MB", "24")
-                    try:
-                        max_mb = int(max_mb_raw)
-                    except ValueError:
-                        max_mb = 24
-                    if max_mb <= 0:
-                        max_mb = 24
-
-                    max_bytes = max_mb * 1024 * 1024
+                    max_bytes = self.max_repost_bytes
                     content_length = None
                     if resp.headers.get("Content-Length"):
                         try:
@@ -170,7 +177,7 @@ class BaseReposter(ABC):
 
                     buf = BytesIO()
                     total = 0
-                    async for chunk in resp.content.iter_chunked(1 << 14):
+                    async for chunk in resp.content.iter_chunked(REPOST_DOWNLOAD_CHUNK_SIZE):
                         total += len(chunk)
                         if total > max_bytes:
                             print(
