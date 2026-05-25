@@ -379,14 +379,13 @@ class Tools(commands.Cog):
                     "application/octet-stream",  # example: https://docs.congress.hrep.online/legisdocs/basic_19/HB09867.pdf
                 )
 
-                if is_pdf_type:
-                    pdf_bytes = await resp.read()
-                else:
+                header_bytes = b""
+                if not is_pdf_type:
                     header_bytes = await resp.content.read(1024)
                     if b"%PDF-" not in header_bytes:
                         print(f"{header_bytes[:200]=}")
                         return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
-                    pdf_bytes = header_bytes + await resp.read()
+                pdf_bytes = header_bytes + await resp.content.read()
 
                 parsed_filename = os.path.basename(urlparse(url).path)
                 image_filename = (
