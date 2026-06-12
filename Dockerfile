@@ -1,6 +1,6 @@
 # Multi-stage image build to create a final image without uv
 
-ARG PYTHON_VERSION=3.10
+ARG PYTHON_VERSION=3.11
 ARG BUILD_MODE=prod
 
 # ---------------------------------------------------------------------------------------------------
