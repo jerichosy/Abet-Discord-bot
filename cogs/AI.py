@@ -73,8 +73,9 @@ class AI(commands.Cog):
             # print("Creating AsyncOpenAI")
             account_id = os.getenv("CF_ACCOUNT_ID")
             gateway_id = os.getenv("CF_AI_GATEWAY_ID")
+            # TODO: Do we still route through Cloudflare's AI Gateway or just direct OpenRouter?
             self._client_openai = AsyncOpenAI(
-                base_url=f"https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/openai"
+                base_url="https://openrouter.ai/api/v1",
             )
         # print("Returning AsyncOpenAI")
         return self._client_openai
@@ -98,23 +99,25 @@ class AI(commands.Cog):
             )
         return self._client_grok
 
-    @commands.hybrid_command(aliases=["ask", "ask-gpt", "chat", "gpt"])
+    @commands.hybrid_command(aliases=["ask", "ask-gpt", "chatgpt", "gpt"])
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
     @commands.max_concurrency(number=1, per=commands.BucketType.user, wait=False)
-    @app_commands.describe(prompt="Your question to ChatGPT")
-    @app_commands.describe(image="GPT-4o and 4o mini supports images as prompt to answer questions about them")
-    @app_commands.describe(model="Defaults to GPT-4o but can be specified to use the cheaper GPT-4o mini")
-    @commands.is_owner()  # If we allow everyone again, in OpenAI API Platform, set up a proj in the default org with its own API key so we can track costs specific to Abet bot's OpenAI API usage
+    @app_commands.describe(prompt="Your question to Abet AI")
+    # @app_commands.describe(image="GPT-4o and 4o mini supports images as prompt to answer questions about them") # TODO: Do our models universally support images?
+    # @app_commands.describe(model="Defaults to GPT-4o but can be specified to use the cheaper GPT-4o mini")
+    # @commands.is_owner()  # If we allow everyone again, in OpenAI API Platform, set up a proj in the default org with its own API key so we can track costs specific to Abet bot's OpenAI API usage
     # For some reason, this `is_owner()` check also works with the slash cmd, but only for a hybrid cmd
-    async def chatgpt(
+    async def chat(
         self,
         ctx,
         *,
         prompt: str,
         image: discord.Attachment = None,
-        model: Literal["gpt-4o-2024-11-20", "gpt-4o", "gpt-4o-mini"] = "gpt-4o-2024-11-20",
+        model: Literal[
+            "google/gemma-4-31b-it:free", "openai/gpt-oss-120b:free", "gpt-4o-mini"
+        ] = "google/gemma-4-31b-it:free",
     ):
-        """Ask ChatGPT! Now powered by OpenAI's newest GPT-4o model."""
+        """Ask Abet AI!"""
 
         # allowed_users = [
         #     199017953922908160,  # hemeduhh
@@ -141,24 +144,24 @@ class AI(commands.Cog):
             if not image.content_type.startswith("image"):
                 return await ctx.reply("🛑 Only image attachment is supported.")
 
-        # FIXME: This logic is borked when this cmd is invoked thru slash
-        if not ctx.interaction:
-            trigger_words_translate = ["translate", "translation"]
-            trigger_words_translate_match = any([word in prompt.lower() for word in trigger_words_translate])
-            if trigger_words_translate_match:
-                view = ConfirmPrompt(ctx.author)
-                view.message = await ctx.reply(
-                    'If you\'re asking for a simple translation, please first try Google Translate, Naver Papago (good for CJK languages), Yandex Translate, etc.\n\nShould you still wish to proceed with asking ChatGPT, please "Confirm" below.',
-                    view=view,
-                )
-                await view.wait()
-                if view.value is None:
-                    return print("Timed out...")
-                elif view.value:
-                    print("Confirmed...")
-                else:
-                    await ctx.message.delete()
-                    return print("Cancelled...")
+        # # FIXME: This logic is borked when this cmd is invoked thru slash
+        # if not ctx.interaction:
+        #     trigger_words_translate = ["translate", "translation"]
+        #     trigger_words_translate_match = any([word in prompt.lower() for word in trigger_words_translate])
+        #     if trigger_words_translate_match:
+        #         view = ConfirmPrompt(ctx.author)
+        #         view.message = await ctx.reply(
+        #             'If you\'re asking for a simple translation, please first try Google Translate, Naver Papago (good for CJK languages), Yandex Translate, etc.\n\nShould you still wish to proceed with asking ChatGPT, please "Confirm" below.',
+        #             view=view,
+        #         )
+        #         await view.wait()
+        #         if view.value is None:
+        #             return print("Timed out...")
+        #         elif view.value:
+        #             print("Confirmed...")
+        #         else:
+        #             await ctx.message.delete()
+        #             return print("Cancelled...")
 
         async def chat_completion_with_backoff(**kwargs):
             """This creates an OpenAI Chat Completion with a manual exponential backoff strategy in case of no responses."""
@@ -200,7 +203,7 @@ class AI(commands.Cog):
                 f"Today is {datetime.now().strftime('%-m/%-d/%Y %-I:%M %p')}.\n"
                 "\n"
                 "Users Info:\n"
-                "Your users are primarily based in Metro Manila, Philippines. They are students ranging from SHS to college, some of whom have already graduated.\n"
+                "Your users are primarily based in Metro Manila, Philippines. They are students ranging from SHS to college, some of whom have already graduated and are now working.\n"
                 "\n"
                 "User Instructions:\n"
                 "You are a friendly, helpful AI assistant. When you are asked to answer a multiple choice question, you should always provide both first the explanation and then the answer (i.e., let's think step by step)."
@@ -215,7 +218,7 @@ class AI(commands.Cog):
                         {"role": "user", "content": prompt},
                     ],
                 }
-            else:
+            else:  # TODO: Images hasn't been tested with OpenRouter.
                 params = {
                     "model": model,
                     "messages": [
@@ -259,6 +262,16 @@ class AI(commands.Cog):
                 elif completion.model in ["gpt-4o-2024-08-06", "gpt-4o-2024-11-20"]:
                     pricing_prompt = 0.00250
                     pricing_completion = 0.01000
+                elif completion.model == "openai/gpt-4o-mini":
+                    pricing_prompt = 0.00015
+                    pricing_completion = 0.00060
+                elif completion.model in [
+                    "google/gemma-4-31b-it:free",
+                    "google/gemma-4-31b-it-20260402:free",
+                    "openai/gpt-oss-120b:free",
+                ]:
+                    pricing_prompt = 0.00000
+                    pricing_completion = 0.00000
                 cost_in_USD = ((token_prompt * pricing_prompt) / 1000) + ((token_completion * pricing_completion) / 1000)
                 cost_in_PHP = cost_in_USD * await self.currency_USD_PHP.latest_exchange_rate()
                 print(cost_in_USD, cost_in_PHP)
@@ -268,10 +281,11 @@ class AI(commands.Cog):
                 footer_cost_text = ""
 
             # Send response
-            embed = discord.Embed(color=0x74AA9C)
+            embed = discord.Embed(color=0xEE615B)
             embed.set_footer(
-                text=f"Model: {completion.model} | {footer_cost_text}Prompt tokens: {token_prompt}, Completion tokens: {token_completion}",
-                icon_url="https://cdn.oaistatic.com/_next/static/media/favicon-32x32.be48395e.png",
+                text=f"Model: {completion.model}\n{footer_cost_text}Prompt tokens: {token_prompt}, Completion tokens: {token_completion}",
+                # icon_url="https://cdn.oaistatic.com/_next/static/media/favicon-32x32.be48395e.png",
+                icon_url="https://media.discordapp.net/stickers/946824812658065459.png",
             )
             # If we decide that we want the author of the prompt to be shown in the embed, uncomment the ff:
             # embed.set_author(
