@@ -67,5 +67,19 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         uv sync --frozen; \
     fi
 
+# Create a non-root user for runtime and ensure writable paths for temp files, logs, and caches.
+ARG APP_USER=appuser
+ARG APP_UID=10001
+ARG APP_GID=10001
+RUN groupadd --gid "${APP_GID}" "${APP_USER}" \
+    && useradd --uid "${APP_UID}" --gid "${APP_GID}" --create-home --home-dir "/home/${APP_USER}" --shell /bin/bash "${APP_USER}" \
+    && mkdir -p /app/temp /app/audio-output "/home/${APP_USER}/.cache" "/home/${APP_USER}/.u2net" \
+    && chown -R "${APP_USER}:${APP_USER}" /app "/home/${APP_USER}"
+
+ENV HOME="/home/${APP_USER}"
+ENV XDG_CACHE_HOME="/home/${APP_USER}/.cache"
+ENV U2NET_HOME="/home/${APP_USER}/.u2net"
+USER ${APP_USER}
+
 # Run the application.
 CMD ["python", "main.py"]
