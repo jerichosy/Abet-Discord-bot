@@ -76,6 +76,7 @@ class AI(commands.Cog):
             # TODO: Do we still route through Cloudflare's AI Gateway or just direct OpenRouter?
             self._client_openai = AsyncOpenAI(
                 base_url="https://openrouter.ai/api/v1",
+                api_key=os.getenv("OPENROUTER_API_KEY"),
             )
         # print("Returning AsyncOpenAI")
         return self._client_openai
