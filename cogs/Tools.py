@@ -367,16 +367,30 @@ class Tools(commands.Cog):
             # In this case, do not code to handle it as it may just waste our time. ¯\_(ツ)_/¯
             # This doesn't work as well: https://www.afsoc.af.mil/Portals/86/documents/history/AFD-051228-021.pdf
             async with ctx.session.get(url) as resp:
-                print(f'{resp.headers.get("Content-Type")=}')
-                if resp.headers.get("Content-Type") not in (
+                if resp.status < 200 or resp.status >= 300:
+                    return await ctx.send(f"ERROR: PDF request failed with HTTP {resp.status} {resp.reason}")
+
+                content_type = resp.headers.get("Content-Type", "")
+                content_type_value = content_type.split(";", 1)[0].strip().lower()
+                print(f"{content_type_value=}")
+
+                is_pdf_type = content_type_value in (
                     "application/pdf",
                     "application/octet-stream",  # example: https://docs.congress.hrep.online/legisdocs/basic_19/HB09867.pdf
-                ):
-                    print(f"{await resp.text()=}")
-                    return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
+                )
 
-                pdf_bytes = await resp.read()
-                image_filename = os.path.basename(urlparse(url).path) or uuid.uuid4()
+                header_bytes = b""
+                if not is_pdf_type:
+                    header_bytes = await resp.content.read(1024)
+                    if b"%PDF-" not in header_bytes:
+                        print(f"{header_bytes[:200]=}")
+                        return await ctx.send("ERROR: Given file / link or URL is not a PDF file")
+                pdf_bytes = header_bytes + await resp.content.read()
+
+                parsed_filename = os.path.basename(urlparse(url).path)
+                image_filename = (
+                    os.path.splitext(parsed_filename)[0] if parsed_filename else str(uuid.uuid4())
+                )
 
                 if flags.selection:
                     # First, get total page count by converting just the first page and using pdfinfo
@@ -395,12 +409,13 @@ class Tools(commands.Cog):
                         return await ctx.reply("🛑 Invalid selection range")
 
                     ranges = group_contiguous(selected_pages)
+                    max_selected_page = ranges[-1][-1]
                     print(ranges)
                     image_list = []
                     for start, end in ranges:
                         print("calling convert_pdf_to_images()")
                         images = await convert_pdf_to_images(pdf_bytes, first_page=start, last_page=end)
-                        append_images_to_list(images, image_list, image_filename, start, ranges[-1][-1])
+                        append_images_to_list(images, image_list, image_filename, start, max_selected_page)
                 else:
                     images = await convert_pdf_to_images(pdf_bytes)
                     image_list = []
