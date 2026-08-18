@@ -2,8 +2,9 @@
 # - If error, do mention author
 
 import asyncio
+import logging
 import os
-import uuid
+import tempfile
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -19,6 +20,50 @@ from openai import AsyncOpenAI
 from cogs.utils.character_limits import EmbedLimit, truncate
 from cogs.utils.checks import owner_only
 from cogs.utils.ExchangeRateUSDPHP import ExchangeRateUSDPHP
+from cogs.utils.transcription import (
+    AudioTooLongError,
+    MediaProcessingError,
+    autocomplete_languages,
+    build_openai_options,
+    build_transcription_route,
+    extract_transcription_content,
+    prepare_audio_for_openai,
+    resolve_source_language,
+    validate_audio_extension,
+)
+
+logger = logging.getLogger(__name__)
+ATTACHMENT_RETRY_DELAY_SECONDS = 1
+
+
+class AttachmentDownloadError(RuntimeError):
+    """Raised when Discord cannot provide an attachment for processing."""
+
+
+async def save_attachment_with_retry(
+    attachment: discord.Attachment, destination: Path
+) -> None:
+    """Save an attachment, retrying one transient Discord CDN failure."""
+
+    for attempt in range(2):
+        try:
+            await attachment.save(destination)
+            return
+        except discord.HTTPException as error:
+            is_transient = error.status == 429 or 500 <= error.status < 600
+            if attempt == 0 and is_transient:
+                await asyncio.sleep(ATTACHMENT_RETRY_DELAY_SECONDS)
+                continue
+            raise AttachmentDownloadError from error
+
+
+async def source_language_autocomplete(
+    interaction: discord.Interaction, current: str
+) -> list[app_commands.Choice[str]]:
+    return [
+        app_commands.Choice(name=name, value=code)
+        for name, code in autocomplete_languages(current)
+    ]
 
 
 class ConfirmPrompt(discord.ui.View):
@@ -408,53 +453,99 @@ class AI(commands.Cog):
     @app_commands.command()
     @commands.cooldown(rate=1, per=8, type=commands.BucketType.user)
     @commands.max_concurrency(number=1, per=commands.BucketType.user, wait=False)
-    @app_commands.describe(audio_file="Supports MP3, MP4, MPEG, MPGA, M4A, WAV, and WEBM. Limited to 25 MB.")
+    @app_commands.describe(
+        audio_file="Supports MP3, MP4, MPEG, MPGA, M4A, WAV, and WEBM.",
+        output="Return a plain text transcript or timestamped SRT subtitles.",
+        source_language="Source language hint. Auto detects the language by default.",
+        translate="Translate the recording into English instead of transcribing it.",
+    )
+    @app_commands.autocomplete(source_language=source_language_autocomplete)
     # If we allow everyone, in OpenAI API Platform, set up a proj in the default org with its own API key so we can track costs specific to Abet bot's OpenAI API usage
     @app_commands.check(owner_only)
     async def whisper(
-        self, interaction: discord.Interaction, audio_file: discord.Attachment, translate: Literal["No", "Yes"] = "No"
+        self,
+        interaction: discord.Interaction,
+        audio_file: discord.Attachment,
+        output: Literal["Text", "SRT"] = "Text",
+        source_language: str = "auto",
+        translate: Literal["No", "Yes"] = "No",
     ):
-        """Uses OpenAI's Whisper model to transcribe audio (speech) to text"""
+        """Transcribe audio with OpenAI, optionally translating it into English."""
 
-        # Check if over 25 MB
-        FILESIZE_LIMITATION = 26214400  # 25 MiB to bytes
-        if audio_file.size > FILESIZE_LIMITATION:
-            return await interaction.response.send_message("🛑 Your attachment is over the 25 MB filesize limit.")
-
-        # TODO: Check if accepted format
-        print(audio_file.content_type)
+        try:
+            extension = validate_audio_extension(audio_file.filename)
+            language_code = resolve_source_language(source_language)
+            route = build_transcription_route(translate == "Yes", output)
+        except ValueError as error:
+            return await interaction.response.send_message(
+                f"🛑 {error}", ephemeral=True
+            )
 
         # Defer before transcribing as it could take a while
         await interaction.response.defer()
 
-        audio_filename_split = os.path.splitext(os.path.basename(audio_file.filename))
-
-        # Save the attached file to a temporary location with its original name
-        Path("./temp").mkdir(parents=False, exist_ok=True)
-        temp_filename = f"./temp/{uuid.uuid4()}{audio_filename_split[-1]}"  # Make sure the './temp/' directory exists or choose a suitable temp directory
-        await audio_file.save(temp_filename)
+        original_stem = Path(audio_file.filename).stem or "audio"
+        notices = []
+        if route.endpoint == "translations" and language_code is not None:
+            notices.append(
+                "Note: OpenAI translation auto-detects the source language, so the selected language hint was not used."
+            )
 
         try:
-            # Transcribe or translate
-            # FIXME: This doesn't seem to work with CF's AI Gateway
-            with open(temp_filename, "rb") as f:  # Open the file in binary read mode
-                if translate == "Yes":
-                    transcript_func = self.client_openai_direct.audio.translations.create
-                else:
-                    transcript_func = self.client_openai_direct.audio.transcriptions.create
-                transcript = await transcript_func(
-                    model="whisper-1",
-                    file=f,  # Pass the file object directly
+            with tempfile.TemporaryDirectory(prefix="abet-whisper-") as temp_directory:
+                source_path = Path(temp_directory) / f"source{extension}"
+                compressed_path = Path(temp_directory) / "compressed.webm"
+                await save_attachment_with_retry(audio_file, source_path)
+
+                upload_path, bitrate_kbps = await prepare_audio_for_openai(
+                    source_path, compressed_path
                 )
-            print("Transcript done")
+                if bitrate_kbps is not None:
+                    notices.append(
+                        f"The recording was compressed to {bitrate_kbps} kbps for transcription."
+                    )
 
-            # Send transcript
-            FILENAME = audio_filename_split[0] + "_transcript.txt"
-            await interaction.followup.send(file=discord.File(BytesIO(transcript.text.encode()), FILENAME))
+                options = build_openai_options(route, language_code)
+                transcript_resource = getattr(
+                    self.client_openai_direct.audio, route.endpoint
+                )
+                with upload_path.open("rb") as audio_stream:
+                    transcript = await transcript_resource.create(
+                        file=audio_stream,
+                        **options,
+                    )
 
-        finally:
-            # Clean up the temporary file
-            os.remove(temp_filename)
+                transcript_content = extract_transcription_content(transcript)
+                output_filename = original_stem + route.output_filename_suffix
+                await interaction.followup.send(
+                    content="\n".join(notices) or None,
+                    file=discord.File(
+                        BytesIO(transcript_content.encode("utf-8")),
+                        filename=output_filename,
+                    ),
+                )
+        except AttachmentDownloadError:
+            logger.exception("Failed to download an attachment for transcription")
+            await interaction.followup.send(
+                "🛑 I couldn't download that attachment from Discord. Please upload it again and retry."
+            )
+        except AudioTooLongError as error:
+            await interaction.followup.send(f"🛑 {error}")
+        except MediaProcessingError:
+            logger.exception("Failed to prepare an attachment for transcription")
+            await interaction.followup.send(
+                "🛑 I couldn't read or compress that recording. Please verify that the file contains valid audio."
+            )
+        except openai.APIError:
+            logger.exception("OpenAI transcription request failed")
+            await interaction.followup.send(
+                "🛑 OpenAI couldn't process that recording right now. Please try again later."
+            )
+        except (OSError, TypeError, UnicodeError):
+            logger.exception("Failed to create or deliver a transcription")
+            await interaction.followup.send(
+                "🛑 I couldn't create the transcript file. Please verify the attachment and try again."
+            )
 
 
 async def setup(bot):
