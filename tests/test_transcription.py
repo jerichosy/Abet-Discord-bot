@@ -274,9 +274,42 @@ class CompressionTests(unittest.IsolatedAsyncioTestCase):
 
             compress.assert_not_awaited()
 
-    async def test_ffprobe_invalid_duration_is_reported(self):
+    async def test_ffprobe_prefers_first_audio_stream_duration(self):
+        command = AsyncMock(
+            return_value='{"streams": [{"duration": "1.5"}], "format": {"duration": "10"}}'
+        )
+        with patch.object(transcription, "_run_media_command", new=command):
+            duration = await transcription.probe_audio_duration(Path("recording.mp4"))
+
+        self.assertEqual(duration, 1.5)
+        args = command.await_args.args
+        self.assertEqual(args[args.index("-select_streams") + 1], "a:0")
+        self.assertEqual(
+            args[args.index("-show_entries") + 1],
+            "stream=duration:format=duration",
+        )
+        self.assertEqual(args[args.index("-of") + 1], "json")
+
+    async def test_ffprobe_falls_back_to_container_duration(self):
+        output = '{"streams": [{}], "format": {"duration": "10"}}'
+        with patch.object(
+            transcription, "_run_media_command", new=AsyncMock(return_value=output)
+        ):
+            duration = await transcription.probe_audio_duration(Path("recording.mp4"))
+
+        self.assertEqual(duration, 10)
+
+    async def test_ffprobe_invalid_json_is_reported(self):
         with patch.object(
             transcription, "_run_media_command", new=AsyncMock(return_value="invalid")
+        ):
+            with self.assertRaises(transcription.MediaProcessingError):
+                await transcription.probe_audio_duration(Path("recording.wav"))
+
+    async def test_ffprobe_unusable_durations_are_reported(self):
+        output = '{"streams": [{"duration": "nan"}], "format": {"duration": "0"}}'
+        with patch.object(
+            transcription, "_run_media_command", new=AsyncMock(return_value=output)
         ):
             with self.assertRaises(transcription.MediaProcessingError):
                 await transcription.probe_audio_duration(Path("recording.wav"))
@@ -289,6 +322,7 @@ class CompressionTests(unittest.IsolatedAsyncioTestCase):
             )
 
         args = command.await_args.args
+        self.assertEqual(args[args.index("-map") + 1], "0:a:0")
         self.assertIn("-vn", args)
         self.assertIn("16000", args)
         self.assertIn("libopus", args)

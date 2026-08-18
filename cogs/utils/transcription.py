@@ -1,6 +1,8 @@
 """Helpers for routing, validating, and preparing audio transcriptions."""
 
 import asyncio
+import json
+import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -297,8 +299,7 @@ def select_fallback_opus_bitrate(
         if bitrate_kbps >= current_bitrate_kbps:
             continue
         projected_size_bytes = (
-            estimated_container_bytes
-            + duration_seconds * bitrate_kbps * 1000 / 8
+            estimated_container_bytes + duration_seconds * bitrate_kbps * 1000 / 8
         )
         if projected_size_bytes <= COMPRESSION_TARGET_BYTES:
             return bitrate_kbps
@@ -324,28 +325,56 @@ async def _run_media_command(*args: str) -> str:
     return stdout.decode("utf-8", errors="replace").strip()
 
 
+def _parse_positive_duration(value: object) -> float | None:
+    """Return a finite positive duration, or ``None`` for unusable values."""
+
+    try:
+        duration = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(duration) or duration <= 0:
+        return None
+    return duration
+
+
 async def probe_audio_duration(path: Path) -> float:
-    """Return a media file's duration in seconds using FFprobe."""
+    """Return the first audio stream's duration, falling back to the container."""
 
     output = await _run_media_command(
         "ffprobe",
         "-v",
         "error",
+        "-select_streams",
+        "a:0",
         "-show_entries",
-        "format=duration",
+        "stream=duration:format=duration",
         "-of",
-        "default=noprint_wrappers=1:nokey=1",
+        "json",
         str(path),
     )
     try:
-        duration = float(output)
-    except ValueError as error:
+        metadata = json.loads(output)
+    except (json.JSONDecodeError, TypeError) as error:
         raise MediaProcessingError(
-            "FFprobe returned an invalid audio duration."
+            "FFprobe returned invalid media metadata."
         ) from error
-    if duration <= 0:
-        raise MediaProcessingError("The recording has no measurable duration.")
-    return duration
+
+    if not isinstance(metadata, dict):
+        raise MediaProcessingError("FFprobe returned invalid media metadata.")
+
+    streams = metadata.get("streams")
+    if isinstance(streams, list) and streams and isinstance(streams[0], dict):
+        duration = _parse_positive_duration(streams[0].get("duration"))
+        if duration is not None:
+            return duration
+
+    format_metadata = metadata.get("format")
+    if isinstance(format_metadata, dict):
+        duration = _parse_positive_duration(format_metadata.get("duration"))
+        if duration is not None:
+            return duration
+
+    raise MediaProcessingError("The recording has no measurable audio duration.")
 
 
 async def compress_audio_for_openai(
@@ -362,6 +391,8 @@ async def compress_audio_for_openai(
         "-y",
         "-i",
         str(source),
+        "-map",
+        "0:a:0",
         "-vn",
         "-ac",
         "1",
