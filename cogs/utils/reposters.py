@@ -14,6 +14,12 @@ import aiohttp
 import discord
 import yarl
 
+DEFAULT_MAX_REPOST_SIZE_MB = 24
+REPOST_DOWNLOAD_CONNECT_TIMEOUT_SECONDS = 10
+REPOST_DOWNLOAD_READ_TIMEOUT_SECONDS = 10
+REPOST_DOWNLOAD_TIMEOUT_SECONDS = 30
+REPOST_DOWNLOAD_CHUNK_SIZE = 1 << 14  # 16KB
+
 
 class BaseRepostData:
     """Base data structure for repost information."""
@@ -35,6 +41,18 @@ class BaseReposter(ABC):
         self.yt_dlp_url = os.getenv("YT_DLP_MICROSERVICE")
         if not self.yt_dlp_url:
             raise RuntimeError("YT_DLP_MICROSERVICE is not configured")
+        self.max_repost_bytes = self._get_max_repost_bytes()
+
+    @staticmethod
+    def _get_max_repost_bytes() -> int:
+        max_mb_raw = os.getenv("MAX_REPOST_SIZE_MB", str(DEFAULT_MAX_REPOST_SIZE_MB))
+        try:
+            max_mb = int(max_mb_raw)
+        except ValueError:
+            max_mb = DEFAULT_MAX_REPOST_SIZE_MB
+        if max_mb <= 0:
+            max_mb = DEFAULT_MAX_REPOST_SIZE_MB
+        return max_mb * 1024 * 1024
 
     @property
     @abstractmethod
@@ -140,10 +158,44 @@ class BaseReposter(ABC):
             if isinstance(dl_link, str):
                 dl_link = yarl.URL(dl_link, encoded=True)
 
-            async with self.session.get(dl_link) as resp:
+            async with self.session.get(
+                dl_link,
+                timeout=aiohttp.ClientTimeout(
+                    total=REPOST_DOWNLOAD_TIMEOUT_SECONDS,
+                    sock_connect=REPOST_DOWNLOAD_CONNECT_TIMEOUT_SECONDS,
+                    sock_read=REPOST_DOWNLOAD_READ_TIMEOUT_SECONDS,
+                ),
+                allow_redirects=True,
+            ) as resp:
                 print(f"{self.platform_name} video download: {resp.status}")
                 if resp.status == 200:
-                    return BytesIO(await resp.read())
+                    max_bytes = self.max_repost_bytes
+                    content_length = None
+                    content_length_header = resp.headers.get("Content-Length")
+                    if content_length_header:
+                        try:
+                            content_length = int(content_length_header)
+                        except ValueError:
+                            content_length = None
+                    if content_length is not None and content_length > max_bytes:
+                        print(
+                            f"{self.platform_name} download aborted: {content_length}B > {max_bytes}B"
+                        )
+                        return None
+
+                    buf = BytesIO()
+                    total = 0
+                    async for chunk in resp.content.iter_chunked(REPOST_DOWNLOAD_CHUNK_SIZE):
+                        if total + len(chunk) > max_bytes:
+                            print(
+                                f"{self.platform_name} download aborted mid-stream: {total + len(chunk)}B > {max_bytes}B"
+                            )
+                            buf.close()
+                            return None
+                        total += len(chunk)
+                        buf.write(chunk)
+                    buf.seek(0)
+                    return buf
                 return None
         except Exception as e:
             print(f"{self.platform_name} download error: {e}")
