@@ -3,7 +3,9 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
-from cogs.AI import AI
+import discord
+
+from cogs.AI import AI, AttachmentDownloadError, save_attachment_with_retry
 
 
 class FakeAttachment:
@@ -13,9 +15,15 @@ class FakeAttachment:
         self.content_type = "audio/mpeg"
         self.payload = payload
         self.saved_path = None
+        self.failures = []
+        self.save_calls = 0
 
     async def save(self, path):
+        self.save_calls += 1
         self.saved_path = Path(path)
+        if self.failures:
+            self.saved_path.write_bytes(b"partial")
+            raise self.failures.pop(0)
         self.saved_path.write_bytes(self.payload)
 
 
@@ -34,6 +42,11 @@ class FakeFollowup:
             message["filename"] = file.filename
             message["file_content"] = file.fp.read().decode("utf-8")
         self.messages.append(message)
+
+
+def make_http_error(status):
+    response = SimpleNamespace(status=status, reason="attachment failure")
+    return discord.HTTPException(response, "attachment failure")
 
 
 def make_interaction():
@@ -73,6 +86,41 @@ class WhisperCommandTests(unittest.IsolatedAsyncioTestCase):
             language,
             translate,
         )
+
+    async def test_transient_attachment_failure_is_retried_once(self):
+        for status in (429, 503):
+            with self.subTest(status=status):
+                attachment = SimpleNamespace(
+                    save=AsyncMock(side_effect=[make_http_error(status), None])
+                )
+                sleep = AsyncMock()
+
+                with patch("cogs.AI.asyncio.sleep", new=sleep):
+                    await save_attachment_with_retry(
+                        attachment, Path("unused-recording.mp3")
+                    )
+
+                self.assertEqual(attachment.save.await_count, 2)
+                sleep.assert_awaited_once_with(1)
+
+    async def test_permanent_attachment_failure_is_not_retried(self):
+        for status in (400, 403, 404):
+            with self.subTest(status=status):
+                attachment = SimpleNamespace(
+                    save=AsyncMock(side_effect=make_http_error(status))
+                )
+                sleep = AsyncMock()
+
+                with (
+                    patch("cogs.AI.asyncio.sleep", new=sleep),
+                    self.assertRaises(AttachmentDownloadError),
+                ):
+                    await save_attachment_with_retry(
+                        attachment, Path("unused-recording.mp3")
+                    )
+
+                attachment.save.assert_awaited_once()
+                sleep.assert_not_awaited()
 
     async def test_all_routes_create_expected_files_and_api_options(self):
         cases = (
@@ -193,6 +241,42 @@ class WhisperCommandTests(unittest.IsolatedAsyncioTestCase):
         transcribe.assert_not_awaited()
         translate.assert_not_awaited()
         self.assertIsNone(attachment.saved_path)
+
+    async def test_final_compression_bitrate_is_reported(self):
+        cog, _, _ = make_cog(
+            transcription_response=SimpleNamespace(text="Transcript")
+        )
+        interaction = make_interaction()
+
+        async def use_compressed_file(source, destination):
+            return source, 32
+
+        with patch(
+            "cogs.AI.prepare_audio_for_openai",
+            new=AsyncMock(side_effect=use_compressed_file),
+        ):
+            await self.invoke(cog, interaction, FakeAttachment())
+
+        self.assertIn(
+            "compressed to 32 kbps", interaction.followup.messages[0]["content"]
+        )
+
+    async def test_attachment_failure_is_reported_and_temp_file_is_removed(self):
+        cog, transcribe, _ = make_cog()
+        interaction = make_interaction()
+        attachment = FakeAttachment()
+        attachment.failures = [make_http_error(503), make_http_error(503)]
+
+        with patch("cogs.AI.asyncio.sleep", new=AsyncMock()):
+            await self.invoke(cog, interaction, attachment)
+
+        self.assertEqual(attachment.save_calls, 2)
+        self.assertIn(
+            "couldn't download that attachment",
+            interaction.followup.messages[0]["content"],
+        )
+        transcribe.assert_not_awaited()
+        self.assertFalse(attachment.saved_path.exists())
 
     async def test_openai_error_is_reported_and_temp_file_is_removed(self):
         class FakeAPIError(Exception):

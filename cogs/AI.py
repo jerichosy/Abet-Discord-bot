@@ -33,6 +33,28 @@ from cogs.utils.transcription import (
 )
 
 logger = logging.getLogger(__name__)
+ATTACHMENT_RETRY_DELAY_SECONDS = 1
+
+
+class AttachmentDownloadError(RuntimeError):
+    """Raised when Discord cannot provide an attachment for processing."""
+
+
+async def save_attachment_with_retry(
+    attachment: discord.Attachment, destination: Path
+) -> None:
+    """Save an attachment, retrying one transient Discord CDN failure."""
+
+    for attempt in range(2):
+        try:
+            await attachment.save(destination)
+            return
+        except discord.HTTPException as error:
+            is_transient = error.status == 429 or 500 <= error.status < 600
+            if attempt == 0 and is_transient:
+                await asyncio.sleep(ATTACHMENT_RETRY_DELAY_SECONDS)
+                continue
+            raise AttachmentDownloadError from error
 
 
 async def source_language_autocomplete(
@@ -473,7 +495,7 @@ class AI(commands.Cog):
             with tempfile.TemporaryDirectory(prefix="abet-whisper-") as temp_directory:
                 source_path = Path(temp_directory) / f"source{extension}"
                 compressed_path = Path(temp_directory) / "compressed.webm"
-                await audio_file.save(source_path)
+                await save_attachment_with_retry(audio_file, source_path)
 
                 upload_path, bitrate_kbps = await prepare_audio_for_openai(
                     source_path, compressed_path
@@ -502,6 +524,11 @@ class AI(commands.Cog):
                         filename=output_filename,
                     ),
                 )
+        except AttachmentDownloadError:
+            logger.exception("Failed to download an attachment for transcription")
+            await interaction.followup.send(
+                "🛑 I couldn't download that attachment from Discord. Please upload it again and retry."
+            )
         except AudioTooLongError as error:
             await interaction.followup.send(f"🛑 {error}")
         except MediaProcessingError:

@@ -102,6 +102,15 @@ class CompressionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(transcription.select_opus_bitrate(6001), 24)
         self.assertIsNone(transcription.select_opus_bitrate(8001))
 
+    def test_fallback_bitrate_uses_measured_container_overhead(self):
+        self.assertEqual(
+            transcription.select_fallback_opus_bitrate(4000, 48, 25_100_000),
+            40,
+        )
+        self.assertIsNone(
+            transcription.select_fallback_opus_bitrate(8000, 24, 25_100_000)
+        )
+
     async def test_small_file_bypasses_media_tools(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "source.mp3"
@@ -149,30 +158,97 @@ class CompressionTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(bitrate, 48)
             compress.assert_awaited_once_with(source, destination, 48)
 
-    async def test_compressed_file_that_remains_oversized_is_rejected(self):
+    async def test_oversized_encode_retries_at_projected_safe_bitrate(self):
         with tempfile.TemporaryDirectory() as directory:
             source = Path(directory) / "source.wav"
             destination = Path(directory) / "compressed.webm"
-            source.write_bytes(b"x" * 11)
+            source.write_bytes(b"x" * 101)
 
-            async def create_oversized_file(*args):
-                destination.write_bytes(b"x" * 11)
+            async def create_compressed_file(source, destination, bitrate):
+                output_sizes = {48: 101, 40: 86}
+                destination.write_bytes(b"x" * output_sizes[bitrate])
 
             with (
-                patch.object(transcription, "OPENAI_AUDIO_FILE_LIMIT_BYTES", 10),
+                patch.object(transcription, "OPENAI_AUDIO_FILE_LIMIT_BYTES", 100),
+                patch.object(transcription, "COMPRESSION_TARGET_BYTES", 90),
                 patch.object(
                     transcription,
                     "probe_audio_duration",
-                    new=AsyncMock(return_value=60),
+                    new=AsyncMock(return_value=0.015),
+                ),
+                patch.object(
+                    transcription,
+                    "compress_audio_for_openai",
+                    new=AsyncMock(side_effect=create_compressed_file),
+                ) as compress,
+            ):
+                upload, bitrate = await transcription.prepare_audio_for_openai(
+                    source, destination
+                )
+
+            self.assertEqual(upload, destination)
+            self.assertEqual(bitrate, 40)
+            self.assertEqual(
+                [call.args[2] for call in compress.await_args_list], [48, 40]
+            )
+
+    async def test_failed_fallback_is_rejected_without_a_third_encode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "source.wav"
+            destination = Path(directory) / "compressed.webm"
+            source.write_bytes(b"x" * 101)
+
+            async def create_oversized_file(*args):
+                destination.write_bytes(b"x" * 101)
+
+            with (
+                patch.object(transcription, "OPENAI_AUDIO_FILE_LIMIT_BYTES", 100),
+                patch.object(transcription, "COMPRESSION_TARGET_BYTES", 90),
+                patch.object(
+                    transcription,
+                    "probe_audio_duration",
+                    new=AsyncMock(return_value=0.015),
                 ),
                 patch.object(
                     transcription,
                     "compress_audio_for_openai",
                     new=AsyncMock(side_effect=create_oversized_file),
-                ),
+                ) as compress,
             ):
                 with self.assertRaises(transcription.AudioTooLongError):
                     await transcription.prepare_audio_for_openai(source, destination)
+
+            self.assertEqual(
+                [call.args[2] for call in compress.await_args_list], [48, 40]
+            )
+
+    async def test_oversized_minimum_bitrate_is_not_retried(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "source.wav"
+            destination = Path(directory) / "compressed.webm"
+            source.write_bytes(b"x" * 101)
+
+            async def create_oversized_file(*args):
+                destination.write_bytes(b"x" * 101)
+
+            with (
+                patch.object(transcription, "OPENAI_AUDIO_FILE_LIMIT_BYTES", 100),
+                patch.object(transcription, "COMPRESSION_TARGET_BYTES", 90),
+                patch.object(
+                    transcription,
+                    "probe_audio_duration",
+                    new=AsyncMock(return_value=0.03),
+                ),
+                patch.object(
+                    transcription,
+                    "compress_audio_for_openai",
+                    new=AsyncMock(side_effect=create_oversized_file),
+                ) as compress,
+            ):
+                with self.assertRaises(transcription.AudioTooLongError):
+                    await transcription.prepare_audio_for_openai(source, destination)
+
+            compress.assert_awaited_once_with(source, destination, 24)
 
     async def test_too_long_file_is_rejected_before_compression(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -216,6 +292,7 @@ class CompressionTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("-vn", args)
         self.assertIn("16000", args)
         self.assertIn("libopus", args)
+        self.assertEqual(args[args.index("-vbr") + 1], "off")
         self.assertIn("32k", args)
 
     async def test_media_command_failure_is_reported(self):

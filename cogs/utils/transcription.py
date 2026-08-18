@@ -1,3 +1,5 @@
+"""Helpers for routing, validating, and preparing audio transcriptions."""
+
 import asyncio
 from dataclasses import dataclass
 from pathlib import Path
@@ -131,15 +133,21 @@ _AUTOCOMPLETE_PRIORITY = (
 
 
 class MediaProcessingError(RuntimeError):
+    """Raised when local media inspection or conversion fails."""
+
     pass
 
 
 class AudioTooLongError(MediaProcessingError):
+    """Raised when audio cannot fit within OpenAI's upload limit."""
+
     pass
 
 
 @dataclass(frozen=True)
 class TranscriptionRoute:
+    """Describe the OpenAI audio endpoint and output format for a request."""
+
     endpoint: Literal["transcriptions", "translations"]
     model: str
     response_format: Literal["json", "srt"]
@@ -147,6 +155,8 @@ class TranscriptionRoute:
 
 
 def validate_audio_extension(filename: str) -> str:
+    """Return a supported lowercase extension or raise ``ValueError``."""
+
     extension = Path(filename).suffix.lower()
     if extension not in SUPPORTED_AUDIO_EXTENSIONS:
         supported = ", ".join(
@@ -160,6 +170,8 @@ def validate_audio_extension(filename: str) -> str:
 
 
 def resolve_source_language(value: str) -> str | None:
+    """Resolve a language name or code, returning ``None`` for auto-detection."""
+
     normalized = value.strip().casefold()
     if not normalized or normalized in {"auto", "auto-detect", "autodetect"}:
         return None
@@ -177,6 +189,8 @@ def resolve_source_language(value: str) -> str | None:
 
 
 def autocomplete_languages(query: str, limit: int = 25) -> list[tuple[str, str]]:
+    """Return matching autocomplete labels and canonical language codes."""
+
     normalized = query.strip().casefold()
     choices: list[tuple[str, str]] = []
 
@@ -202,6 +216,8 @@ def autocomplete_languages(query: str, limit: int = 25) -> list[tuple[str, str]]
 
 
 def build_transcription_route(translate: bool, output: str) -> TranscriptionRoute:
+    """Select the endpoint, model, response format, and output filename suffix."""
+
     normalized_output = output.strip().casefold()
     if normalized_output not in {"text", "srt"}:
         raise ValueError("Output must be Text or SRT.")
@@ -227,6 +243,8 @@ def build_transcription_route(translate: bool, output: str) -> TranscriptionRout
 def build_openai_options(
     route: TranscriptionRoute, source_language: str | None
 ) -> dict[str, object]:
+    """Build model options, omitting unsupported translation language hints."""
+
     options: dict[str, object] = {
         "model": route.model,
         "response_format": route.response_format,
@@ -241,6 +259,8 @@ def build_openai_options(
 
 
 def extract_transcription_content(response: object) -> str:
+    """Extract text from structured or raw OpenAI audio responses."""
+
     if isinstance(response, str):
         return response
     if isinstance(response, bytes):
@@ -253,6 +273,8 @@ def extract_transcription_content(response: object) -> str:
 
 
 def select_opus_bitrate(duration_seconds: float) -> int | None:
+    """Return the highest allowed Opus bitrate estimated to fit the target."""
+
     if duration_seconds <= 0:
         raise ValueError("Audio duration must be greater than zero.")
 
@@ -263,7 +285,29 @@ def select_opus_bitrate(duration_seconds: float) -> int | None:
     return None
 
 
+def select_fallback_opus_bitrate(
+    duration_seconds: float, current_bitrate_kbps: int, actual_size_bytes: int
+) -> int | None:
+    """Choose the highest lower bitrate projected to fit after a failed encode."""
+
+    current_payload_bytes = duration_seconds * current_bitrate_kbps * 1000 / 8
+    estimated_container_bytes = max(0, actual_size_bytes - current_payload_bytes)
+
+    for bitrate_kbps in OPUS_BITRATES_KBPS:
+        if bitrate_kbps >= current_bitrate_kbps:
+            continue
+        projected_size_bytes = (
+            estimated_container_bytes
+            + duration_seconds * bitrate_kbps * 1000 / 8
+        )
+        if projected_size_bytes <= COMPRESSION_TARGET_BYTES:
+            return bitrate_kbps
+    return None
+
+
 async def _run_media_command(*args: str) -> str:
+    """Run FFmpeg or FFprobe and return stdout, wrapping process failures."""
+
     try:
         process = await asyncio.create_subprocess_exec(
             *args,
@@ -281,6 +325,8 @@ async def _run_media_command(*args: str) -> str:
 
 
 async def probe_audio_duration(path: Path) -> float:
+    """Return a media file's duration in seconds using FFprobe."""
+
     output = await _run_media_command(
         "ffprobe",
         "-v",
@@ -305,6 +351,8 @@ async def probe_audio_duration(path: Path) -> float:
 async def compress_audio_for_openai(
     source: Path, destination: Path, bitrate_kbps: int
 ) -> None:
+    """Encode media once as mono 16 kHz hard-CBR WebM/Opus audio."""
+
     await _run_media_command(
         "ffmpeg",
         "-hide_banner",
@@ -321,6 +369,8 @@ async def compress_audio_for_openai(
         "16000",
         "-c:a",
         "libopus",
+        "-vbr",
+        "off",
         "-b:a",
         f"{bitrate_kbps}k",
         str(destination),
@@ -330,6 +380,13 @@ async def compress_audio_for_openai(
 async def prepare_audio_for_openai(
     source: Path, destination: Path
 ) -> tuple[Path, int | None]:
+    """Return upload-ready audio and its final bitrate, compressing when needed.
+
+    Files within the API limit are returned unchanged. Oversized files receive
+    one initial encode and, when its measured overhead permits, at most one
+    lower-bitrate fallback encode.
+    """
+
     if source.stat().st_size <= OPENAI_AUDIO_FILE_LIMIT_BYTES:
         return source, None
 
@@ -342,6 +399,22 @@ async def prepare_audio_for_openai(
         )
 
     await compress_audio_for_openai(source, destination, bitrate_kbps)
+    if not destination.exists():
+        raise MediaProcessingError("FFmpeg did not create compressed audio.")
+
+    actual_size_bytes = destination.stat().st_size
+    if actual_size_bytes <= OPENAI_AUDIO_FILE_LIMIT_BYTES:
+        return destination, bitrate_kbps
+
+    fallback_bitrate_kbps = select_fallback_opus_bitrate(
+        duration, bitrate_kbps, actual_size_bytes
+    )
+    if fallback_bitrate_kbps is None:
+        raise AudioTooLongError(
+            "The compressed recording is still over OpenAI's 25 MB limit. Automatic chunking is not enabled."
+        )
+
+    await compress_audio_for_openai(source, destination, fallback_bitrate_kbps)
     if (
         not destination.exists()
         or destination.stat().st_size > OPENAI_AUDIO_FILE_LIMIT_BYTES
@@ -349,4 +422,4 @@ async def prepare_audio_for_openai(
         raise AudioTooLongError(
             "The compressed recording is still over OpenAI's 25 MB limit. Automatic chunking is not enabled."
         )
-    return destination, bitrate_kbps
+    return destination, fallback_bitrate_kbps
