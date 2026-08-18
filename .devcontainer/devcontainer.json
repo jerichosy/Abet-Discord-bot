@@ -42,7 +42,8 @@
 			"extensions": [
 				"ms-python.python",
 				"ms-python.isort",
-				"ms-python.black-formatter"
+				"ms-python.black-formatter",
+				"openai.chatgpt"
 			]
 		}
 	}
