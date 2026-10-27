@@ -1,0 +1,74 @@
+name: Safe Dependabot auto-merge
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Never check out or execute code from the PR in this privileged workflow.
+      - uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3
+        id: metadata
+      - name: Check every dependency in this PR
+        id: policy
+        env:
+          DEPENDENCIES: ${{ steps.metadata.outputs.updated-dependencies-json }}
+        run: |
+          python - <<'PY'
+          """Conservative eligibility check for verified dependabot/fetch-metadata output."""
+          import re
+
+          def eligible(dependencies):
+              if not isinstance(dependencies, list) or not dependencies:
+                  return False
+              for dep in dependencies:
+                  if dep.get('maintainerChanges') or dep.get('updateType') not in (
+                      'version-update:semver-major', 'version-update:semver-minor', 'version-update:semver-patch'
+                  ):
+                      return False
+                  # Unknown registries, containers, date versions and version ranges need review.
+                  if dep.get('packageEcosystem') not in ('npm_and_yarn', 'npm', 'pip', 'uv', 'maven', 'gradle', 'go_modules', 'gomod', 'github_actions', 'github-actions', 'devcontainers'):
+                      return False
+                  versions = []
+                  for key in ('prevVersion', 'newVersion'):
+                      match = re.fullmatch(r'v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)', dep.get(key, ''))
+                      if not match:
+                          return False
+                      versions.append(tuple(map(int, match.groups())))
+                  old, new = versions
+                  if new <= old or old[0] != new[0] or old[0] >= 1900:
+                      return False
+                  # Some registries call a pre-1.0 minor bump a compatibility-major.
+                  # The owner explicitly accepts that risk within major zero.
+                  if dep['updateType'] == 'version-update:semver-major' and old[0] != 0:
+                      return False
+              return True
+
+          import json, os
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('eligible=' + str(eligible(json.loads(os.environ['DEPENDENCIES']))).lower() + '\n')
+          PY
+      - name: Require CI protection before enabling auto-merge
+        if: steps.policy.outputs.eligible == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          BASE: ${{ github.event.pull_request.base.ref }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh api "repos/$REPO/branches/$BASE" > protection.json
+          python - <<'PY'
+          import json
+          branch = json.load(open('protection.json'))
+          assert branch['protected'], 'Branch protection is missing'
+          checks = branch['protection']['required_status_checks']
+          assert checks['enforcement_level'] == 'everyone'
+          assert any(c['context'] == 'Dependency CI Gate' and c['app_id'] == 15368 for c in checks['checks']), 'Required CI protection is missing'
+          PY
+          gh pr merge --auto --merge --match-head-commit "$HEAD_SHA" "$PR_URL"
