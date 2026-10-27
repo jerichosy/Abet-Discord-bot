@@ -1,0 +1,45 @@
+name: Dependency CI
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dependency-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version-file: .python-version
+      - uses: astral-sh/setup-uv@v7
+      - run: uv sync --locked --all-extras --dev
+      - run: uv pip check
+      - run: uvx flake8 . --select=E9,F63,F7,F82 --show-source
+      - run: |
+          uv run python -m compileall -q cogs models main.py
+          docker build -t dependabot-bot-check .
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Build the actual devcontainer configuration
+        run: |
+          npm install --global @devcontainers/cli@0.80.3
+          devcontainer build --workspace-folder .
+  gate:
+    name: Dependency CI Gate
+    if: always()
+    needs: [verify]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every verification job to succeed
+        env:
+          RESULT: ${{ needs.verify.result }}
+        run: test "$RESULT" = success
