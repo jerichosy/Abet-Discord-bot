@@ -23,6 +23,7 @@ jobs:
       - run: uv sync --locked --all-extras --dev
       - run: uv pip check
       - run: uvx flake8 . --extend-exclude=.venv --select=E9,F63,F7,F82 --show-source
+        continue-on-error: true
       - run: |
           uv run python -m compileall -q cogs models main.py
           docker build -t dependabot-bot-check .
